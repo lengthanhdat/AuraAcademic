@@ -1,0 +1,89 @@
+import { useEffect, useRef, useState } from "react";
+
+export type ViolationType = 
+  | "no_face" 
+  | "multiple_faces" 
+  | "cell_phone" 
+  | "looking_left" 
+  | "looking_right" 
+  | "looking_down" 
+  | "head_down_deep";
+
+export const VIOLATION_LABELS: Record<ViolationType, string> = {
+  no_face: "Không nhận diện được khuôn mặt",
+  multiple_faces: "Phát hiện có nhiều người trong khung hình",
+  cell_phone: "Phát hiện sử dụng điện thoại",
+  looking_left: "Quay mặt sang trái",
+  looking_right: "Quay mặt sang phải",
+  looking_down: "Cúi nhìn tài liệu",
+  head_down_deep: "Gập đầu hoặc quay lưng"
+};
+
+export function useProctoring(
+  videoRef: React.RefObject<HTMLVideoElement>,
+  examCode: string,
+  isActive: boolean,
+  isRecordingEnabled: boolean = false
+) {
+  const [currentViolations, setCurrentViolations] = useState<ViolationType[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    if (!canvasRef.current) {
+      canvasRef.current = document.createElement("canvas");
+      canvasRef.current.width = 320;
+      canvasRef.current.height = 240;
+    }
+
+    if (!isActive || !videoRef.current || !examCode) return;
+
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const studentId = user.id || "unknown";
+    const studentName = encodeURIComponent(user.name || user.fullName || "Học sinh");
+
+    // Kết nối WebSocket tới AI Service
+    const wsUrl = `ws://localhost:8001/ws/detect/${examCode}/${studentId}?student_name=${studentName}&record=${isRecordingEnabled}`;
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => console.log("✅ Đã kết nối WebSocket tới AI Service");
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        setCurrentViolations(data.currentViolations || []);
+      } catch (e) {}
+    };
+
+    ws.onerror = (e) => console.error("Lỗi WebSocket AI Service:", e);
+    ws.onclose = () => console.log("Ngắt kết nối WebSocket AI Service");
+
+    const sendFrame = () => {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const base64Image = canvas.toDataURL("image/jpeg", 0.6);
+      
+      ws.send(base64Image);
+    };
+
+    // Gửi liên tục 3 khung hình / giây (~333ms)
+    const interval = setInterval(sendFrame, 333);
+
+    return () => {
+      clearInterval(interval);
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [isActive, examCode, videoRef]);
+
+  return { currentViolations };
+}
