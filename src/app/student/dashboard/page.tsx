@@ -21,7 +21,10 @@ export default function StudentDashboard() {
 
   const fetchResults = async (studentId: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/results/student/${studentId}`);
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`http://localhost:8088/api/exams/results/student/${studentId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setResults(data);
@@ -46,7 +49,10 @@ export default function StudentDashboard() {
     setError("");
     try {
       // Kiểm tra phòng tồn tại và đủ điều kiện qua lobby endpoint
-      const res = await fetch(`http://localhost:8088/api/exams/lobby/${accessCode.toUpperCase()}`);
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`http://localhost:8088/api/exams/lobby/${accessCode.toUpperCase()}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       if (res.ok) {
         // Phòng hợp lệ → đưa vào phòng chờ
         window.location.href = `/student/lobby?code=${accessCode.toUpperCase()}`;

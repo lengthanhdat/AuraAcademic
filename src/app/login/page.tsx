@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,12 +29,15 @@ export default function LoginPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.error || "Email hoặc mật khẩu không đúng");
+        const errMsg = data.message || data.error || "Email hoặc mật khẩu không đúng"; if(errMsg.includes("chưa được xác thực")) { router.push(`/verify-email?email=${formData.email}`); } else { setError(errMsg); }
       } else {
         localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        
         if (data.user?.role === "admin") {
           router.push("/admin/dashboard");
         } else if (data.user?.role === "teacher") {
@@ -109,10 +113,38 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-4">
-              <button className="w-full flex items-center justify-center gap-3 py-3.5 px-6 rounded-xl bg-surface-container-lowest text-on-surface font-semibold shadow-sm hover:bg-surface-container-low transition-all duration-200 border border-outline-variant/10">
-                <img alt="Google Logo" className="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkETuhCwUCO3LlSI5x4rYD7wYPqvAMv18XbXfFiHLHjVCg6bGa-gwY51G_UK0YcpB-UhLLooCBK4kZrGeh2bWtK_ETldfE2GU6UO6r9XCcd5FWZ0H5i8Q03Ra50jUUcNufe_KCccQXJi7cNO3GFXqIQJ1u5VObcyNzs8oF5vcljG9iism0tNnz4l9Z425Syek5L5-QlTFspdEFQgafPxtVyLFoTQ0kE-hWMyC4VxgHJDht5irqG5FlO_8yg3B-BfbOzs6lZI2NXRc" />
-                <span>Tiếp tục với Google</span>
-              </button>
+              <div className="w-full flex justify-center py-2">
+              <GoogleOAuthProvider clientId="968516051128-f6mp8otaud9f3jvkf63k4evef8995iq3.apps.googleusercontent.com">
+                <GoogleLogin 
+                  onSuccess={async (creds) => {
+                    try {
+                      const r = await fetch("http://localhost:8088/api/auth/google", {
+                        method: "POST", headers: {"Content-Type":"application/json"},
+                        body: JSON.stringify({idToken: creds.credential})
+                      });
+                      if (r.ok) { 
+                        const data = await r.json();
+                        localStorage.setItem("user", JSON.stringify(data.user));
+                        localStorage.setItem("accessToken", data.accessToken);
+                        localStorage.setItem("refreshToken", data.refreshToken);
+                        alert("Đăng nhập Google thành công!"); 
+                        if (data.user?.role === "admin") {
+                          router.push("/admin/dashboard");
+                        } else if (data.user?.role === "teacher") {
+                          router.push("/teacher/dashboard");
+                        } else {
+                          router.push("/student/dashboard");
+                        }
+                      }
+                      else alert("Đăng nhập thất bại");
+                    } catch(e) {}
+                  }}
+                  onError={() => alert("Google Login Failed")}
+                  text="signin_with"
+                  width="100%"
+                />
+              </GoogleOAuthProvider>
+            </div>
 
               <div className="flex items-center gap-4 py-2">
                 <div className="flex-grow h-[1px] bg-outline-variant/20"></div>

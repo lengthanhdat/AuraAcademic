@@ -40,8 +40,12 @@ export default function StudentProfile() {
         department: u.department || ""
       });
       
+      const token = localStorage.getItem("accessToken");
+      
       // Fetch kết quả thi
-      fetch(`http://localhost:8088/api/exams/results/student/${u.id}`)
+      fetch(`http://localhost:8088/api/exams/results/student/${u.id}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
@@ -57,9 +61,13 @@ export default function StudentProfile() {
     setSaving(true);
     setProfileMsg({ type: "", text: "" });
     try {
-      const res = await fetch(`http://localhost:8088/api/auth/profile/${user.id}`, {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`http://localhost:8088/api/users/me`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(form),
       });
       if (res.ok) {
@@ -88,9 +96,13 @@ export default function StudentProfile() {
     }
     setChangingPw(true);
     try {
-      const res = await fetch(`http://localhost:8088/api/auth/change-password/${user.id}`, {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`http://localhost:8088/api/users/me/password`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
       });
       if (res.ok) {

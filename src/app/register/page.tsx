@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 export default function Register() {
   const router = useRouter();
@@ -33,21 +34,18 @@ export default function Register() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.error || "Có lỗi xảy ra khi đăng ký");
-      } else {
-        // Lưu thông tin tạm
-        localStorage.setItem("user", JSON.stringify(data.user));
-        // Chuyển hướng
-        if (role === "student") {
-          router.push("/student/dashboard");
-        } else if (role === "teacher") {
-          router.push("/teacher/dashboard");
+        if (data.fieldErrors) {
+          setError(Object.values(data.fieldErrors).join(", "));
         } else {
-          router.push("/admin/dashboard");
+          setError(data.message || data.error || "Có lỗi xảy ra khi đăng ký");
         }
+      } else {
+        // Đăng ký thành công, yêu cầu xác thực email
+        alert("Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực tài khoản.");
+        router.push(`/verify-email?email=${formData.email}`);
       }
     } catch (err) {
       setError("Không thể kết nối đến máy chủ");
@@ -128,15 +126,43 @@ export default function Register() {
               </button>
             </div>
 
-            <button className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl hover:bg-surface-container-low transition-all duration-200 active:scale-[0.98]">
-              <img alt="Google Logo" className="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSm0Mz3AD5hQpHkrckcSofK92ZwdOGI8IDSQlHp1kZMYZddUFV1_BYUPbN944AYUNbORyUCzEqyAzTEcGFKeLtJouRpOh6wwY2vq_SCOMJ_G4iLZoumC3e9NMfpVx1k_ij4XvDDASh_cT_F9WLye_5YA-rCuBERFWzeuvj1vlbcjPUafv-oDfPG4VVYJv3mAqyuP0Etp5EyZMnFyMLV8SYgJlpHAtyG_hYffHcCuS1HGZMiJ94YAEQzvsrsQcyquqtkPod6q_sI00"/>
-              <span className="text-on-surface font-semibold text-sm">Tiếp tục với Google</span>
-            </button>
+            <div className="w-full flex justify-center py-2">
+              <GoogleOAuthProvider clientId="968516051128-f6mp8otaud9f3jvkf63k4evef8995iq3.apps.googleusercontent.com">
+                <GoogleLogin 
+                  onSuccess={async (creds) => {
+                    try {
+                      const r = await fetch("http://localhost:8088/api/auth/google", {
+                        method: "POST", headers: {"Content-Type":"application/json"},
+                        body: JSON.stringify({idToken: creds.credential})
+                      });
+                      if (r.ok) { 
+                        const data = await r.json();
+                        localStorage.setItem("user", JSON.stringify(data.user));
+                        localStorage.setItem("accessToken", data.accessToken);
+                        localStorage.setItem("refreshToken", data.refreshToken);
+                        alert("Đăng nhập Google thành công!"); 
+                        if (data.user?.role === "admin") {
+                          router.push("/admin/dashboard");
+                        } else if (data.user?.role === "teacher") {
+                          router.push("/teacher/dashboard");
+                        } else {
+                          router.push("/student/dashboard");
+                        }
+                      }
+                      else alert("Đăng nhập thất bại");
+                    } catch(e) {}
+                  }}
+                  onError={() => alert("Google Login Failed")}
+                  text="signup_with"
+                  width="100%"
+                />
+              </GoogleOAuthProvider>
+            </div>
 
             <div className="relative flex items-center py-2">
               <div className="flex-grow border-t border-outline-variant/20"></div>
               <span className="flex-shrink mx-4 text-xs font-bold text-on-surface-variant tracking-widest">HOẶC</span>
-              <div class="flex-grow border-t border-outline-variant/20"></div>
+              <div className="flex-grow border-t border-outline-variant/20"></div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">

@@ -43,8 +43,12 @@ export default function TeacherProfile() {
         schedule: u.schedule || ""
       });
 
+      const token = localStorage.getItem("accessToken");
+
       // Fetch danh sách kỳ thi của giảng viên
-      fetch(`http://localhost:8088/api/exams/teacher/${u.id}`)
+      fetch(`http://localhost:8088/api/exams/teacher/${u.id}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) setExams(data);
@@ -58,9 +62,13 @@ export default function TeacherProfile() {
     setSaving(true);
     setProfileMsg({ type: "", text: "" });
     try {
-      const res = await fetch(`http://localhost:8088/api/auth/profile/${user.id}`, {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`http://localhost:8088/api/users/me`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ 
           fullName: form.fullName,
           phoneNumber: form.phoneNumber,
@@ -108,9 +116,13 @@ export default function TeacherProfile() {
     }
     setChangingPw(true);
     try {
-      const res = await fetch(`http://localhost:8088/api/auth/change-password/${user.id}`, {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`http://localhost:8088/api/users/me/password`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
       });
       const data = await res.json();

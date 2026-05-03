@@ -31,7 +31,10 @@ export default function StudentLobby() {
     isEnteringRef.current = true;
     setIsEntering(true);
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/join/${accessCode}`);
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`http://localhost:8088/api/exams/join/${accessCode}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       if (res.ok) {
         const versionData = await res.json();
         sessionStorage.setItem("currentExam", JSON.stringify(versionData));
@@ -51,7 +54,8 @@ export default function StudentLobby() {
 
   const startSSE = (examCode: string) => {
     if (esRef.current) return;
-    const es = new EventSource(`http://localhost:8088/api/exams/${examCode}/stream`);
+    const token = localStorage.getItem("accessToken");
+    const es = new EventSource(`http://localhost:8088/api/exams/${examCode}/stream?token=${token}`);
     esRef.current = es;
 
     es.addEventListener("status", (e) => {
@@ -78,7 +82,10 @@ export default function StudentLobby() {
 
     const fetchLobbyInfo = async () => {
       try {
-        const res = await fetch(`http://localhost:8088/api/exams/lobby/${code}`);
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(`http://localhost:8088/api/exams/lobby/${code}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
         if (res.ok) {
           const data = await res.json();
           setExamInfo(data);
@@ -103,17 +110,25 @@ export default function StudentLobby() {
     if (!user.id) return;
 
     const sendHeartbeat = () => {
+      const token = localStorage.getItem("accessToken");
       fetch(`http://localhost:8088/api/exams/${code}/heartbeat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ studentId: user.id }),
       }).catch(() => {});
     };
 
     const sendLeaveFetch = () => {
+      const token = localStorage.getItem("accessToken");
       fetch(`http://localhost:8088/api/exams/${code}/leave`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ studentId: user.id }),
       }).catch(() => {});
     };

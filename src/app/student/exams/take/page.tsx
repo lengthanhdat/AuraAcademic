@@ -100,9 +100,13 @@ export default function TakeExam() {
     if (!user.id) return;
 
     const sendHeartbeat = () => {
+      const token = localStorage.getItem("accessToken");
       fetch(`http://localhost:8088/api/exams/${accessCode}/heartbeat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ studentId: user.id })
       }).catch(() => {}); // Bỏ qua lỗi mạng, không ảnh hưởng bài thi
     };
@@ -190,9 +194,13 @@ export default function TakeExam() {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
       // 2. GỬI KẾT QUẢ LÊN BACKEND
+      const token = localStorage.getItem("accessToken");
       const res = await fetch("http://localhost:8088/api/exams/submit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           examId: accessCode, 
           studentId: user.id,

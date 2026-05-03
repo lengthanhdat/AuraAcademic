@@ -13,9 +13,10 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("accessToken");
 
-    if (!storedUser) {
-      // Chua dang nhap -> ve trang login
+    if (!storedUser || !token) {
+      // Chua dang nhap hoac mat token -> ve trang login
       router.replace("/login");
       return;
     }
@@ -30,6 +31,8 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       setIsAuthorized(true);
     } catch {
       localStorage.removeItem("user");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       router.replace("/login");
     }
   }, []);
