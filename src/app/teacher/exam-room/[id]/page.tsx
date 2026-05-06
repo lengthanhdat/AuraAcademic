@@ -27,8 +27,12 @@ export default function TeacherExamRoom() {
     head_down_deep: "Gập đầu hoặc quay lưng"
   };
 
+  const getToken = () => localStorage.getItem("accessToken") || "";
+
   const fetchExam = async () => {
-    const res = await fetch(`http://localhost:8088/api/exams/${examId}`);
+    const res = await fetch(`http://localhost:8088/api/exams/${examId}`, {
+      headers: { "Authorization": `Bearer ${getToken()}` }
+    });
     if (res.ok) setExam(await res.json());
   };
 
@@ -79,21 +83,27 @@ export default function TeacherExamRoom() {
 
   const fetchActiveCount = async (code: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${code}/active-count`);
+      const res = await fetch(`http://localhost:8088/api/exams/${code}/active-count`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      });
       if (res.ok) { const d = await res.json(); setActiveCount(d.activeCount || 0); }
     } catch {}
   };
 
   const fetchResults = async (code: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${code}/results`);
+      const res = await fetch(`http://localhost:8088/api/exams/${code}/results`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      });
       if (res.ok) setResults(await res.json());
     } catch {}
   };
 
   const fetchViolations = async (code: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${code}/violations`);
+      const res = await fetch(`http://localhost:8088/api/exams/${code}/violations`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      });
       if (res.ok) setViolations(await res.json());
     } catch {}
   };
@@ -103,7 +113,10 @@ export default function TeacherExamRoom() {
     setIsStarting(true);
     setMsg({ type: "", text: "" });
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${examId}/start`, { method: "POST" });
+      const res = await fetch(`http://localhost:8088/api/exams/${examId}/start`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      });
       if (res.ok) {
         setMsg({ type: "success", text: "Bài thi đã bắt đầu! Học sinh sẽ tự động được chuyển vào phòng thi." });
         fetchExam();
@@ -121,7 +134,10 @@ export default function TeacherExamRoom() {
     if (!confirm("Bạn có chắc chắn muốn đóng phòng thi không?")) return;
     setIsClosing(true);
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${examId}/close`, { method: "POST" });
+      const res = await fetch(`http://localhost:8088/api/exams/${examId}/close`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      });
       if (res.ok) {
         setMsg({ type: "success", text: "Phòng thi đã được đóng." });
         fetchExam();

@@ -105,6 +105,7 @@ export default function ExamBuilder() {
 
       const uploadRes = await fetch("http://localhost:8088/api/ai/generate-questions", {
         method: "POST",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` },
         body: formData,
       });
       const uploadData = await uploadRes.json();
@@ -149,7 +150,9 @@ export default function ExamBuilder() {
       }
 
       try {
-        const pollRes = await fetch(`http://localhost:8088/api/ai/jobs/${jobId}`);
+        const pollRes = await fetch(`http://localhost:8088/api/ai/jobs/${jobId}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
+        });
         if (!pollRes.ok) return; // Tạm thời bỏ qua lỗi mạng nhất thời
 
         const job = await pollRes.json();
@@ -225,13 +228,53 @@ export default function ExamBuilder() {
     }, 100);
   };
 
+  const addOption = (qIdx: number) => {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIdx) return q;
+      const newOptionId = Date.now().toString();
+      return {
+        ...q,
+        options: [...(q.options || []), { id: newOptionId, text: `Đáp án mới`, isCorrect: false }]
+      };
+    }));
+  };
+
+  const deleteOption = (qIdx: number, oIdx: number) => {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIdx) return q;
+      const newOptions = (q.options || []).filter((_, j) => j !== oIdx);
+      if (q.options[oIdx]?.isCorrect && newOptions.length > 0) {
+        newOptions[0].isCorrect = true;
+      }
+      return { ...q, options: newOptions };
+    }));
+  };
+
+  const handleImageUpload = (qIdx: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = event.target?.result as string;
+      setQuestions(prev => prev.map((q, i) => i === qIdx ? { ...q, imageUrl: base64String } : q));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = (qIdx: number) => {
+    setQuestions(prev => prev.map((q, i) => i === qIdx ? { ...q, imageUrl: undefined } : q));
+  };
+
   const handleAIChat = async () => {
     if (!aiCommand.trim()) return;
     setIsAiLoading(true);
     try {
       const res = await fetch("http://localhost:8088/api/ai/chat-refine", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
         body: JSON.stringify({
           command: aiCommand,
           documentText: extractedText,
@@ -279,7 +322,10 @@ export default function ExamBuilder() {
 
       const res = await fetch("http://localhost:8088/api/exams", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
         body: JSON.stringify({ 
           title, 
           duration, 
@@ -453,16 +499,29 @@ export default function ExamBuilder() {
                   <div className="text-base font-medium text-slate-800 max-w-none mb-2">
                     {renderContentWithImages(q.text)}
                   </div>
-                  {/* Textarea ẩn để vẫn chỉnh sửa được nội dung */}
-                  <details className="mt-1">
-                    <summary className="text-xs text-blue-500 cursor-pointer hover:underline">✏️ Chỉnh sửa nội dung câu hỏi</summary>
-                    <textarea
-                      className="w-full mt-2 text-sm text-slate-700 border border-slate-200 rounded-lg p-2 resize-none outline-none bg-slate-50 focus:ring-2 focus:ring-blue-200 leading-relaxed font-mono"
-                      rows={5}
-                      value={q.text}
-                      onChange={e => updateQuestion(qIdx, e.target.value)}
-                    />
-                  </details>
+                  {/* Textarea ẩn để vẫn chỉnh sửa được nội dung & Nút thêm ảnh */}
+                  <div className="flex flex-wrap items-start gap-4 mt-1">
+                    <details className="flex-1">
+                      <summary className="text-xs text-blue-500 cursor-pointer hover:underline">✏️ Chỉnh sửa nội dung câu hỏi</summary>
+                      <textarea
+                        className="w-full mt-2 text-sm text-slate-700 border border-slate-200 rounded-lg p-2 resize-none outline-none bg-slate-50 focus:ring-2 focus:ring-blue-200 leading-relaxed font-mono"
+                        rows={5}
+                        value={q.text}
+                        onChange={e => updateQuestion(qIdx, e.target.value)}
+                      />
+                    </details>
+                    <label className="text-xs font-bold text-blue-600 cursor-pointer hover:bg-blue-100 flex items-center gap-1.5 border border-blue-200 px-3 py-2 rounded-xl bg-blue-50 transition-colors shadow-sm shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">image</span>
+                      {q.imageUrl ? "Đổi hình" : "Thêm hình"}
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(qIdx, e)} />
+                    </label>
+                    {q.imageUrl && (
+                      <button onClick={() => removeImage(qIdx)} className="text-xs font-bold text-red-600 cursor-pointer hover:bg-red-100 flex items-center gap-1.5 border border-red-200 px-3 py-2 rounded-xl bg-red-50 transition-colors shadow-sm shrink-0">
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        Xóa hình
+                      </button>
+                    )}
+                  </div>
                 {q.imageUrl && (
                   <div className="mt-2 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
                     <img src={q.imageUrl} alt={`Hình minh họa câu ${qIdx + 1}`} className="max-w-full max-h-48 object-contain mx-auto block p-2" />
@@ -498,9 +557,16 @@ export default function ExamBuilder() {
                       opt.isCorrect ? 'font-bold text-green-900' : 'text-slate-700'
                     }`}
                   />
-                  {opt.isCorrect && <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">Đúng</span>}
+                  {opt.isCorrect && <span className="text-[10px] font-black text-green-600 uppercase tracking-widest shrink-0">Đúng</span>}
+                  <button onClick={(e) => { e.stopPropagation(); deleteOption(qIdx, oIdx); }} className="text-slate-300 hover:text-red-500 transition-colors p-1 shrink-0">
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                  </button>
                 </div>
               ))}
+              <button onClick={() => addOption(qIdx)} className="flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-300 transition-all cursor-pointer bg-slate-50 hover:bg-blue-50/50">
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                <span className="text-sm font-bold">Thêm đáp án</span>
+              </button>
             </div>
           </div>
         ))}
