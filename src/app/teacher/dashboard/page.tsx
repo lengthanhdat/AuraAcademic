@@ -22,7 +22,11 @@ export default function TeacherDashboard() {
 
   const fetchExams = async (teacherId: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/teacher/${teacherId}`);
+      const res = await fetch(`http://localhost:8088/api/exams/teacher/${teacherId}`, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setExams(data);
@@ -48,7 +52,11 @@ export default function TeacherDashboard() {
       const updates: Record<string, number> = {};
       await Promise.all(liveExams.map(async (exam) => {
         try {
-          const res = await fetch(`http://localhost:8088/api/exams/${exam.accessCode}/active-count`);
+          const res = await fetch(`http://localhost:8088/api/exams/${exam.accessCode}/active-count`, {
+            headers: {
+              "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+            }
+          });
           if (res.ok) {
             const data = await res.json();
             updates[exam.accessCode] = data.activeCount;
@@ -66,7 +74,12 @@ export default function TeacherDashboard() {
   const deleteExam = async (id: string) => {
     if (!confirm("Ban co chac chan muon xoa ky thi nay?")) return;
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${id}`, { method: "DELETE" });
+      const res = await fetch(`http://localhost:8088/api/exams/${id}`, { 
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        }
+      });
       if (res.ok) {
         setExams(prev => prev.filter(e => e.id !== id));
       }
@@ -78,7 +91,12 @@ export default function TeacherDashboard() {
   const closeExam = async (id: string) => {
     if (!confirm("Dong phong thi nay? Hoc sinh se khong vao lam bai duoc nua.")) return;
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${id}/close`, { method: "POST" });
+      const res = await fetch(`http://localhost:8088/api/exams/${id}/close`, { 
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        }
+      });
       if (res.ok) {
         setExams(prev => prev.map(e => e.id === id ? { ...e, status: 'FINISHED' } : e));
       }
@@ -90,7 +108,12 @@ export default function TeacherDashboard() {
   const reopenExam = async (id: string) => {
     if (!confirm("Mo lai phong thi nay?")) return;
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${id}/reopen`, { method: "POST" });
+      const res = await fetch(`http://localhost:8088/api/exams/${id}/reopen`, { 
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        }
+      });
       if (res.ok) {
         setExams(prev => prev.map(e => e.id === id ? { ...e, status: 'PUBLISHED' } : e));
       }
@@ -158,7 +181,10 @@ export default function TeacherDashboard() {
             <span className="text-5xl font-black text-[#00355f] font-headline">{activeExamsCount}</span>
             <span className="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 rounded-full">LIVE NOW</span>
           </div>
-          <div className="mt-6 flex items-center gap-2 text-[#00355f] text-sm font-semibold cursor-pointer hover:underline">
+          <div 
+            onClick={() => router.push("/teacher/monitoring")}
+            className="mt-6 flex items-center gap-2 text-[#00355f] text-sm font-semibold cursor-pointer hover:underline"
+          >
             <span>Chi tiết giám sát</span>
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </div>
@@ -174,8 +200,11 @@ export default function TeacherDashboard() {
             <span className="text-5xl font-black text-on-surface font-headline">{draftExamsCount}</span>
             <span className="text-on-surface-variant text-sm font-medium">Đang chỉnh sửa</span>
           </div>
-          <div className="mt-6 flex items-center gap-2 text-on-surface-variant text-sm font-semibold cursor-pointer hover:underline">
-            <span>Xem kết quả lưu trữ</span>
+          <div 
+            onClick={() => router.push("/teacher/reports")}
+            className="mt-6 flex items-center gap-2 text-on-surface-variant text-sm font-semibold cursor-pointer hover:underline"
+          >
+            <span>Xem báo cáo chi tiết</span>
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </div>
         </div>
@@ -316,7 +345,14 @@ export default function TeacherDashboard() {
                           return (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 text-[10px] font-black uppercase tracking-wider">
                               <span className="material-symbols-outlined text-[12px]">lock</span>
-                              Da dong
+                              Đã đóng
+                            </span>
+                          );
+                        } else if (exam.status === 'COMPLETED') {
+                          return (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-black uppercase tracking-wider">
+                              <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                              Đã kết thúc
                             </span>
                           );
                         } else {
@@ -330,49 +366,6 @@ export default function TeacherDashboard() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {(exam.status === 'PUBLISHED' || exam.status === 'WAITING' || exam.status === 'STARTED') && (
-                          <>
-                            <button 
-                              onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
-                              className="p-2 text-on-surface-variant hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" 
-                              title="Quản lý phòng thi"
-                            >
-                              <span className="material-symbols-outlined text-xl">meeting_room</span>
-                            </button>
-                            <button 
-                              onClick={() => router.push(`/teacher/exams/results/${exam.accessCode}`)}
-                              className="p-2 text-on-surface-variant hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" 
-                              title="Thống kê điểm số"
-                            >
-                              <span className="material-symbols-outlined text-xl">bar_chart</span>
-                            </button>
-                            <button 
-                              onClick={() => closeExam(exam.id)}
-                              className="p-2 text-on-surface-variant hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" 
-                              title="Đóng phòng thi"
-                            >
-                              <span className="material-symbols-outlined text-xl">lock</span>
-                            </button>
-                          </>
-                        )}
-                        {exam.status === 'FINISHED' && (
-                          <>
-                            <button 
-                              onClick={() => router.push(`/teacher/exams/results/${exam.accessCode}`)}
-                              className="p-2 text-on-surface-variant hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" 
-                              title="Thong ke diem so"
-                            >
-                              <span className="material-symbols-outlined text-xl">bar_chart</span>
-                            </button>
-                            <button 
-                              onClick={() => reopenExam(exam.id)}
-                              className="p-2 text-on-surface-variant hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" 
-                              title="Mo lai phong thi"
-                            >
-                              <span className="material-symbols-outlined text-xl">lock_open</span>
-                            </button>
-                          </>
-                        )}
                         <button 
                           onClick={() => viewExam(exam)}
                           className="p-2 text-on-surface-variant hover:text-[#00355f] hover:bg-blue-50 rounded-lg transition-all" 

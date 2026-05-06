@@ -18,7 +18,11 @@ export default function ExamResults() {
 
   const fetchResults = async (accessCode: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${accessCode}/results`);
+      const res = await fetch(`http://localhost:8088/api/exams/${accessCode}/results`, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         data.sort((a: any, b: any) => b.score - a.score);

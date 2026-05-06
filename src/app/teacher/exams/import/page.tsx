@@ -59,7 +59,7 @@ export default function ImportFromFile() {
   const processFile = (file: File) => {
     const name = file.name.toLowerCase();
     if (!name.endsWith(".docx") && !name.endsWith(".pdf")) {
-      setUploadError("Chi ho tro file DOCX va PDF.");
+      setUploadError("Chỉ hỗ trợ file DOCX và PDF.");
       return;
     }
     setUploadError("");
@@ -79,7 +79,7 @@ export default function ImportFromFile() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setUploadError(data.error || "Loi khi xu ly file");
+        setUploadError(data.error || "Lỗi khi xử lý file");
         return;
       }
       const qs: ParsedQuestion[] = data.questions || [];
@@ -88,7 +88,7 @@ export default function ImportFromFile() {
       setSelected(new Set(qs.map((q) => q.id)));
       setStep("preview");
     } catch {
-      setUploadError("Khong the ket noi den server. Vui long kiem tra backend.");
+      setUploadError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra backend.");
     } finally {
       setUploading(false);
     }
@@ -134,9 +134,9 @@ export default function ImportFromFile() {
   // ─── Create Exam ──────────────────────────────────────────────────
 
   const handleCreateExam = async () => {
-    if (!examTitle.trim()) { setCreateError("Vui long nhap ten bai kiem tra"); return; }
+    if (!examTitle.trim()) { setCreateError("Vui lòng nhập tên bài kiểm tra"); return; }
     const selectedQs = questions.filter((q) => selected.has(q.id));
-    if (selectedQs.length === 0) { setCreateError("Vui long chon it nhat 1 cau hoi"); return; }
+    if (selectedQs.length === 0) { setCreateError("Vui lòng chọn ít nhất 1 câu hỏi"); return; }
 
     setCreating(true);
     setCreateError("");
@@ -146,7 +146,7 @@ export default function ImportFromFile() {
       // Chuyen doi ParsedQuestion sang format Exam cua he thong
       const formattedQuestions = selectedQs.map((q, idx) => ({
         id: String(idx + 1),
-        type: "Trac nghiem",
+        type: "Trắc nghiệm",
         text: q.text,
         imageUrl: q.imageBase64 || null,
         options: q.options.map((o) => ({
@@ -182,10 +182,10 @@ export default function ImportFromFile() {
         router.push("/teacher/dashboard");
       } else {
         const err = await res.json();
-        setCreateError(err.message || "Loi khi tao bai kiem tra");
+        setCreateError(err.message || "Lỗi khi tạo bài kiểm tra");
       }
     } catch {
-      setCreateError("Khong the ket noi den server.");
+      setCreateError("Không thể kết nối đến máy chủ.");
     } finally {
       setCreating(false);
     }
@@ -204,17 +204,17 @@ export default function ImportFromFile() {
           <span className="material-symbols-outlined text-slate-600">arrow_back</span>
         </button>
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Nhap Cau Hoi Tu File</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Upload DOCX/PDF, he thong tu dong trich xuat cau hoi — khong can AI.</p>
+          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Nhập Câu Hỏi Từ File</h1>
+          <p className="text-slate-500 text-sm mt-0.5">Tải lên DOCX/PDF, hệ thống tự động trích xuất câu hỏi — không cần AI.</p>
         </div>
       </div>
 
       {/* Step Indicator */}
       <div className="flex items-center gap-0 mb-10 max-w-lg">
         {[
-          { key: "upload", label: "1. Upload File" },
-          { key: "preview", label: "2. Xem & Chon" },
-          { key: "create", label: "3. Tao De Thi" },
+          { key: "upload", label: "1. Tải lên File" },
+          { key: "preview", label: "2. Xem & Chọn" },
+          { key: "create", label: "3. Tạo Đề Thi" },
         ].map((s, i) => (
           <div key={s.key} className="flex items-center">
             <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${step === s.key ? "bg-blue-600 text-white shadow-md" : (["upload", "preview", "create"].indexOf(step) > i ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-400")}`}>
@@ -239,8 +239,8 @@ export default function ImportFromFile() {
             className={`border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all ${dragging ? "border-blue-500 bg-blue-50 scale-[1.01]" : "border-slate-300 hover:border-blue-400 hover:bg-blue-50/50"}`}
           >
             <span className="material-symbols-outlined text-6xl text-slate-400 mb-4 block">upload_file</span>
-            <p className="text-lg font-bold text-slate-700">Keo tha hoac click de chon file</p>
-            <p className="text-slate-400 text-sm mt-2">Ho tro: DOCX, PDF · Toi da 30MB</p>
+            <p className="text-lg font-bold text-slate-700">Kéo thả hoặc nhấn để chọn file</p>
+            <p className="text-slate-400 text-sm mt-2">Hỗ trợ: DOCX, PDF · Tối đa 30MB</p>
             <input ref={fileInputRef} type="file" accept=".docx,.pdf" className="hidden" onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])} />
           </div>
 
@@ -266,12 +266,12 @@ export default function ImportFromFile() {
           )}
 
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
-            <p className="font-bold mb-1">Dinh dang cau hoi duoc ho tro:</p>
+            <p className="font-bold mb-1">Định dạng câu hỏi được hỗ trợ:</p>
             <p className="font-mono text-xs leading-relaxed">
-              Câu 1: Noi dung cau hoi...<br/>
-              A. Dap an A&nbsp;&nbsp;B. Dap an B&nbsp;&nbsp;C. Dap an C&nbsp;&nbsp;D. Dap an D<br/>
+              Câu 1: Nội dung câu hỏi...<br/>
+              A. Đáp án A&nbsp;&nbsp;B. Đáp án B&nbsp;&nbsp;C. Đáp án C&nbsp;&nbsp;D. Đáp án D<br/>
               <br/>
-              Giao vien co the to dam dap an dung trong DOCX hoac them dau * cuoi dap an dung.
+              Giáo viên có thể tô đậm đáp án đúng trong DOCX hoặc thêm dấu * cuối đáp án đúng.
             </p>
           </div>
 
@@ -281,8 +281,8 @@ export default function ImportFromFile() {
             className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-3"
           >
             {uploading
-              ? <><svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Dang phan tich file...</>
-              : <><span className="material-symbols-outlined">auto_fix_high</span>Trich Xuat Cau Hoi</>
+              ? <><svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Đang phân tích file...</>
+              : <><span className="material-symbols-outlined">auto_fix_high</span>Trích Xuất Câu Hỏi</>
             }
           </button>
         </div>
@@ -294,18 +294,18 @@ export default function ImportFromFile() {
           {/* Toolbar */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="font-black text-slate-800 text-lg">Ket qua trich xuat: <span className="text-blue-600">{totalCount} cau hoi</span></p>
-              <p className="text-slate-400 text-sm">Da chon: <span className="text-green-600 font-bold">{selectedCount}</span> / {totalCount}</p>
+              <p className="font-black text-slate-800 text-lg">Kết quả trích xuất: <span className="text-blue-600">{totalCount} câu hỏi</span></p>
+              <p className="text-slate-400 text-sm">Đã chọn: <span className="text-green-600 font-bold">{selectedCount}</span> / {totalCount}</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={selectAll} className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-200 transition-all">Chon Tat Ca</button>
-              <button onClick={deselectAll} className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-200 transition-all">Bo Chon Het</button>
+              <button onClick={selectAll} className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-200 transition-all">Chọn Tất Cả</button>
+              <button onClick={deselectAll} className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-200 transition-all">Bỏ Chọn Hết</button>
               <button
                 onClick={() => { if (selectedCount > 0) setStep("create"); }}
                 disabled={selectedCount === 0}
                 className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center gap-2"
               >
-                Tiep Theo <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                Tiếp Theo <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </div>
           </div>
@@ -325,13 +325,13 @@ export default function ImportFromFile() {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Cau {idx + 1}</span>
+                        <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Câu {idx + 1}</span>
                         <button
                           onClick={() => setEditingId(editingId === q.id ? null : q.id)}
                           className="text-xs text-blue-600 hover:underline font-bold flex items-center gap-1"
                         >
                           <span className="material-symbols-outlined text-sm">{editingId === q.id ? "visibility" : "edit"}</span>
-                          {editingId === q.id ? "Xem" : "Sua"}
+                          {editingId === q.id ? "Xem" : "Sửa"}
                         </button>
                       </div>
 
@@ -363,7 +363,7 @@ export default function ImportFromFile() {
                       {/* Question image */}
                       {q.imageBase64 && (
                         <div className="mt-3">
-                          <img src={q.imageBase64} alt="Hinh anh cau hoi" className="max-h-48 rounded-lg border border-slate-200 object-contain" />
+                          <img src={q.imageBase64} alt="Hình ảnh câu hỏi" className="max-h-48 rounded-lg border border-slate-200 object-contain" />
                         </div>
                       )}
                     </div>
@@ -386,7 +386,7 @@ export default function ImportFromFile() {
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => updateOptionText(q.id, opt.id, e.target.value)}
                             className="flex-1 text-sm bg-transparent border-none outline-none text-slate-700"
-                            placeholder={`Dap an ${opt.label}`}
+                            placeholder={`Đáp án ${opt.label}`}
                           />
                         ) : (
                           <div className={`text-sm flex-1 ${opt.isCorrect ? "text-green-700 font-bold" : "text-slate-700"}`}>
@@ -410,7 +410,7 @@ export default function ImportFromFile() {
                   {!q.options.some(o => o.isCorrect) && (
                     <p className="text-xs text-amber-600 font-bold mt-3 pl-9 flex items-center gap-1">
                       <span className="material-symbols-outlined text-sm">warning</span>
-                      Chua chon dap an dung. Click vao dap an de danh dau.
+                      Chưa chọn đáp án đúng. Click vào đáp án để đánh dấu.
                     </p>
                   )}
                 </div>
@@ -420,15 +420,15 @@ export default function ImportFromFile() {
 
           {/* Bottom bar */}
           <div className="sticky bottom-4 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 flex items-center justify-between">
-            <p className="font-bold text-slate-600 text-sm">Da chon <span className="text-blue-600">{selectedCount}</span> cau hoi</p>
+            <p className="font-bold text-slate-600 text-sm">Đã chọn <span className="text-blue-600">{selectedCount}</span> câu hỏi</p>
             <div className="flex gap-3">
-              <button onClick={() => { setStep("upload"); setQuestions([]); setSelected(new Set()); }} className="px-4 py-2 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all">Quay Lai</button>
+              <button onClick={() => { setStep("upload"); setQuestions([]); setSelected(new Set()); }} className="px-4 py-2 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all">Quay Lại</button>
               <button
                 onClick={() => { if (selectedCount > 0) setStep("create"); }}
                 disabled={selectedCount === 0}
                 className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center gap-2"
               >
-                Tiep Theo ({selectedCount} cau) <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                Tiếp Theo ({selectedCount} câu) <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </div>
           </div>
@@ -440,8 +440,8 @@ export default function ImportFromFile() {
         <div className="max-w-xl mx-auto">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
             <div>
-              <h2 className="text-2xl font-black text-slate-800">Tao De Thi</h2>
-              <p className="text-slate-400 text-sm mt-1">Da chon <span className="font-bold text-blue-600">{selectedCount}</span> cau hoi tu file. Dien thong tin de hoan tat.</p>
+              <h2 className="text-2xl font-black text-slate-800">Tạo Đề Thi</h2>
+              <p className="text-slate-400 text-sm mt-1">Đã chọn <span className="font-bold text-blue-600">{selectedCount}</span> câu hỏi từ file. Điền thông tin để hoàn tất.</p>
             </div>
 
             {createError && (
@@ -473,22 +473,22 @@ export default function ImportFromFile() {
             {/* Summary */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-blue-700">So cau hoi:</span>
+                <span className="text-blue-700">Số câu hỏi:</span>
                 <span className="font-bold text-blue-800">{selectedCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-700">Thoi gian:</span>
-                <span className="font-bold text-blue-800">{duration} phut</span>
+                <span className="text-blue-700">Thời gian:</span>
+                <span className="font-bold text-blue-800">{duration} phút</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-700">Trang thai:</span>
-                <span className="font-bold text-slate-600">Ban Nhap (co the chinh sua sau)</span>
+                <span className="text-blue-700">Trạng thái:</span>
+                <span className="font-bold text-slate-600">Bản Nháp (có thể chỉnh sửa sau)</span>
               </div>
             </div>
 
             <div className="flex gap-3">
               <button onClick={() => setStep("preview")} className="flex-1 py-3 border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all">
-                Quay Lai
+                Quay Lại
               </button>
               <button
                 onClick={handleCreateExam}
@@ -496,8 +496,8 @@ export default function ImportFromFile() {
                 className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
                 {creating
-                  ? <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Dang tao...</>
-                  : <><span className="material-symbols-outlined text-sm">save</span>Luu Bai Kiem Tra</>
+                  ? <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Đang tạo...</>
+                  : <><span className="material-symbols-outlined text-sm">save</span>Lưu Bài Kiểm Tra</>
                 }
               </button>
             </div>

@@ -107,7 +107,7 @@ export default function TakeExam() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ studentId: user.id })
+        body: JSON.stringify({ studentId: user.id, status: "EXAM" })
       }).catch(() => {}); // Bỏ qua lỗi mạng, không ảnh hưởng bài thi
     };
 

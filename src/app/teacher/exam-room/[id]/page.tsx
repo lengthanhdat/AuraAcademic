@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 export default function TeacherExamRoom() {
@@ -9,12 +9,15 @@ export default function TeacherExamRoom() {
 
   const [exam, setExam] = useState<any>(null);
   const [activeCount, setActiveCount] = useState(0);
+  const [lobbyCount, setLobbyCount] = useState(0);
+  const [examCount, setExamCount] = useState(0);
   const [results, setResults] = useState<any[]>([]);
   const [violations, setViolations] = useState<any[]>([]);
   const [isStarting, setIsStarting] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
 
   const VIOLATION_LABELS: Record<string, string> = {
 
@@ -51,6 +54,8 @@ export default function TeacherExamRoom() {
     es.addEventListener("count", (e) => {
       const data = JSON.parse(e.data);
       setActiveCount(data.activeCount ?? 0);
+      setLobbyCount(data.lobbyCount ?? 0);
+      setExamCount(data.examCount ?? 0);
     });
 
     es.addEventListener("result", (e) => {
@@ -86,7 +91,12 @@ export default function TeacherExamRoom() {
       const res = await fetch(`http://localhost:8088/api/exams/${code}/active-count`, {
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
-      if (res.ok) { const d = await res.json(); setActiveCount(d.activeCount || 0); }
+      if (res.ok) { 
+        const d = await res.json(); 
+        setActiveCount(d.activeCount || 0);
+        setLobbyCount(d.lobbyCount || 0);
+        setExamCount(d.examCount || 0);
+      }
     } catch {}
   };
 
@@ -130,8 +140,8 @@ export default function TeacherExamRoom() {
     }
   };
 
-  const handleClose = async () => {
-    if (!confirm("Bạn có chắc chắn muốn đóng phòng thi không?")) return;
+  const handleClose = async (auto = false) => {
+    if (!auto && !confirm("Bạn có chắc chắn muốn đóng phòng thi không?")) return;
     setIsClosing(true);
     try {
       const res = await fetch(`http://localhost:8088/api/exams/${examId}/close`, {
@@ -139,11 +149,29 @@ export default function TeacherExamRoom() {
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
       if (res.ok) {
-        setMsg({ type: "success", text: "Phòng thi đã được đóng." });
+        setMsg({ type: "success", text: auto ? "⏰ Đã hết thời gian. Hệ thống tự động đóng phòng thi." : "Phòng thi đã được đóng." });
         fetchExam();
       }
     } catch {
       setMsg({ type: "error", text: "Không thể đóng phòng thi." });
+    } finally {
+      setIsClosing(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    setIsClosing(true);
+    try {
+      const res = await fetch(`http://localhost:8088/api/exams/${examId}/finish`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      });
+      if (res.ok) {
+        setMsg({ type: "success", text: "⏰ Đã hết thời gian. Hệ thống tự động kết thúc bài thi." });
+        fetchExam();
+      }
+    } catch {
+      setMsg({ type: "error", text: "Lỗi khi tự động kết thúc bài thi." });
     } finally {
       setIsClosing(false);
     }
@@ -167,14 +195,15 @@ export default function TeacherExamRoom() {
 
     if (s === "WAITING") return <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-black uppercase rounded-full">⏳ Đang chờ học sinh</span>;
     if (s === "STARTED" || s === "PUBLISHED") return <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-black uppercase rounded-full animate-pulse">🟢 Đang diễn ra</span>;
-    if (s === "FINISHED") return <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-black uppercase rounded-full">⬛ Đã kết thúc</span>;
+    if (s === "FINISHED") return <span className="px-3 py-1 bg-error-container text-on-error-container text-xs font-black uppercase rounded-full">🔒 Đã đóng</span>;
+    if (s === "COMPLETED") return <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-black uppercase rounded-full">⬛ Đã kết thúc</span>;
     if (s === "DRAFT") return <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-black uppercase rounded-full">📝 Bản nháp</span>;
     return null;
   };
 
   const isActive = exam?.status === "STARTED" || exam?.status === "PUBLISHED";
   const isWaiting = exam?.status === "WAITING";
-  const isFinished = exam?.status === "FINISHED";
+  const isFinished = exam?.status === "FINISHED" || exam?.status === "COMPLETED";
 
 
   // Khởi tạo thời gian còn lại khi load exam
@@ -196,6 +225,16 @@ export default function TeacherExamRoom() {
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
+
+  // Tự động đóng phòng thi khi hết giờ (delay 3 giây để nhận nốt các bài nộp cuối)
+  useEffect(() => {
+    if (isActive && timeLeft === 0 && !isClosing) {
+      const timeout = setTimeout(() => {
+        handleFinish(); // Gọi hàm finish thay vì close
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [timeLeft, isActive]);
 
   const formatTime = (seconds: number | null) => {
     if (seconds === null) return "--:--";
@@ -255,30 +294,39 @@ export default function TeacherExamRoom() {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-surface-container-lowest rounded-xl p-6 flex flex-col justify-between shadow-sm">
-            <span className="material-symbols-outlined text-primary text-3xl mb-2">group</span>
+        {/* Stats Cards - Grid 2x2 for balance */}
+        <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Phòng chờ */}
+          <div className="bg-surface-container-lowest rounded-xl p-6 flex flex-col justify-between shadow-sm border border-outline-variant/10">
+            <span className="material-symbols-outlined text-amber-500 text-3xl mb-2">hourglass_top</span>
             <div>
-              <p className="text-3xl font-black text-primary">{activeCount}</p>
+              <p className="text-3xl font-black text-amber-500">{lobbyCount}</p>
               <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">Đang trong phòng chờ</p>
             </div>
           </div>
-          <div className="bg-surface-container-lowest rounded-xl p-6 flex flex-col justify-between shadow-sm">
-            <span className="material-symbols-outlined text-green-600 text-3xl mb-2">assignment_turned_in</span>
+          {/* Đang làm bài */}
+          <div className="bg-surface-container-lowest rounded-xl p-6 flex flex-col justify-between shadow-sm border border-outline-variant/10">
+            <span className="material-symbols-outlined text-blue-600 text-3xl mb-2">edit_document</span>
             <div>
-              <p className="text-3xl font-black text-green-600">{results.length}</p>
-              <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">Đã nộp bài</p>
+              <p className="text-3xl font-black text-blue-600">{examCount}</p>
+              <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">Đang làm bài</p>
             </div>
           </div>
-          <div className="bg-surface-container-lowest rounded-xl p-6 flex flex-col justify-between shadow-sm">
-            <span className="material-symbols-outlined text-amber-600 text-3xl mb-2">timer</span>
+          <div className="bg-surface-container-lowest rounded-xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/10">
+            <span className="material-symbols-outlined text-green-600 text-2xl mb-2">assignment_turned_in</span>
             <div>
-              <p className={`text-3xl font-black ${timeLeft !== null && timeLeft < 300 ? "text-red-500 animate-pulse" : "text-amber-600"}`}>
+              <p className="text-2xl font-black text-green-600">{results.length}</p>
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">Đã nộp bài</p>
+            </div>
+          </div>
+          <div className="bg-surface-container-lowest rounded-xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/10">
+            <span className="material-symbols-outlined text-amber-600 text-2xl mb-2">timer</span>
+            <div>
+              <p className={`text-2xl font-black ${timeLeft !== null && timeLeft < 300 ? "text-red-500 animate-pulse" : "text-amber-600"}`}>
                 {isActive ? formatTime(timeLeft) : `${exam.duration}:00`}
               </p>
-              <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">
-                {isActive ? "Thời gian còn lại" : "Thời gian làm bài"}
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
+                {isActive ? "Còn lại" : "Thời lượng"}
               </p>
             </div>
           </div>
@@ -325,8 +373,10 @@ export default function TeacherExamRoom() {
       )}
 
       {isFinished && (
-        <div className="p-6 bg-slate-100 rounded-xl mb-8 text-center">
-          <p className="text-slate-600 font-bold">Phòng thi đã kết thúc. Xem kết quả bên dưới.</p>
+        <div className="p-6 bg-slate-100 rounded-xl mb-8 text-center border border-slate-200">
+          <p className="text-slate-600 font-bold">
+            {exam.status === "COMPLETED" ? "🏁 Bài thi đã kết thúc thời gian làm bài." : "🔒 Phòng thi đã được đóng bởi giáo viên."}
+          </p>
         </div>
       )}
 
@@ -390,54 +440,180 @@ export default function TeacherExamRoom() {
         )}
       </section>
 
-      {/* Violations Section */}
-      <section className="bg-error-container/20 rounded-xl shadow-sm border border-error/20 overflow-hidden mt-8">
-        <div className="px-6 py-5 border-b border-error/20 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-error flex items-center gap-2">
-            <span className="material-symbols-outlined text-error">gpp_bad</span>
-            Báo cáo vi phạm từ AI ({violations.length})
-          </h3>
-        </div>
-        {violations.length > 0 ? (
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {violations.map((v) => (
-              <div key={v.id} className="bg-surface-container-lowest rounded-xl shadow-sm border-l-4 border-error overflow-hidden flex flex-col">
-                {v.videoUrl && (
-                  <div className="relative aspect-video bg-black/10">
-                    <video 
-                      src={v.videoUrl} 
-                      controls 
-                      className="w-full h-full object-cover"
-                      poster="/placeholder-video.jpg"
-                    />
-                    <div className="absolute top-2 left-2 bg-error/90 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
-                      <span className="material-symbols-outlined text-[10px]">videocam</span> 5s Buffer
-                    </div>
-                  </div>
-                )}
-                <div className="p-4 flex flex-col gap-2 flex-1">
-                  <div className="flex justify-between items-start">
+      {/* Violations Section - Grouped by student */}
+      {(() => {
+        // Nhóm vi phạm theo studentId
+        const grouped = violations.reduce((acc: Record<string, any>, v: any) => {
+          const key = v.studentId || "unknown";
+          if (!acc[key]) acc[key] = { studentId: key, studentName: v.studentName || "Không rõ tên", violations: [] };
+          acc[key].violations.push(v);
+          return acc;
+        }, {});
+        const groups = Object.values(grouped) as any[];
+
+        // Modal chi tiết vi phạm
+        const modalStudent = selectedStudent ? grouped[selectedStudent] : null;
+
+        return (
+          <>
+            {/* Modal */}
+            {modalStudent && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                onClick={() => setSelectedStudent(null)}
+              >
+                <div
+                  className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col"
+                  onClick={e => e.stopPropagation()}
+                >
+                  {/* Modal Header */}
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-on-surface truncate pr-2">{v.studentName || "Không rõ tên"}</p>
-                      <p className="text-[10px] text-on-surface-variant/70 uppercase tracking-wider">ID: {v.studentId}</p>
+                      <h3 className="text-lg font-bold text-slate-800">{modalStudent.studentName}</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">ID: {modalStudent.studentId} · {modalStudent.violations.length} vi phạm</p>
                     </div>
-                    <span className="text-xs text-on-surface-variant font-mono bg-surface-container px-2 py-1 rounded-md shrink-0">{new Date(v.timestamp).toLocaleTimeString("vi-VN")}</span>
+                    <button
+                      onClick={() => setSelectedStudent(null)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-red-100 hover:text-red-600 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-xl">close</span>
+                    </button>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 bg-error/10 text-error px-2.5 py-1.5 rounded-lg text-sm font-bold mt-auto w-fit">
-                    <span className="material-symbols-outlined text-[16px]">warning</span>
-                    {VIOLATION_LABELS[v.type] || v.type}
+
+                  {/* Modal Body - Timeline */}
+                  <div className="overflow-y-auto flex-1 p-6 space-y-4">
+                    {[...modalStudent.violations].sort((a: any, b: any) => b.timestamp - a.timestamp).map((v: any, idx: number) => (
+                      <div key={v.id || idx} className="flex gap-4 items-start">
+                        {/* Timeline dot */}
+                        <div className="flex flex-col items-center shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-red-500 text-[16px]">warning</span>
+                          </div>
+                          {idx < modalStudent.violations.length - 1 && (
+                            <div className="w-px h-full bg-slate-200 mt-1 flex-1" style={{minHeight: '24px'}}></div>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
+                          {v.videoUrl && (
+                            <div className="relative aspect-video bg-black">
+                              <video src={v.videoUrl} controls className="w-full h-full object-cover" />
+                              <div className="absolute top-2 left-2 bg-red-600/90 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[10px]">videocam</span> 5s Buffer
+                              </div>
+                            </div>
+                          )}
+                          <div className="p-3 flex items-center justify-between">
+                            <span className="text-sm font-bold text-red-600 flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[14px]">report</span>
+                              {VIOLATION_LABELS[v.type] || v.type}
+                            </span>
+                            <span className="text-xs text-slate-400 font-mono">{new Date(v.timestamp).toLocaleTimeString("vi-VN")}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-10 text-center text-green-700 font-medium flex flex-col items-center gap-2">
-            <span className="material-symbols-outlined text-4xl">verified_user</span>
-            Chưa phát hiện vi phạm nào. Phòng thi an toàn.
-          </div>
-        )}
-      </section>
+            )}
+
+            {/* Violations Summary Section */}
+            <section className="bg-red-50 rounded-xl shadow-sm border border-red-200 overflow-hidden mt-8">
+              <div className="px-6 py-5 border-b border-red-100 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-red-700 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-red-500">gpp_bad</span>
+                  Báo cáo vi phạm từ AI
+                  {violations.length > 0 && (
+                    <span className="ml-1 px-2 py-0.5 bg-red-600 text-white text-xs font-black rounded-full">{violations.length}</span>
+                  )}
+                </h3>
+                {groups.length > 0 && (
+                  <span className="text-xs text-slate-500">{groups.length} học sinh vi phạm</span>
+                )}
+              </div>
+
+              {groups.length > 0 ? (
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {groups
+                    .sort((a: any, b: any) => b.violations.length - a.violations.length)
+                    .map((group: any) => {
+                      const latest = group.violations[0];
+                      const count = group.violations.length;
+                      const severity = count >= 4 ? "high" : count >= 2 ? "med" : "low";
+                      const severityStyle = {
+                        high: { card: "border-red-500 bg-white",  badge: "bg-red-600 text-white",   icon: "text-red-600" },
+                        med:  { card: "border-amber-400 bg-white", badge: "bg-amber-500 text-white", icon: "text-amber-500" },
+                        low:  { card: "border-slate-300 bg-white", badge: "bg-slate-500 text-white", icon: "text-slate-500" },
+                      }[severity];
+
+                      return (
+                        <button
+                          key={group.studentId}
+                          onClick={() => setSelectedStudent(group.studentId)}
+                          className={`text-left rounded-xl border-2 ${severityStyle.card} overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all group`}
+                        >
+                          {/* Preview video of latest violation */}
+                          {latest?.videoUrl ? (
+                            <div className="relative aspect-video bg-black/5 overflow-hidden">
+                              <video
+                                src={latest.videoUrl}
+                                className="w-full h-full object-cover pointer-events-none"
+                                muted
+                              />
+                              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow">
+                                  <span className="material-symbols-outlined text-slate-700">play_circle</span>
+                                </div>
+                              </div>
+                              <div className="absolute top-2 right-2">
+                                <span className={`px-2 py-1 rounded-full text-[11px] font-black ${severityStyle.badge} shadow`}>
+                                  {count} lỗi
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-4xl text-slate-300">videocam_off</span>
+                            </div>
+                          )}
+
+                          {/* Student info */}
+                          <div className="p-3">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <p className="font-bold text-slate-800 text-sm truncate pr-2">{group.studentName}</p>
+                              <span className={`material-symbols-outlined text-lg ${severityStyle.icon}`}>
+                                {severity === "high" ? "crisis_alert" : severity === "med" ? "warning" : "info"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mb-2 truncate">
+                              Gần nhất: {VIOLATION_LABELS[latest?.type] || latest?.type}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {latest?.timestamp ? new Date(latest.timestamp).toLocaleTimeString("vi-VN") : ""}
+                              </span>
+                              <span className="text-[11px] font-bold text-blue-600 flex items-center gap-1 group-hover:underline">
+                                Xem chi tiết
+                                <span className="material-symbols-outlined text-[13px]">chevron_right</span>
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              ) : (
+                <div className="py-10 text-center text-green-700 font-medium flex flex-col items-center gap-2">
+                  <span className="material-symbols-outlined text-4xl">verified_user</span>
+                  Chưa phát hiện vi phạm nào. Phòng thi an toàn.
+                </div>
+              )}
+            </section>
+          </>
+        );
+      })()}
     </div>
   );
 }

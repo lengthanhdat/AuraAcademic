@@ -47,15 +47,20 @@ export default function StudentDashboard() {
 
     setIsJoining(true);
     setError("");
+    const cleanCode = accessCode.trim().toUpperCase();
+    
     try {
       // Kiểm tra phòng tồn tại và đủ điều kiện qua lobby endpoint
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/exams/lobby/${accessCode.toUpperCase()}`, {
+      const res = await fetch(`http://localhost:8088/api/exams/lobby/${cleanCode}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
+      
       if (res.ok) {
         // Phòng hợp lệ → đưa vào phòng chờ
-        window.location.href = `/student/lobby?code=${accessCode.toUpperCase()}`;
+        window.location.href = `/student/lobby?code=${cleanCode}`;
+      } else if (res.status === 401 || res.status === 403) {
+        setError("Phiên làm việc đã hết hạn. Vui lòng đăng xuất và đăng nhập lại.");
       } else {
         const msg = await res.text();
         setError(msg || "Mã phòng thi không chính xác hoặc đã kết thúc.");

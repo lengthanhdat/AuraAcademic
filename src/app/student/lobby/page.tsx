@@ -117,7 +117,7 @@ export default function StudentLobby() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ studentId: user.id }),
+        body: JSON.stringify({ studentId: user.id, status: "LOBBY" }),
       }).catch(() => {});
     };
 
