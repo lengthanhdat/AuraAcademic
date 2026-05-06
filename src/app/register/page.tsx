@@ -127,7 +127,7 @@ export default function Register() {
             </div>
 
             <div className="w-full flex justify-center py-2">
-              <GoogleOAuthProvider clientId="968516051128-f6mp8otaud9f3jvkf63k4evef8995iq3.apps.googleusercontent.com">
+              <GoogleOAuthProvider clientId="800081855688-vvu143d2r2hgoo24h6adsm6j7vaj95mn.apps.googleusercontent.com">
                 <GoogleLogin 
                   onSuccess={async (creds) => {
                     try {
