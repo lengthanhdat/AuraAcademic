@@ -1,40 +1,87 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+
+const pageTitles: Record<string, string> = {
+  "/admin/dashboard": "Dashboard",
+  "/admin/analytics": "Thống kê & Báo cáo",
+  "/admin/users": "Quản lý người dùng",
+  "/admin/roles": "Phân quyền RBAC",
+  "/admin/exams": "Quản lý bài thi",
+  "/admin/content": "Nội dung & Media",
+  "/admin/audit-logs": "Audit Logs",
+  "/admin/sessions": "Phiên đăng nhập",
+  "/admin/settings": "Cấu hình hệ thống",
+  "/admin/notifications": "Thông báo",
+};
 
 export function AdminHeader() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [notifCount] = useState(3);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  const timeStr = now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = now.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  const pageTitle = pageTitles[pathname] || "Admin Panel";
+
   return (
-    <header className="flex justify-between items-center w-full px-8 h-16 bg-[#f7f9fb] dark:bg-slate-950 sticky top-0 z-50">
-      <div className="flex items-center gap-4 flex-1">
-        <div className="relative w-64 group">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
-          <input 
-            className="w-full bg-surface-container-highest/50 border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-surface-variant/60 outline-none transition-all" 
-            placeholder="Tìm kiếm tài nguyên..." 
+    <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 bg-[#0f172a]/90 backdrop-blur-xl border-b border-slate-800">
+      {/* Left: Breadcrumb */}
+      <div>
+        <p className="text-[11px] text-slate-500 font-medium uppercase tracking-widest">Admin / {pageTitle}</p>
+        <h2 className="text-lg font-bold text-white leading-tight mt-0.5">{pageTitle}</h2>
+      </div>
+
+      {/* Center: Search */}
+      <div className="hidden lg:flex flex-1 max-w-sm mx-8">
+        <div className="relative w-full">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+          <input
+            className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
+            placeholder="Tìm kiếm người dùng, bài thi..."
             type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
           />
         </div>
       </div>
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-4 text-slate-500">
-          <button className="hover:bg-[#f2f4f6] p-2 rounded-lg transition-colors">
-            <span className="material-symbols-outlined">sensors</span>
-          </button>
-          <button className="hover:bg-[#f2f4f6] p-2 rounded-lg transition-colors relative">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
-          </button>
-          <button className="hover:bg-[#f2f4f6] p-2 rounded-lg transition-colors">
-            <span className="material-symbols-outlined">account_circle</span>
-          </button>
+
+      {/* Right: Actions */}
+      <div className="flex items-center gap-2">
+        {/* Live clock */}
+        <div className="hidden xl:flex flex-col items-end mr-3">
+          <span className="text-sm font-bold text-white">{timeStr}</span>
+          <span className="text-[10px] text-slate-500">{dateStr}</span>
         </div>
-        <div className="h-8 w-px bg-outline-variant/30"></div>
-        <div className="flex items-center gap-3">
-          <img 
-            className="w-8 h-8 rounded-full object-cover" 
-            alt="proctor admin" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_uXpJm9-FHpPBhB8q1MyelVgXOWeM8AHFBvE1SKzBn3Gdvrn-9QFzbOI7kPRDy2Np1XQuPCLi8rtlCEiQvnlfuOOg6Vxssmeq87A3DTqjZo8ENTN2THg7A9tbbfOv_8Br1bZTYXS4DuygXtAMt7P90d53rfFDU6BVJNW8N0ZiVuqYqk-sC0P14bBMt4sKE-_IcgmnblNLQyxrtkDF4Oje2hYJPgId1FJU6GHPom8tyRSLFe9Bkq20x1SpM0Vbd2W4wEZfKKph4y0"
-          />
-          <span className="font-headline font-semibold text-sm tracking-tight text-[#00355f]">Digital Proctor</span>
+
+        {/* System status */}
+        <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full mr-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Online</span>
         </div>
+
+        {/* Notification bell */}
+        <button className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+          <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>notifications</span>
+          {notifCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[9px] font-black text-white">
+              {notifCount}
+            </span>
+          )}
+        </button>
+
+        {/* Settings */}
+        <button onClick={() => router.push("/admin/settings")} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+          <span className="material-symbols-outlined text-xl">settings</span>
+        </button>
       </div>
     </header>
   );
