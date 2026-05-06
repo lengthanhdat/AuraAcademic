@@ -7,10 +7,21 @@ export function TeacherHeader() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const loadUser = () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    };
+
+    loadUser();
+    window.addEventListener("user-updated", loadUser);
+    window.addEventListener("storage", loadUser);
+
+    return () => {
+      window.removeEventListener("user-updated", loadUser);
+      window.removeEventListener("storage", loadUser);
+    };
   }, []);
 
   return (
@@ -37,7 +48,7 @@ export function TeacherHeader() {
               <p className="text-sm font-bold text-blue-900 leading-none">{user?.fullName || "Giáo viên"}</p>
               <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tighter">Ban Giảng Huấn</p>
             </div>
-            <img alt="Giáo viên Profile" className="w-10 h-10 rounded-full object-cover border-2 border-blue-900/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0pRLjsYNuYnvwUAtnEACdq-Kh3GGr4RXIQ29z1hKdw2IL9Q3KxPqR_zaLEFUB-LhS_5bmuZraE_8zRkSZ0FjUMOC287Q8Zkl54rOHbzGYFF5j0XNeYm0dQF26UPv9UprT-afl1-flyFIBUJ0CS0Mb4duE9PlwEEabSJag1HzkAOOF7b8iqUUoqy44mTWJx19DDBOv9SSz2yOTj06gVOgcvkE71qW2IFuOr23H5Zk9LQfc57GjVZ7O1Mhgm1UcA_lFRb_FzBp9SkQ"/>
+            <img alt="Giáo viên Profile" className="w-10 h-10 rounded-full object-cover border-2 border-blue-900/10" src={user?.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuA0pRLjsYNuYnvwUAtnEACdq-Kh3GGr4RXIQ29z1hKdw2IL9Q3KxPqR_zaLEFUB-LhS_5bmuZraE_8zRkSZ0FjUMOC287Q8Zkl54rOHbzGYFF5j0XNeYm0dQF26UPv9UprT-afl1-flyFIBUJ0CS0Mb4duE9PlwEEabSJag1HzkAOOF7b8iqUUoqy44mTWJx19DDBOv9SSz2yOTj06gVOgcvkE71qW2IFuOr23H5Zk9LQfc57GjVZ7O1Mhgm1UcA_lFRb_FzBp9SkQ"}/>
           </div>
         </div>
       </div>

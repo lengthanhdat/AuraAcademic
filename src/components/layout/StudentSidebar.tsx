@@ -23,7 +23,7 @@ export function StudentSidebar() {
           <span className="material-symbols-outlined">assignment_turned_in</span>
           <span className="font-label text-sm">Kết quả thi</span>
         </Link>
-        <Link className="flex items-center gap-3 text-[#42474f] dark:text-[#c2c7d1] px-8 py-3 hover:text-[#00355f] dark:hover:text-white transition-all active:scale-98" href="#">
+        <Link className="flex items-center gap-3 text-[#42474f] dark:text-[#c2c7d1] px-8 py-3 hover:text-[#00355f] dark:hover:text-white transition-all active:scale-98" href="/student/materials">
           <span className="material-symbols-outlined">menu_book</span>
           <span className="font-label text-sm">Tài liệu học</span>
         </Link>

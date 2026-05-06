@@ -19,6 +19,7 @@ export function TeacherSidebar() {
     { label: "Bảng Điều Khiển", icon: "dashboard", href: "/teacher/dashboard" },
     { label: "Thiết Kế Đề Thi", icon: "magic_button", href: "/teacher/exams" },
     { label: "Nhập Từ File", icon: "upload_file", href: "/teacher/exams/import" },
+    { label: "Tài Liệu Giảng Dạy", icon: "menu_book", href: "/teacher/materials" },
     { label: "Giám Sát Trực Tiếp", icon: "videocam", href: "/teacher/monitoring" },
     { label: "Báo Cáo Phân Tích", icon: "assessment", href: "/teacher/reports" },
   ];

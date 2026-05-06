@@ -2,8 +2,11 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { useAlert } from "@/components/ui/AlertProvider";
+
 function VerifyEmailContent() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const [otp, setOtp] = useState("");
@@ -26,7 +29,11 @@ function VerifyEmailContent() {
       if (!res.ok) {
         setError(data.message || data.error || "Mã xác thực không đúng");
       } else {
-        alert("Xác thực email thành công! Bạn có thể đăng nhập.");
+        showAlert({
+          title: "Xác thực thành công!",
+          message: "Xác thực email thành công! Bạn có thể đăng nhập ngay.",
+          type: "success"
+        });
         router.push("/login");
       }
     } catch (err) {
@@ -43,7 +50,13 @@ function VerifyEmailContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      if (res.ok) alert("Đã gửi lại mã xác thực tới email của bạn.");
+      if (res.ok) {
+        showAlert({
+          title: "Đã gửi mã",
+          message: "Mã xác thực mới đã được gửi lại tới email của bạn.",
+          type: "info"
+        });
+      }
     } catch(err) {}
   };
 
