@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAlert } from "@/components/ui/AlertProvider";
 
 export default function TeacherProfile() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [user, setUser] = useState<any>(null);
   const [exams, setExams] = useState<any[]>([]);
 
@@ -17,7 +19,9 @@ export default function TeacherProfile() {
     title: "",
     department: "",
     workplace: "",
-    schedule: ""
+    schedule: "",
+    certificates: "",
+    experience: ""
   });
   const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   
@@ -25,7 +29,6 @@ export default function TeacherProfile() {
   const [saving, setSaving] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
   const [pwMsg, setPwMsg] = useState({ type: "", text: "" });
-  const [profileMsg, setProfileMsg] = useState({ type: "", text: "" });
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -40,7 +43,9 @@ export default function TeacherProfile() {
         title: u.title || "",
         department: u.department || "",
         workplace: u.workplace || "",
-        schedule: u.schedule || ""
+        schedule: u.schedule || "",
+        certificates: u.certificates || "",
+        experience: u.experience || ""
       });
 
       const token = localStorage.getItem("accessToken");
@@ -57,10 +62,73 @@ export default function TeacherProfile() {
     }
   }, []);
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showAlert({
+        title: "Lỗi tệp tin",
+        message: "Chỉ cho phép tải lên tệp tin hình ảnh (PNG, JPG, WEBP).",
+        type: "error"
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      showAlert({
+        title: "Tệp tin quá lớn",
+        message: "Ảnh đại diện không được vượt quá 2MB.",
+        type: "error"
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch("http://localhost:8088/api/users/me/avatar", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ avatarUrl: base64 })
+        });
+
+        if (res.ok) {
+          const updatedUser = { ...user, avatarUrl: base64 };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          window.dispatchEvent(new Event("user-updated"));
+          showAlert({
+            title: "Thành công",
+            message: "Cập nhật ảnh đại diện thành công!",
+            type: "success"
+          });
+        } else {
+          showAlert({
+            title: "Lỗi tải ảnh",
+            message: "Có lỗi xảy ra khi cập nhật ảnh đại diện.",
+            type: "error"
+          });
+        }
+      } catch {
+        showAlert({
+          title: "Lỗi kết nối",
+          message: "Không thể kết nối đến máy chủ.",
+          type: "error"
+        });
+      }
+    };
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setProfileMsg({ type: "", text: "" });
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(`http://localhost:8088/api/users/me`, {
@@ -77,7 +145,9 @@ export default function TeacherProfile() {
           title: form.title,
           department: form.department,
           workplace: form.workplace,
-          schedule: form.schedule
+          schedule: form.schedule,
+          certificates: form.certificates,
+          experience: form.experience
         }),
       });
       if (res.ok) {
@@ -90,18 +160,32 @@ export default function TeacherProfile() {
           title: form.title,
           department: form.department,
           workplace: form.workplace,
-          schedule: form.schedule
+          schedule: form.schedule,
+          certificates: form.certificates,
+          experience: form.experience
         };
         localStorage.setItem("user", JSON.stringify(updated));
+        window.dispatchEvent(new Event("user-updated"));
         setUser(updated);
-        setProfileMsg({ type: "success", text: "Cập nhật hồ sơ thành công!" });
+        showAlert({
+          title: "Thành công",
+          message: "Cập nhật hồ sơ thành công!",
+          type: "success"
+        });
         setIsEditing(false);
-        setTimeout(() => setProfileMsg({ type: "", text: "" }), 3000);
       } else {
-        setProfileMsg({ type: "error", text: "Lỗi cập nhật hồ sơ." });
+        showAlert({
+          title: "Lỗi cập nhật",
+          message: "Có lỗi xảy ra khi lưu thông tin hồ sơ.",
+          type: "error"
+        });
       }
     } catch {
-      setProfileMsg({ type: "error", text: "Không thể kết nối server." });
+      showAlert({
+        title: "Lỗi kết nối",
+        message: "Không thể kết nối đến máy chủ.",
+        type: "error"
+      });
     } finally {
       setSaving(false);
     }
@@ -173,10 +257,19 @@ export default function TeacherProfile() {
       <section className="mb-8">
         <div className="bg-surface-container-lowest rounded-xl p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-          <div className="relative">
-            <div className="w-32 h-32 rounded-full border-4 border-surface p-1 shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
-              {user.fullName?.charAt(0).toUpperCase()}
+          <div className="relative group cursor-pointer">
+            <div className="w-32 h-32 rounded-full border-4 border-surface overflow-hidden shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                user.fullName?.charAt(0).toUpperCase()
+              )}
             </div>
+            <label className="absolute inset-0 bg-black/40 backdrop-blur-xs opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer text-[10px] font-bold text-white flex-col gap-1">
+              <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+              Đổi ảnh
+              <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+            </label>
             <div className="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-white"></div>
           </div>
           <div className="flex-1 text-center md:text-left">
@@ -213,11 +306,6 @@ export default function TeacherProfile() {
             <span className="material-symbols-outlined">edit_document</span>
             Cập nhật thông tin giảng viên
           </h4>
-          {profileMsg.text && (
-            <div className={`p-3 rounded-lg mb-4 text-sm font-medium ${profileMsg.type === "error" ? "bg-error-container text-on-error-container" : "bg-green-100 text-green-800"}`}>
-              {profileMsg.text}
-            </div>
-          )}
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -256,6 +344,14 @@ export default function TeacherProfile() {
                   <option value="Nữ">Nữ</option>
                   <option value="Khác">Khác</option>
                 </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Kinh nghiệm làm việc & Dự án</label>
+                <textarea rows={3} value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder="VD: 5 năm giảng dạy bộ môn Kiến trúc phần mềm..." />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Chứng chỉ & Giải thưởng</label>
+                <textarea rows={3} value={form.certificates} onChange={e => setForm({ ...form, certificates: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder="VD: Chứng chỉ AWS Certified Solutions Architect..." />
               </div>
             </div>
             <div className="flex justify-end pt-2">
@@ -307,6 +403,29 @@ export default function TeacherProfile() {
               </li>
             </ul>
           </div>
+
+          {/* Work Experience */}
+          <div className="bg-surface-container-low rounded-xl p-6">
+            <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary-fixed-dim">work</span>
+              Kinh nghiệm & Dự án
+            </h3>
+            <p className="text-xs text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+              {user.experience || "Chưa cập nhật thông tin kinh nghiệm làm việc."}
+            </p>
+          </div>
+
+          {/* Certificates */}
+          <div className="bg-surface-container-low rounded-xl p-6">
+            <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary-fixed-dim">verified</span>
+              Chứng chỉ & Giải thưởng
+            </h3>
+            <p className="text-xs text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+              {user.certificates || "Chưa cập nhật thông tin chứng chỉ."}
+            </p>
+          </div>
+
           <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
             <h4 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined">lock</span>

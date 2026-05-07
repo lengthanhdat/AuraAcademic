@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Hệ thống thi trắc nghiệm thông minh tích hợp AI",
 };
 
+import { AlertProvider } from "@/components/ui/AlertProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +26,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${manrope.variable} bg-surface text-on-surface min-h-screen flex flex-col font-body`}>
-        {children}
+        <AlertProvider>
+          {children}
+        </AlertProvider>
       </body>
     </html>
   );

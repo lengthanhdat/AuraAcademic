@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { useAlert } from "@/components/ui/AlertProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -127,19 +129,33 @@ export default function LoginPage() {
                         localStorage.setItem("user", JSON.stringify(data.user));
                         localStorage.setItem("accessToken", data.accessToken);
                         localStorage.setItem("refreshToken", data.refreshToken);
-                        alert("Đăng nhập Google thành công!"); 
-                        if (data.user?.role === "admin") {
-                          router.push("/admin/dashboard");
-                        } else if (data.user?.role === "teacher") {
-                          router.push("/teacher/dashboard");
-                        } else {
-                          router.push("/student/dashboard");
-                        }
+                        showAlert({
+                          title: "Thành công",
+                          message: "Đăng nhập Google thành công!",
+                          type: "success",
+                          onConfirm: () => {
+                            if (data.user?.role === "admin") {
+                              router.push("/admin/dashboard");
+                            } else if (data.user?.role === "teacher") {
+                              router.push("/teacher/dashboard");
+                            } else {
+                              router.push("/student/dashboard");
+                            }
+                          }
+                        }); 
                       }
-                      else alert("Đăng nhập thất bại");
+                      else showAlert({
+                        title: "Đăng nhập thất bại",
+                        message: "Không thể đăng nhập bằng tài khoản Google này.",
+                        type: "error"
+                      });
                     } catch(e) {}
                   }}
-                  onError={() => alert("Google Login Failed")}
+                  onError={() => showAlert({
+                    title: "Lỗi đăng nhập",
+                    message: "Đăng nhập Google thất bại. Vui lòng thử lại.",
+                    type: "error"
+                  })}
                   text="signin_with"
                   width="100%"
                 />
@@ -166,7 +182,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <label className="text-sm font-bold text-on-surface-variant ml-1">Mật khẩu</label>
-                    <a className="text-xs font-bold text-primary hover:underline transition-all" href="#">Quên mật khẩu?</a>
+                    <Link className="text-xs font-bold text-primary hover:underline transition-all" href="/forgot-password">Quên mật khẩu?</Link>
                   </div>
                   <div className="relative group">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant group-focus-within:text-primary transition-colors">lock</span>

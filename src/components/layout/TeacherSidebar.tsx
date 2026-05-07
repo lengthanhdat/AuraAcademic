@@ -18,6 +18,7 @@ export function TeacherSidebar() {
   const menuItems = [
     { label: "Bảng Điều Khiển", icon: "dashboard", href: "/teacher/dashboard" },
     { label: "Thiết Kế Đề Thi", icon: "magic_button", href: "/teacher/exams" },
+    { label: "Tài Liệu Giảng Dạy", icon: "menu_book", href: "/teacher/materials" },
     { label: "Giám Sát Trực Tiếp", icon: "videocam", href: "/teacher/monitoring" },
     { label: "Báo Cáo Phân Tích", icon: "assessment", href: "/teacher/reports" },
   ];

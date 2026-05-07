@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAlert } from "@/components/ui/AlertProvider";
 
 export default function StudentProfile() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [user, setUser] = useState<any>(null);
   const [results, setResults] = useState<any[]>([]);
 
@@ -23,7 +25,6 @@ export default function StudentProfile() {
   const [saving, setSaving] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
   const [pwMsg, setPwMsg] = useState({ type: "", text: "" });
-  const [profileMsg, setProfileMsg] = useState({ type: "", text: "" });
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -56,10 +57,73 @@ export default function StudentProfile() {
     }
   }, []);
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showAlert({
+        title: "Lỗi tệp tin",
+        message: "Chỉ cho phép tải lên tệp tin hình ảnh (PNG, JPG, WEBP).",
+        type: "error"
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      showAlert({
+        title: "Tệp tin quá lớn",
+        message: "Ảnh đại diện không được vượt quá 2MB.",
+        type: "error"
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch("http://localhost:8088/api/users/me/avatar", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ avatarUrl: base64 })
+        });
+
+        if (res.ok) {
+          const updatedUser = { ...user, avatarUrl: base64 };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          window.dispatchEvent(new Event("user-updated"));
+          showAlert({
+            title: "Thành công",
+            message: "Cập nhật ảnh đại diện thành công!",
+            type: "success"
+          });
+        } else {
+          showAlert({
+            title: "Lỗi tải ảnh",
+            message: "Có lỗi xảy ra khi cập nhật ảnh đại diện.",
+            type: "error"
+          });
+        }
+      } catch {
+        showAlert({
+          title: "Lỗi kết nối",
+          message: "Không thể kết nối đến máy chủ.",
+          type: "error"
+        });
+      }
+    };
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setProfileMsg({ type: "", text: "" });
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(`http://localhost:8088/api/users/me`, {
@@ -73,15 +137,27 @@ export default function StudentProfile() {
       if (res.ok) {
         const updated = { ...user, ...form };
         localStorage.setItem("user", JSON.stringify(updated));
+        window.dispatchEvent(new Event("user-updated"));
         setUser(updated);
-        setProfileMsg({ type: "success", text: "Cập nhật hồ sơ thành công!" });
+        showAlert({
+          title: "Thành công",
+          message: "Cập nhật hồ sơ thành công!",
+          type: "success"
+        });
         setIsEditing(false);
-        setTimeout(() => setProfileMsg({ type: "", text: "" }), 3000);
       } else {
-        setProfileMsg({ type: "error", text: "Lỗi cập nhật hồ sơ." });
+        showAlert({
+          title: "Lỗi cập nhật",
+          message: "Có lỗi xảy ra khi lưu hồ sơ.",
+          type: "error"
+        });
       }
     } catch {
-      setProfileMsg({ type: "error", text: "Không thể kết nối server." });
+      showAlert({
+        title: "Lỗi kết nối",
+        message: "Không thể kết nối đến máy chủ.",
+        type: "error"
+      });
     } finally {
       setSaving(false);
     }
@@ -162,8 +238,12 @@ export default function StudentProfile() {
             <p className="text-sm font-bold text-primary">{user.fullName}</p>
             <p className="text-xs text-on-surface-variant">Học sinh</p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold">
-            {user.fullName?.charAt(0).toUpperCase()}
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-primary text-white flex items-center justify-center font-bold">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              user.fullName?.charAt(0).toUpperCase()
+            )}
           </div>
         </div>
       </header>
@@ -171,8 +251,19 @@ export default function StudentProfile() {
       <div className="space-y-6">
         {/* Hero Card */}
         <section className="bg-surface-container-lowest rounded-xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-          <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-bold shadow-xl">
-            {user.fullName?.charAt(0).toUpperCase()}
+          <div className="relative group cursor-pointer">
+            <div className="w-32 h-32 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-bold shadow-xl">
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                user.fullName?.charAt(0).toUpperCase()
+              )}
+            </div>
+            <label className="absolute inset-0 bg-black/40 backdrop-blur-xs opacity-0 group-hover:opacity-100 rounded-3xl flex items-center justify-center transition-all duration-300 cursor-pointer text-[10px] font-bold text-white flex-col gap-1">
+              <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+              Đổi ảnh
+              <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+            </label>
           </div>
           <div className="flex-1 text-center md:text-left">
             <h3 className="text-4xl font-extrabold text-primary mb-2">{user.fullName}</h3>
@@ -189,7 +280,6 @@ export default function StudentProfile() {
         {isEditing && (
           <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-primary/10">
             <h4 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">Cập nhật thông tin</h4>
-            {profileMsg.text && <div className={`p-3 rounded-lg mb-4 text-sm font-medium ${profileMsg.type === "error" ? "bg-error-container text-on-error-container" : "bg-green-100 text-green-800"}`}>{profileMsg.text}</div>}
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder="Họ và tên" required />

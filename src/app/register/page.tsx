@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { useAlert } from "@/components/ui/AlertProvider";
 
 export default function Register() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [role, setRole] = useState("student");
   const [formData, setFormData] = useState({
     fullName: "",
@@ -44,7 +46,12 @@ export default function Register() {
         }
       } else {
         // Đăng ký thành công, yêu cầu xác thực email
-        alert("Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực tài khoản.");
+        showAlert({
+          title: "Đăng ký thành công!",
+          message: "Vui lòng kiểm tra email của bạn để xác thực tài khoản.",
+          type: "success",
+          confirmText: "Xác thực ngay"
+        });
         router.push(`/verify-email?email=${formData.email}`);
       }
     } catch (err) {
@@ -140,19 +147,33 @@ export default function Register() {
                         localStorage.setItem("user", JSON.stringify(data.user));
                         localStorage.setItem("accessToken", data.accessToken);
                         localStorage.setItem("refreshToken", data.refreshToken);
-                        alert("Đăng nhập Google thành công!"); 
-                        if (data.user?.role === "admin") {
-                          router.push("/admin/dashboard");
-                        } else if (data.user?.role === "teacher") {
-                          router.push("/teacher/dashboard");
-                        } else {
-                          router.push("/student/dashboard");
-                        }
+                        showAlert({
+                          title: "Thành công",
+                          message: "Đăng nhập Google thành công!",
+                          type: "success",
+                          onConfirm: () => {
+                            if (data.user?.role === "admin") {
+                              router.push("/admin/dashboard");
+                            } else if (data.user?.role === "teacher") {
+                              router.push("/teacher/dashboard");
+                            } else {
+                              router.push("/student/dashboard");
+                            }
+                          }
+                        }); 
                       }
-                      else alert("Đăng nhập thất bại");
+                      else showAlert({
+                        title: "Đăng nhập thất bại",
+                        message: "Không thể đăng nhập bằng tài khoản Google này.",
+                        type: "error"
+                      });
                     } catch(e) {}
                   }}
-                  onError={() => alert("Google Login Failed")}
+                  onError={() => showAlert({
+                    title: "Lỗi đăng nhập",
+                    message: "Đăng nhập Google thất bại. Vui lòng thử lại.",
+                    type: "error"
+                  })}
                   text="signup_with"
                   width="100%"
                 />

@@ -7,11 +7,23 @@ export function StudentHeader() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const loadUser = () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    };
+
+    loadUser();
+    window.addEventListener("user-updated", loadUser);
+    window.addEventListener("storage", loadUser);
+
+    return () => {
+      window.removeEventListener("user-updated", loadUser);
+      window.removeEventListener("storage", loadUser);
+    };
   }, []);
+
   return (
     <header className="bg-[#f7f9fb] dark:bg-[#191c1e] z-50 h-16 flex justify-between items-center px-8 w-full mx-auto sticky top-0 border-none">
       <div className="flex items-center gap-4">
@@ -34,7 +46,7 @@ export function StudentHeader() {
             <p className="text-[10px] text-on-surface-variant font-medium">Báo danh: {user?.id?.substring(0, 8) || "N/A"}</p>
           </div>
           <div className="relative">
-            <img alt="Student profile" className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZFtG_u-rS3DsADUCJpkoChXS1Rti1_JujgxPM1b3_G51c3VyV3QTNLCYxpt8TJFkI75-qPbFGOjPaoQZLH9Ca6PZN5lDPptIBl5B-yYIu1tafvbKTzCLi8yLm36uPsEML0e0tlqDo-_l6zzJ7G65J0-jXeEnW0eVixYpLmtFYV4GpUovPZrAMReqOMmiBRNKYWVu4pYpvjZ4jpybY1fgLfZcjMEbnGe1d_HEHLy_9wsi-HuRCpxrl9YmjH0LYMKcYQbUP6Mc8rkk"/>
+            <img alt="Student profile" className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm" src={user?.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuCZFtG_u-rS3DsADUCJpkoChXS1Rti1_JujgxPM1b3_G51c3VyV3QTNLCYxpt8TJFkI75-qPbFGOjPaoQZLH9Ca6PZN5lDPptIBl5B-yYIu1tafvbKTzCLi8yLm36uPsEML0e0tlqDo-_l6zzJ7G65J0-jXeEnW0eVixYpLmtFYV4GpUovPZrAMReqOMmiBRNKYWVu4pYpvjZ4jpybY1fgLfZcjMEbnGe1d_HEHLy_9wsi-HuRCpxrl9YmjH0LYMKcYQbUP6Mc8rkk"}/>
             <div className="absolute bottom-0 right-0 h-3 w-3 bg-emerald-500 border-2 border-white rounded-full"></div>
           </div>
         </div>
