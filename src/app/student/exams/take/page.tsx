@@ -16,6 +16,7 @@ export default function TakeExam() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<any>(null);
+  const [showReview, setShowReview] = useState(false);
   const [isTimeUp, setIsTimeUp] = useState(false); // Hiển thị thông báo hết giờ
 
   // --- AI PROCTORING LOGIC ---
@@ -175,7 +176,7 @@ export default function TakeExam() {
   const handleSubmit = async () => {
     if (!examVersion) return;
     // Nếu gọi từ autoSubmit thì không confirm, nếu gọi từ nút bấm thì có confirm
-    if (timeLeft > 0 && !confirm("Bạn có chắc chắn muốn nộp bài?")) return;
+    if ((timeLeft ?? 0) > 0 && !confirm("Bạn có chắc chắn muốn nộp bài?")) return;
     
     setIsSubmitting(true);
     try {
@@ -190,7 +191,13 @@ export default function TakeExam() {
       });
 
       const total = examVersion.questions.length;
+      const unanswered = total - Object.keys(answers).length;
+      const incorrectCount = total - correctCount - unanswered;
       const finalScore = total > 0 ? (correctCount / total) * 10 : 0;
+      
+      const durationInSeconds = (examVersion.duration || 60) * 60;
+      const timeSpent = Math.max(0, durationInSeconds - (timeLeft ?? 0));
+      
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
       // 2. GỬI KẾT QUẢ LÊN BACKEND
@@ -218,10 +225,13 @@ export default function TakeExam() {
         setSubmissionResult({
           score: Math.round(finalScore * 10) / 10,
           correctCount,
-          total
+          total,
+          incorrectCount,
+          unanswered,
+          timeSpent
         });
         localStorage.removeItem(`exam_start_${accessCode}`);
-        // Không redirect nữa, giữ lại trang để xem kết quả chi tiết
+        // Không redirect nữa, hiển thị trang tổng quan kết quả
       } else {
         alert("Có lỗi khi lưu kết quả thi. Vui lòng liên hệ giáo viên.");
       }
@@ -314,7 +324,7 @@ export default function TakeExam() {
               <>
                 <div className="text-center">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Thời gian còn lại</p>
-                  <p className={`text-2xl font-black ${timeLeft < 300 ? 'text-red-500' : 'text-blue-900'}`}>
+                  <p className={`text-2xl font-black ${(timeLeft ?? 0) < 300 ? 'text-red-500' : 'text-blue-900'}`}>
                     {formatTime(timeLeft)}
                   </p>
                 </div>
@@ -327,39 +337,106 @@ export default function TakeExam() {
                 </button>
               </>
             )}
-            {submissionResult && (
-              <button 
-                onClick={() => router.push("/student/dashboard")}
-                className="px-6 py-2.5 bg-blue-50 text-blue-800 border border-blue-200 font-bold rounded-xl active:scale-95 transition-all"
-              >
-                Về trang chủ
-              </button>
+            {submissionResult && showReview && (
+              <>
+                <button 
+                  onClick={() => setShowReview(false)}
+                  className="px-6 py-2.5 bg-white text-slate-700 border border-slate-200 font-bold rounded-xl active:scale-95 transition-all hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                  Tổng quan
+                </button>
+                <button 
+                  onClick={() => router.push("/student/dashboard")}
+                  className="px-6 py-2.5 bg-[#00355f] text-white shadow-lg shadow-blue-900/20 font-bold rounded-xl active:scale-95 transition-all hover:bg-[#002848] flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[20px]">home</span>
+                  Trang chủ
+                </button>
+              </>
             )}
           </div>
         </div>
       </header>
 
-      {submissionResult && (
-        <div className="max-w-7xl mx-auto mt-8 px-4 mb-8">
-          <div className="bg-gradient-to-r from-[#00355f] to-[#0f4c81] rounded-2xl p-8 text-white shadow-lg text-center">
-            <h2 className="text-3xl font-black mb-2">Đã Nộp Bài Thành Công!</h2>
-            <div className="flex items-center justify-center gap-12 mt-6">
-              <div>
-                <p className="text-blue-200 text-sm font-bold uppercase tracking-widest mb-1">Điểm số</p>
-                <p className="text-5xl font-black">{submissionResult.score}<span className="text-2xl text-blue-300">/10</span></p>
-              </div>
-              <div className="w-px h-16 bg-blue-700/50"></div>
-              <div>
-                <p className="text-blue-200 text-sm font-bold uppercase tracking-widest mb-1">Số câu đúng</p>
-                <p className="text-5xl font-black">{submissionResult.correctCount}<span className="text-2xl text-blue-300">/{submissionResult.total}</span></p>
-              </div>
-            </div>
+      {submissionResult && !showReview ? (
+        <div className="max-w-3xl mx-auto mt-12 px-4 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="bg-white rounded-3xl p-8 md:p-12 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
+             {/* Background shapes */}
+             <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-50 rounded-full blur-3xl pointer-events-none"></div>
+             <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-green-50 rounded-full blur-3xl pointer-events-none"></div>
+             
+             {/* Icon */}
+             <div className="relative mx-auto w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                <span className="material-symbols-outlined text-5xl text-green-600">check_circle</span>
+             </div>
+
+             <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-2 relative">Chúc mừng bạn đã hoàn thành bài thi!</h2>
+             <p className="text-slate-500 font-medium mb-10 relative">Kết quả của bạn đã được lưu vào hệ thống thành công.</p>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 relative">
+               {/* Điểm số */}
+               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50">
+                 <p className="text-blue-600 font-bold uppercase tracking-wider text-sm mb-2">Điểm số của bạn</p>
+                 <div className="flex items-end justify-center gap-1 mb-2">
+                   <span className="text-6xl font-black text-blue-900">{submissionResult.score}</span>
+                   <span className="text-2xl font-bold text-blue-400 mb-1">/10</span>
+                 </div>
+                 <p className="text-blue-800/60 text-sm font-medium">Hoàn thành {Math.round((submissionResult.correctCount/submissionResult.total)*100)}%</p>
+               </div>
+
+               {/* Thống kê chi tiết */}
+               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                 <div className="flex items-center justify-between py-2 border-b border-slate-200/60">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-slate-600 font-medium">Số câu đúng</span>
+                    </div>
+                    <span className="font-bold text-slate-800">{submissionResult.correctCount}</span>
+                 </div>
+                 <div className="flex items-center justify-between py-2 border-b border-slate-200/60">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span className="text-slate-600 font-medium">Số câu sai</span>
+                    </div>
+                    <span className="font-bold text-slate-800">{submissionResult.incorrectCount}</span>
+                 </div>
+                 <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-slate-300"></div>
+                      <span className="text-slate-600 font-medium">Chưa làm</span>
+                    </div>
+                    <span className="font-bold text-slate-800">{submissionResult.unanswered}</span>
+                 </div>
+               </div>
+             </div>
+
+             <div className="inline-flex items-center justify-center gap-2 bg-slate-100/80 px-5 py-3 rounded-full text-slate-600 font-medium text-sm mb-10 relative">
+               <span className="material-symbols-outlined text-[20px]">timer</span>
+               Thời gian làm bài: {formatTime(submissionResult.timeSpent)}
+             </div>
+
+             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative">
+               <button 
+                 onClick={() => setShowReview(true)}
+                 className="w-full sm:w-auto px-8 py-3.5 bg-white border-2 border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all flex items-center justify-center gap-2"
+               >
+                 <span className="material-symbols-outlined text-[20px]">fact_check</span>
+                 Xem chi tiết đáp án
+               </button>
+               <button 
+                 onClick={() => router.push("/student/dashboard")}
+                 className="w-full sm:w-auto px-8 py-3.5 bg-[#00355f] text-white font-bold rounded-xl hover:bg-[#002848] shadow-lg shadow-blue-900/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+               >
+                 <span className="material-symbols-outlined text-[20px]">home</span>
+                 Trở về trang chủ
+               </button>
+             </div>
           </div>
         </div>
-      )}
-
-      <div className="max-w-7xl mx-auto mt-8 px-4 flex flex-col lg:flex-row gap-8 items-start">
-        <div className="flex-1 space-y-8">
+      ) : (
+        <div className="max-w-7xl mx-auto mt-8 px-4 flex flex-col lg:flex-row gap-8 items-start">
+          <div className="flex-1 space-y-8">
           {examVersion.questions.map((q: any, idx: number) => {
             const isCorrectAnswer = q.options.find((o: any) => o.isCorrect)?.id;
             const studentAnswer = answers[q.id];
@@ -473,6 +550,7 @@ export default function TakeExam() {
           )}
         </div>
       </div>
+      )}
     </main>
   );
 }

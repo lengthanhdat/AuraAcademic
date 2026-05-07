@@ -19,6 +19,13 @@ export default function TeacherExamRoom() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
 
+  // Helper: lấy src video từ Base64 (mới) hoặc URL (legacy)
+  const getVideoSrc = (v: any): string | null => {
+    if (v?.videoBase64) return `data:video/webm;base64,${v.videoBase64}`;
+    if (v?.videoUrl) return v.videoUrl;
+    return null;
+  };
+
   const VIOLATION_LABELS: Record<string, string> = {
 
     no_face: "Không nhận diện được khuôn mặt",
@@ -44,12 +51,23 @@ export default function TeacherExamRoom() {
     fetchExam();
   }, [examId]);
 
+  // Nếu exam load xong mà không có accessCode → tự động tạo mã mới
+  useEffect(() => {
+    if (!exam) return;
+    if (!exam.accessCode) {
+      fetch(`http://localhost:8088/api/exams/${examId}/generate-code`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${getToken()}` }
+      }).then(r => { if (r.ok) fetchExam(); });
+    }
+  }, [exam?.id]);
+
   // Kết nối SSE khi biết accessCode của phòng
   useEffect(() => {
     if (!exam?.accessCode) return;
     const code = exam.accessCode;
 
-    const es = new EventSource(`http://localhost:8088/api/exams/${code}/stream`);
+    const es = new EventSource(`http://localhost:8088/api/exams/${code}/stream?token=${getToken()}`);
 
     es.addEventListener("count", (e) => {
       const data = JSON.parse(e.data);
@@ -78,12 +96,18 @@ export default function TeacherExamRoom() {
       setViolations(prev => [newViolation, ...prev]);
     });
 
-    // Lấy dữ liệu ban đầu ngay khi kết nối
+    // Lấy dữ liệu ban đầu
     fetchActiveCount(code);
     fetchResults(code);
     fetchViolations(code);
 
-    return () => es.close();
+    // Polling dự phòng mỗi 10s (đặc biệt hữu ích cho số lượng người)
+    const pollId = setInterval(() => fetchActiveCount(code), 10000);
+
+    return () => {
+      es.close();
+      clearInterval(pollId);
+    };
   }, [exam?.accessCode]);
 
   const fetchActiveCount = async (code: string) => {
@@ -91,13 +115,15 @@ export default function TeacherExamRoom() {
       const res = await fetch(`http://localhost:8088/api/exams/${code}/active-count`, {
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
-      if (res.ok) { 
-        const d = await res.json(); 
-        setActiveCount(d.activeCount || 0);
-        setLobbyCount(d.lobbyCount || 0);
-        setExamCount(d.examCount || 0);
+      if (res.ok) {
+        const data = await res.json();
+        setActiveCount(data.activeCount ?? 0);
+        setLobbyCount(data.lobbyCount ?? 0);
+        setExamCount(data.examCount ?? 0);
       }
-    } catch {}
+    } catch (e) {
+      console.error("Error fetching active count:", e);
+    }
   };
 
   const fetchResults = async (code: string) => {
@@ -189,31 +215,30 @@ export default function TeacherExamRoom() {
     if (!exam) return null;
     const s = exam.status;
     
-    if ((s === "STARTED" || s === "PUBLISHED") && timeLeft === 0) {
+    if (s === "STARTED" && timeLeft === 0) {
       return <span className="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-black uppercase rounded-full">⏳ Hết thời gian làm bài</span>;
     }
 
-    if (s === "WAITING") return <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-black uppercase rounded-full">⏳ Đang chờ học sinh</span>;
-    if (s === "STARTED" || s === "PUBLISHED") return <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-black uppercase rounded-full animate-pulse">🟢 Đang diễn ra</span>;
-    if (s === "FINISHED") return <span className="px-3 py-1 bg-error-container text-on-error-container text-xs font-black uppercase rounded-full">🔒 Đã đóng</span>;
+    if (s === "PUBLISHED") return <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-black uppercase rounded-full animate-pulse">📋 Sẵn sàng — Chưa bắt đầu</span>;
+    if (s === "WAITING")   return <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-black uppercase rounded-full">⏳ Đang chờ học sinh</span>;
+    if (s === "STARTED")   return <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-black uppercase rounded-full animate-pulse">🟢 Đang diễn ra</span>;
+    if (s === "FINISHED")  return <span className="px-3 py-1 bg-error-container text-on-error-container text-xs font-black uppercase rounded-full">🔒 Đã đóng</span>;
     if (s === "COMPLETED") return <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-black uppercase rounded-full">⬛ Đã kết thúc</span>;
-    if (s === "DRAFT") return <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-black uppercase rounded-full">📝 Bản nháp</span>;
+    if (s === "DRAFT")     return <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-black uppercase rounded-full">📝 Bản nháp</span>;
     return null;
   };
 
-  const isActive = exam?.status === "STARTED" || exam?.status === "PUBLISHED";
-  const isWaiting = exam?.status === "WAITING";
+  const isActive   = exam?.status === "STARTED"; // chỉ STARTED mới là đang diễn ra
+  const isWaiting  = exam?.status === "WAITING" || exam?.status === "PUBLISHED"; // PUBLISHED = đã công bố, chờ GV bắt đầu
   const isFinished = exam?.status === "FINISHED" || exam?.status === "COMPLETED";
 
 
-  // Khởi tạo thời gian còn lại khi load exam
+  // Khởi tạo thời gian còn lại — chỉ khi STARTED (có startTime thực tế)
   useEffect(() => {
-    if (exam?.status === "STARTED" || exam?.status === "PUBLISHED") {
-      if (exam.startTime && exam.duration) {
-        const endTime = exam.startTime + exam.duration * 60 * 1000;
-        const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-        setTimeLeft(remaining);
-      }
+    if (exam?.status === "STARTED" && exam.startTime && exam.duration) {
+      const endTime = exam.startTime + exam.duration * 60 * 1000;
+      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+      setTimeLeft(remaining);
     }
   }, [exam?.status, exam?.startTime, exam?.duration]);
 
@@ -282,12 +307,20 @@ export default function TeacherExamRoom() {
           <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-white/10 text-[120px]">key</span>
           <div>
             <p className="text-on-primary-container text-xs font-bold uppercase tracking-widest mb-2">Mã phòng thi</p>
-            <h2 className="text-5xl font-black tracking-widest mb-4">{exam.accessCode}</h2>
+            {exam.accessCode ? (
+              <h2 className="text-5xl font-black tracking-widest mb-4">{exam.accessCode}</h2>
+            ) : (
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined animate-spin text-2xl">sync</span>
+                <span className="text-lg font-bold opacity-80">Đang tạo mã...</span>
+              </div>
+            )}
             <p className="text-on-primary-container/80 text-xs">Chia sẻ mã này cho học sinh để vào phòng chờ</p>
           </div>
           <button
             onClick={copyCode}
-            className="mt-4 flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl font-bold text-sm transition-all"
+            disabled={!exam.accessCode}
+            className="mt-4 flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 px-4 py-2 rounded-xl font-bold text-sm transition-all"
           >
             <span className="material-symbols-outlined text-sm">content_copy</span>
             Sao chép mã
@@ -362,7 +395,7 @@ export default function TeacherExamRoom() {
             )
           )}
           <button
-            onClick={handleClose}
+            onClick={() => handleClose()}
             disabled={isClosing}
             className="px-8 py-4 bg-error-container text-on-error-container font-bold rounded-xl hover:bg-error/20 transition-all flex items-center gap-2 disabled:opacity-60"
           >
@@ -496,14 +529,18 @@ export default function TeacherExamRoom() {
 
                         {/* Content */}
                         <div className="flex-1 bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
-                          {v.videoUrl && (
-                            <div className="relative aspect-video bg-black">
-                              <video src={v.videoUrl} controls className="w-full h-full object-cover" />
-                              <div className="absolute top-2 left-2 bg-red-600/90 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[10px]">videocam</span> 5s Buffer
+                          {/* Video bằng chứng */}
+                          {(() => {
+                            const src = getVideoSrc(v);
+                            return src ? (
+                              <div className="relative aspect-video bg-black">
+                                <video src={src} controls className="w-full h-full object-cover" />
+                                <div className="absolute top-2 left-2 bg-red-600/90 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[10px]">videocam</span> 5s Buffer
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            ) : null;
+                          })()}
                           <div className="p-3 flex items-center justify-between">
                             <span className="text-sm font-bold text-red-600 flex items-center gap-1.5">
                               <span className="material-symbols-outlined text-[14px]">report</span>
@@ -554,30 +591,33 @@ export default function TeacherExamRoom() {
                           onClick={() => setSelectedStudent(group.studentId)}
                           className={`text-left rounded-xl border-2 ${severityStyle.card} overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all group`}
                         >
-                          {/* Preview video of latest violation */}
-                          {latest?.videoUrl ? (
-                            <div className="relative aspect-video bg-black/5 overflow-hidden">
-                              <video
-                                src={latest.videoUrl}
-                                className="w-full h-full object-cover pointer-events-none"
-                                muted
-                              />
-                              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow">
-                                  <span className="material-symbols-outlined text-slate-700">play_circle</span>
+                          {/* Preview ảnh thumbnail hoặc video preview */}
+                          {(() => {
+                            const src = getVideoSrc(latest);
+                            return src ? (
+                              <div className="relative aspect-video bg-black/5 overflow-hidden">
+                                <video
+                                  src={src}
+                                  className="w-full h-full object-cover pointer-events-none"
+                                  muted
+                                />
+                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                  <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow">
+                                    <span className="material-symbols-outlined text-slate-700">play_circle</span>
+                                  </div>
+                                </div>
+                                <div className="absolute top-2 right-2">
+                                  <span className={`px-2 py-1 rounded-full text-[11px] font-black ${severityStyle.badge} shadow`}>
+                                    {count} lỗi
+                                  </span>
                                 </div>
                               </div>
-                              <div className="absolute top-2 right-2">
-                                <span className={`px-2 py-1 rounded-full text-[11px] font-black ${severityStyle.badge} shadow`}>
-                                  {count} lỗi
-                                </span>
+                            ) : (
+                              <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-4xl text-slate-300">videocam_off</span>
                               </div>
-                            </div>
-                          ) : (
-                            <div className="aspect-video bg-slate-100 flex items-center justify-center">
-                              <span className="material-symbols-outlined text-4xl text-slate-300">videocam_off</span>
-                            </div>
-                          )}
+                            );
+                          })()}
 
                           {/* Student info */}
                           <div className="p-3">

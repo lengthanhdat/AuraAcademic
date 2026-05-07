@@ -41,7 +41,7 @@ export default function TeacherDashboard() {
   // Cập nhật realtime số học sinh đang làm bài mỗi 10 giây
   useEffect(() => {
     const liveExams = exams.filter(e => {
-      if (e.status !== 'PUBLISHED') return false;
+      if (e.status !== 'PUBLISHED' && e.status !== 'STARTED') return false;
       if (!e.startTime) return true;
       const endTime = e.startTime + (e.duration * 60 * 1000);
       return Date.now() <= endTime;
@@ -123,34 +123,16 @@ export default function TeacherDashboard() {
   };
 
   const editExam = (exam: any) => {
-    // Lưu trạng thái vào localStorage để trang ExamBuilder nhận diện
-    const stateToSave = {
-      step: "review",
-      title: exam.title,
-      duration: exam.duration,
-      questionCount: exam.versions?.[0]?.questions?.length || 20,
-      questions: exam.versions?.[0]?.questions || [],
-      versionCount: exam.versions?.length || 1,
-      editingId: exam.id // Lưu ID để biết là đang sửa chứ không phải tạo mới
-    };
-    localStorage.setItem("exam_builder_state", JSON.stringify(stateToSave));
-    router.push("/teacher/exams");
+    // Dùng URL query param — ExamBuilder sẽ fetch thắng từ API, không cần localStorage
+    router.push(`/teacher/exams?edit=${exam.id}`);
   };
 
   const viewExam = (exam: any) => {
-    // Tương tự edit nhưng chuyển thẳng sang bước preview
-    const stateToSave = {
-      step: "preview",
-      title: exam.title,
-      duration: exam.duration,
-      questions: exam.versions?.[0]?.questions || [],
-      versionCount: exam.versions?.length || 1
-    };
-    localStorage.setItem("exam_builder_state", JSON.stringify(stateToSave));
-    router.push("/teacher/exams");
+    // Mọi trạng thái đều vào exam-room để xem chi tiết
+    router.push(`/teacher/exam-room/${exam.id}`);
   };
 
-  const activeExamsCount = exams.filter(e => e.status === 'PUBLISHED').length;
+  const activeExamsCount = exams.filter(e => e.status === 'PUBLISHED' || e.status === 'STARTED').length;
   const draftExamsCount = exams.filter(e => e.status === 'DRAFT').length;
 
   return (
@@ -158,7 +140,14 @@ export default function TeacherDashboard() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h3 className="text-3xl font-extrabold text-on-surface font-headline tracking-tight">Chào buổi sáng, {user?.fullName || "Giáo viên"}</h3>
+          <h3 className="text-3xl font-extrabold text-on-surface font-headline tracking-tight">
+            {(() => {
+              const hour = new Date().getHours();
+              if (hour < 12) return "Chào buổi sáng";
+              if (hour < 18) return "Chào buổi chiều";
+              return "Chào buổi tối";
+            })()}, {user?.fullName || "Giáo viên"}
+          </h3>
           <p className="text-on-surface-variant mt-1">Dưới đây là tổng quan các kỳ thi và lớp học của bạn hôm nay.</p>
         </div>
         <div className="flex gap-3">
@@ -273,7 +262,7 @@ export default function TeacherDashboard() {
                   <tr key={exam.id} className="hover:bg-surface-container-lowest transition-colors group">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${exam.status === 'PUBLISHED' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${(exam.status === 'PUBLISHED' || exam.status === 'STARTED') ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
                           {exam.title.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
@@ -318,7 +307,7 @@ export default function TeacherDashboard() {
                     </td>
                     <td className="px-6 py-5 text-center">
                       {(() => {
-                        if (exam.status === 'PUBLISHED') {
+                        if (exam.status === 'PUBLISHED' || exam.status === 'STARTED') {
                           if (exam.startTime) {
                             const endTime = exam.startTime + (exam.duration * 60 * 1000);
                             if (Date.now() > endTime) {

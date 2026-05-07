@@ -18,7 +18,6 @@ export function TeacherSidebar() {
   const menuItems = [
     { label: "Bảng Điều Khiển", icon: "dashboard", href: "/teacher/dashboard" },
     { label: "Thiết Kế Đề Thi", icon: "magic_button", href: "/teacher/exams" },
-    { label: "Nhập Từ File", icon: "upload_file", href: "/teacher/exams/import" },
     { label: "Giám Sát Trực Tiếp", icon: "videocam", href: "/teacher/monitoring" },
     { label: "Báo Cáo Phân Tích", icon: "assessment", href: "/teacher/reports" },
   ];
@@ -33,45 +32,62 @@ export function TeacherSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col h-screen w-64 border-r-0 sticky left-0 top-0 bg-slate-50 dark:bg-slate-900 p-6 space-y-8 z-50 shrink-0">
-      <div className="flex items-center space-x-3 px-2">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00355f] to-[#0f4c81] flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
+    <aside className="hidden md:flex flex-col h-screen w-64 sticky left-0 top-0 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 p-5 space-y-6 z-50 shrink-0">
+      {/* Logo Section */}
+      <div className="flex items-center space-x-3 px-3 py-2">
+        <div className="w-10 h-10 rounded-xl bg-[#00355f] flex items-center justify-center text-white shadow-lg shadow-blue-900/10 shrink-0">
           <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
         </div>
-        <div>
-          <h1 className="text-lg font-black text-blue-900 dark:text-blue-100 leading-none tracking-tight">Digital Proctor</h1>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">Hội đồng thi</p>
+        <div className="overflow-hidden">
+          <h1 className="text-base font-black text-[#00355f] dark:text-blue-100 leading-tight tracking-tight truncate">Digital Proctor</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 mt-0.5">Hội đồng thi</p>
         </div>
       </div>
       
-      <Link href="/teacher/exams" className="w-full py-3.5 px-4 bg-[#00355f] text-white rounded-xl font-headline font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/10 hover:bg-[#002a4d] active:scale-95 transition-all">
-        <span className="material-symbols-outlined text-[18px]">add_circle</span>
-        Tạo Kỳ Thi Mới
-      </Link>
+      {/* Primary Action */}
+      <div className="px-1">
+        <Link href="/teacher/exams" className="w-full py-3.5 px-4 bg-[#00355f] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 hover:bg-[#002a4d] hover:-translate-y-0.5 active:scale-95 transition-all duration-200">
+          <span className="material-symbols-outlined text-[18px]">add_circle</span>
+          Tạo Kỳ Thi Mới
+        </Link>
+      </div>
 
-      <nav className="flex-1 flex flex-col gap-1.5">
+      {/* Navigation */}
+      <nav className="flex-1 flex flex-col gap-1 px-1">
         {menuItems.map((item) => {
           const active = isActive(item.href);
           return (
             <Link 
               key={item.href}
               href={item.href}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
                 active 
-                  ? "bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-400 font-bold shadow-md shadow-slate-200/50" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-blue-900 hover:bg-white/50"
+                  ? "bg-blue-50/80 dark:bg-blue-900/20 text-[#00355f] dark:text-blue-400 font-bold" 
+                  : "text-slate-500 dark:text-slate-400 hover:text-[#00355f] hover:bg-slate-50"
               }`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${active ? "bg-blue-50 text-blue-900" : "text-slate-400 group-hover:text-blue-600"}`}>
-                <span className={`material-symbols-outlined text-[20px] ${active ? "fill-1" : ""}`}>{item.icon}</span>
+              {/* Active Indicator Line */}
+              {active && (
+                <div className="absolute left-0 top-3 bottom-3 w-1 bg-[#00355f] rounded-r-full" />
+              )}
+              
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                active ? "scale-110" : "group-hover:scale-110"
+              }`}>
+                <span className={`material-symbols-outlined text-[22px] transition-colors ${
+                  active ? "text-[#00355f] dark:text-blue-400" : "text-slate-400 group-hover:text-[#00355f]"
+                }`} style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
+                  {item.icon}
+                </span>
               </div>
-              <span className="font-headline font-semibold tracking-tight text-sm">{item.label}</span>
+              <span className="text-sm tracking-tight">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="pt-6 border-t border-slate-200/60 flex flex-col gap-1.5">
+      {/* Bottom Actions */}
+      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-1 px-1">
         {bottomItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -80,26 +96,29 @@ export function TeacherSidebar() {
               href={item.href}
               className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                 active 
-                  ? "bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-400 font-bold shadow-md shadow-slate-200/50" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-blue-900 hover:bg-white/50"
+                  ? "bg-blue-50/80 dark:bg-blue-900/20 text-[#00355f] dark:text-blue-400 font-bold" 
+                  : "text-slate-500 dark:text-slate-400 hover:text-[#00355f] hover:bg-slate-50"
               }`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${active ? "bg-blue-50 text-blue-900" : "text-slate-400 group-hover:text-blue-600"}`}>
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:scale-110">
+                <span className="material-symbols-outlined text-[22px] text-slate-400 group-hover:text-[#00355f]" style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
+                  {item.icon}
+                </span>
               </div>
-              <span className="font-headline font-semibold tracking-tight text-sm">{item.label}</span>
+              <span className="text-sm tracking-tight">{item.label}</span>
             </Link>
           );
         })}
+        
         <Link 
           onClick={() => { localStorage.removeItem("user"); localStorage.removeItem("accessToken"); }} 
-          className="flex items-center space-x-3 px-4 py-3 text-red-500 dark:text-red-400 hover:bg-red-50 rounded-xl transition-all group" 
+          className="flex items-center space-x-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-all group mt-2" 
           href="/login"
         >
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 group-hover:text-red-600">
-            <span className="material-symbols-outlined text-[20px]">logout</span>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+            <span className="material-symbols-outlined text-[22px]">logout</span>
           </div>
-          <span className="font-headline font-semibold tracking-tight text-sm">Đăng Xuất</span>
+          <span className="text-sm font-bold tracking-tight">Đăng Xuất</span>
         </Link>
       </div>
     </aside>

@@ -60,13 +60,14 @@ export default function StudentLobby() {
 
     es.addEventListener("status", (e) => {
       const data = JSON.parse(e.data);
-      if (data.status === "STARTED" || data.status === "PUBLISHED") {
+      // Chỉ vào thi khi GV bấm "Bắt đầu thi" (STARTED) — không vào khi PUBLISHED
+      if (data.status === "STARTED") {
         es.close(); esRef.current = null;
         enterExam(examCode);
       }
-      if (data.status === "FINISHED") {
+      if (data.status === "FINISHED" || data.status === "COMPLETED") {
         es.close(); esRef.current = null;
-        setError("Phòng thi đã bị đóng bởi giáo viên.");
+        setError("Đã được đóng. Bạn không thể vào thi nữa.");
       }
     });
 
@@ -89,8 +90,12 @@ export default function StudentLobby() {
         if (res.ok) {
           const data = await res.json();
           setExamInfo(data);
-          if (data.status === "STARTED" || data.status === "PUBLISHED") {
+          // Chỉ tự động vào thi khi GV đã bấm Bắt đầu (STARTED)
+          // Nếu PUBLISHED → học sinh vào phòng chờ, chờ SSE báo STARTED
+          if (data.status === "STARTED") {
             enterExam(code);
+          } else {
+            startSSE(code); // Kết nối SSE để đợi GV bắt đầu
           }
         } else {
           const msg = await res.text();
@@ -142,7 +147,7 @@ export default function StudentLobby() {
 
     sendHeartbeat();
     heartbeatRef.current = setInterval(sendHeartbeat, 15000);
-    startSSE(code);
+    // Không gọi startSSE ở đây — đã được gọi trong fetchLobbyInfo khi status=PUBLISHED/WAITING
 
     window.addEventListener("beforeunload", sendLeaveBeacon);
     return () => {

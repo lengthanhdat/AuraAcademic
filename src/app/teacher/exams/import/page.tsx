@@ -73,8 +73,12 @@ export default function ImportFromFile() {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
+      const token = localStorage.getItem("accessToken");
       const res = await fetch("http://localhost:8088/api/questions/extract", {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
         body: formData,
       });
       const data = await res.json();
@@ -169,12 +173,16 @@ export default function ImportFromFile() {
             questions: formattedQuestions,
           },
         ],
-        extractedImages: {},
+        extractedImages: [],
       };
 
+      const token = localStorage.getItem("accessToken");
       const res = await fetch("http://localhost:8088/api/exams", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(examPayload),
       });
 

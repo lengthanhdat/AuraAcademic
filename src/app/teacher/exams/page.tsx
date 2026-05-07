@@ -1,6 +1,6 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -10,35 +10,78 @@ type Question = { id: string; type: string; text: string; imageUrl?: string; opt
 
 type Step = "upload" | "generating" | "review" | "preview";
 
-export default function ExamBuilder() {
+function ExamBuilderContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>("upload");
+  type CreationMode = "ai" | "manual" | "import";
+  const [creationMode, setCreationMode] = useState<CreationMode>("ai");
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
-  const [duration, setDuration] = useState(60);
-  const [questionCount, setQuestionCount] = useState(20);
+  const [duration, setDuration] = useState<number | "">("");
+  const [questionCount, setQuestionCount] = useState<number | "">("");
   const [shuffle, setShuffle] = useState(true);
   const [aiProctoring, setAiProctoring] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [extractedText, setExtractedText] = useState("");
   const [extractedImages, setExtractedImages] = useState<string[]>([]);
-  const [versionCount, setVersionCount] = useState(1);
+  const [versionCount, setVersionCount] = useState<number | "">("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiCommand, setAiCommand] = useState("");
   const [error, setError] = useState("");
   const [genLog, setGenLog] = useState("Đang phân tích tài liệu...");
   const [genProgress, setGenProgress] = useState(0);
+  const [editingQIdx, setEditingQIdx] = useState<number | null>(null);
+  const [editingOptIdx, setEditingOptIdx] = useState<{q: number; o: number} | null>(null);
+  const imgUploadRef = useRef<HTMLInputElement>(null);
+  const [pendingImgQIdx, setPendingImgQIdx] = useState<number | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 1. Khôi phục dữ liệu từ LocalStorage
+  // Flag để tránh autosave ghi đè trong khi đang load từ URL
+  const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(false);
+
+  // 1a. Load từ URL query param ?edit=<examId> (uu tiên cao nhất, fetch từ API)
   useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId) return;
+    setIsLoadingFromUrl(true);
+    fetch(`http://localhost:8088/api/exams/${editId}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
+    }).then(r => r.ok ? r.json() : null).then(exam => {
+      if (!exam) return;
+      setTitle(exam.title || "");
+      setDuration(exam.duration || 60);
+      const qs = exam.versions?.[0]?.questions || [];
+      setQuestions(qs);
+      setQuestionCount(qs.length || 20);
+      setVersionCount(exam.versions?.length || 1);
+      setShuffle(exam.shuffle ?? true);
+      setAiProctoring(exam.aiProctoring ?? false);
+      setExtractedImages(exam.extractedImages || []); // <-- Added this line to load images
+      setEditingId(editId);
+      setStep("review");
+    }).finally(() => setIsLoadingFromUrl(false));
+  }, [searchParams]);
+
+  // 1b. Xử lý chế độ truy cập từ URL (?mode=import hoặc ?mode=manual)
+  useEffect(() => {
+    const mode = searchParams.get("mode");
+    if (mode === "import") setCreationMode("import");
+    else if (mode === "manual") setCreationMode("manual");
+    else if (mode === "ai") setCreationMode("ai");
+  }, [searchParams]);
+
+  // 1c. Fallback: Khôi phục từ LocalStorage khi không có URL param
+  useEffect(() => {
+    if (searchParams.get("edit")) return; // ưu tiên URL param
     const savedData = localStorage.getItem("exam_builder_state");
     if (savedData) {
       try {
-        const { step: savedStep, title, duration, questionCount, questions, versionCount, extractedText: savedText } = JSON.parse(savedData);
+        const { step: savedStep, title, duration, questionCount, questions, versionCount, extractedText: savedText, editingId: savedId } = JSON.parse(savedData);
         if (savedStep && savedStep !== "generating") setStep(savedStep);
         if (title) setTitle(title);
         if (duration) setDuration(duration);
@@ -46,34 +89,43 @@ export default function ExamBuilder() {
         if (questions) setQuestions(questions);
         if (versionCount) setVersionCount(versionCount);
         if (savedText) setExtractedText(savedText);
+        if (savedId) setEditingId(savedId);
+        if (savedData.includes("creationMode")) {
+          const { creationMode: savedMode } = JSON.parse(savedData);
+          if (savedMode) setCreationMode(savedMode);
+        }
         const savedImages = sessionStorage.getItem("exam_extracted_images");
         if (savedImages) setExtractedImages(JSON.parse(savedImages));
       } catch (e) {
-        console.error("Lỗi khôi phục dữ liệu:", e);
+        console.error("Đã xảy ra lỗi khi khôi phục dữ liệu:", e);
       }
     }
   }, []);
 
-  // 2. Tự động lưu dữ liệu
+  // 2. Tự động lưu dữ liệu (chỉ khi không đang load từ URL)
   useEffect(() => {
-    if (step !== "generating") {
-      const stateToSave = { step, title, duration, questionCount, questions, versionCount, extractedText };
+    if (step !== "generating" && !isLoadingFromUrl) {
+      const stateToSave = { step, title, duration, questionCount, questions, versionCount, extractedText, editingId, creationMode };
       localStorage.setItem("exam_builder_state", JSON.stringify(stateToSave));
     }
-  }, [step, title, duration, questionCount, questions, versionCount, extractedText]);
+  }, [step, title, duration, questionCount, questions, versionCount, extractedText, editingId, creationMode, isLoadingFromUrl]);
 
   const clearPersistedState = () => {
     localStorage.removeItem("exam_builder_state");
   };
 
   const handleGenerate = async () => {
-    if (!file)        { toast.error("Vui lòng chọn file tài liệu."); return; }
-    if (!title.trim()) { toast.error("Vui lòng nhập tên kỳ thi.");  return; }
-    
-    setGenProgress(0);
-    setStep("generating");
+    if (!file) return;
+    if (creationMode === "import") {
+      handleFileExtract();
+      return;
+    }
+    if (!questionCount || questionCount <= 0) { toast.error("Vui lòng nhập số lượng câu hỏi hợp lệ."); return; }
 
-    let jobId: string;
+    setStep("generating");
+    setGenProgress(5);
+    setGenLog("Bắt đầu xử lý tài liệu...");
+    let jobId = "";
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -89,40 +141,136 @@ export default function ExamBuilder() {
       
       jobId = uploadData.jobId;
       setGenProgress(15);
-      setGenLog("Tài liệu đã tải lên. AI đang xử lý...");
+      setGenLog("Tài liệu đã tải lên. Aura AI đang kết nối...");
     } catch (e: any) {
       toast.error(e.message || "Không thể kết nối máy chủ");
       setStep("upload");
       return;
     }
 
+    let startTime = Date.now();
+    let pseudoProgress = 15;
+    
     pollingRef.current = setInterval(async () => {
+      // 1. Cập nhật tiến trình giả lập để người dùng không cảm thấy treo
+      pseudoProgress += Math.random() * 2;
+      if (pseudoProgress > 95) pseudoProgress = 95;
+      setGenProgress(Math.floor(pseudoProgress));
+
+      // 2. Cập nhật log theo tiến trình
+      if (pseudoProgress > 20 && pseudoProgress < 40) setGenLog("Đang trích xuất văn bản & hình ảnh...");
+      if (pseudoProgress >= 40 && pseudoProgress < 65) setGenLog("Aura AI đang phân tích cấu trúc đề thi...");
+      if (pseudoProgress >= 65 && pseudoProgress < 85) setGenLog("Đang tối ưu hóa câu hỏi bằng trí tuệ nhân tạo...");
+      if (pseudoProgress >= 85) setGenLog("Đang chuẩn bị danh sách câu hỏi cuối cùng...");
+
+      // 3. Kiểm tra Timeout sau 5 phút
+      if (Date.now() - startTime > 300000) {
+        clearInterval(pollingRef.current!);
+        toast.error("Quá thời gian xử lý. Vui lòng thử lại với tệp nhỏ hơn.");
+        setStep("upload");
+        return;
+      }
+
       try {
         const pollRes = await fetch(`http://localhost:8088/api/ai/jobs/${jobId}`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
         });
+
+        if (pollRes.status === 401 || pollRes.status === 403) {
+          clearInterval(pollingRef.current!);
+          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          router.push("/login");
+          return;
+        }
+
         if (!pollRes.ok) return;
         const job = await pollRes.json();
 
         if (job.status === "DONE") {
           clearInterval(pollingRef.current!);
+          setGenProgress(100);
+          setGenLog("Hoàn tất!");
           setQuestions(job.questions || []);
           setExtractedText(job.extractedText || "");
           const imgs = job.extractedImages || [];
           setExtractedImages(imgs);
           sessionStorage.setItem("exam_extracted_images", JSON.stringify(imgs));
-          toast.success("Tạo thành công bộ đề!");
-          setStep("review");
+          
+          setTimeout(() => {
+            toast.success("Tạo thành công bộ đề!");
+            setStep("review");
+          }, 500);
         } else if (job.status === "FAILED") {
           clearInterval(pollingRef.current!);
-          toast.error(job.errorMessage || "AI xử lý thất bại");
+          setError(job.errorMessage || "AI gặp lỗi khi xử lý tài liệu này.");
+          toast.error("AI thất bại: " + job.errorMessage);
           setStep("upload");
         }
-      } catch {}
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
     }, 2500);
   };
 
+  const handleFileExtract = async () => {
+    if (!file) return;
+    setIsAiLoading(true);
+    setStep("generating");
+    setGenProgress(20);
+    setGenLog("Đang tải file và phân tích cấu trúc...");
+    
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch("http://localhost:8088/api/questions/extract", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData,
+      });
+      
+      if (!res.ok) {
+        toast.error("Lỗi khi trích xuất câu hỏi từ file.");
+        setStep("upload");
+        setIsAiLoading(false);
+        return;
+      }
+      
+      const data = await res.json();
+      setGenProgress(100);
+      setGenLog("Hoàn tất!");
+      
+      const qs = (data.questions || []).map((q: any, i: number) => ({
+        id: q.id || String(Date.now() + i),
+        type: "Trắc nghiệm",
+        text: q.text,
+        imageUrl: q.imageBase64 || null,
+        options: q.options.map((o: any) => ({
+          id: o.id,
+          text: o.text,
+          isCorrect: o.isCorrect
+        }))
+      }));
+
+      setQuestions(qs);
+      setTimeout(() => {
+        toast.success(`Đã trích xuất thành công ${qs.length} câu hỏi!`);
+        setStep("review");
+        setIsAiLoading(false);
+      }, 500);
+    } catch (err) {
+      toast.error("Không thể kết nối đến máy chủ.");
+      setStep("upload");
+      setIsAiLoading(false);
+    }
+  };
+
   const handleSave = async (status: string) => {
+    if (!title.trim()) { toast.error("Vui lòng nhập tên kỳ thi."); return; }
+    if (!duration || duration <= 0) { toast.error("Vui lòng nhập thời gian làm bài hợp lệ."); return; }
+    if (!versionCount || versionCount <= 0) { toast.error("Vui lòng nhập số lượng đề hợp lệ."); return; }
+    if (questions.length === 0) { toast.error("Đề thi phải có ít nhất một câu hỏi."); return; }
+
     setIsSaving(true);
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -134,22 +282,40 @@ export default function ExamBuilder() {
           questions: [...questions].sort(() => Math.random() - 0.5)
         });
       }
-      const res = await fetch("http://localhost:8088/api/exams", {
-        method: "POST",
+
+      const payload = { 
+        title, duration, shuffle, aiProctoring, 
+        teacherId: user.id, teacherName: user.fullName,
+        status: status === "WAITING" ? "PUBLISHED" : status, 
+        versions, extractedImages
+      };
+
+      const url = editingId 
+        ? `http://localhost:8088/api/exams/${editingId}`
+        : "http://localhost:8088/api/exams";
+      
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method: method,
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
         },
-        body: JSON.stringify({ 
-          title, duration, shuffle, aiProctoring, 
-          teacherId: user.id, teacherName: user.fullName,
-          status, versions, extractedImages
-        }),
+        body: JSON.stringify(payload),
       });
+
       if (res.ok) {
+        const savedExam = await res.json();
         clearPersistedState();
-        router.push("/teacher/dashboard");
-        toast.success(status === "WAITING" ? "Đã công bố kỳ thi!" : "Đã lưu bản nháp");
+        if (status === "WAITING") {
+          // Công bố đề → vào thẳng trang phòng thi để chia sẻ mã và bắt đầu
+          router.push(`/teacher/exam-room/${savedExam.id}`);
+          toast.success("Đã công bố kỳ thi! Chia sẻ mã phòng cho học sinh.");
+        } else {
+          router.push("/teacher/dashboard");
+          toast.success("Đã lưu bản nháp.");
+        }
       }
     } catch { toast.error("Không thể kết nối máy chủ."); }
     finally { setIsSaving(false); }
@@ -157,6 +323,72 @@ export default function ExamBuilder() {
 
   const deleteQuestion = (idx: number) => {
     setQuestions(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateQuestionText = (idx: number, text: string) => {
+    setQuestions(prev => prev.map((q, i) => i === idx ? { ...q, text } : q));
+  };
+
+  const updateOptionText = (qIdx: number, oIdx: number, text: string) => {
+    setQuestions(prev => prev.map((q, i) => i === qIdx
+      ? { ...q, options: q.options.map((o, j) => j === oIdx ? { ...o, text } : o) }
+      : q
+    ));
+  };
+
+  const setCorrectOption = (qIdx: number, oIdx: number) => {
+    setQuestions(prev => prev.map((q, i) => i === qIdx
+      ? { ...q, options: q.options.map((o, j) => ({ ...o, isCorrect: j === oIdx })) }
+      : q
+    ));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f || pendingImgQIdx === null) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      const newIdx = extractedImages.length;
+      setExtractedImages(prev => {
+        const updated = [...prev, base64];
+        sessionStorage.setItem("exam_extracted_images", JSON.stringify(updated));
+        return updated;
+      });
+      updateQuestionText(pendingImgQIdx, questions[pendingImgQIdx].text + ` [IMG_${newIdx}]`);
+      setPendingImgQIdx(null);
+    };
+    reader.readAsDataURL(f);
+    e.target.value = '';
+  };
+
+  // Render nội dung câu hỏi: chuyển [IMG_N] → <img>, còn lại → ReactMarkdown
+  const renderContent = (text: string) => {
+    const parts = text.split(/(\[IMG_\d+\])/g);
+    return (
+      <>
+        {parts.map((part, i) => {
+          const match = part.match(/\[IMG_(\d+)\]/);
+          if (match) {
+            const imgIdx = parseInt(match[1]);
+            const src = extractedImages[imgIdx];
+            return src
+              ? <img key={i} src={`data:image/jpeg;base64,${src}`} alt={`Hình ${imgIdx}`} className="max-w-[450px] max-h-[300px] object-contain rounded-lg my-3 border border-slate-200 shadow-sm" />
+              : <span key={i} className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-mono">[IMG_{imgIdx} — chưa có ảnh]</span>;
+          }
+          return part ? (
+            <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}
+              components={{
+                table: ({node, ...props}) => <div className="overflow-x-auto my-2"><table className="text-sm border-collapse w-full" {...props} /></div>,
+                th: ({node, ...props}) => <th className="border border-slate-300 bg-slate-100 px-3 py-1.5 text-left font-bold" {...props} />,
+                td: ({node, ...props}) => <td className="border border-slate-200 px-3 py-1.5" {...props} />,
+                p: ({node, ...props}) => <span {...props} />,
+              }}
+            >{part}</ReactMarkdown>
+          ) : null;
+        })}
+      </>
+    );
   };
 
   const addManualQuestion = () => {
@@ -171,23 +403,83 @@ export default function ExamBuilder() {
         { id: "d", text: "Đáp án D", isCorrect: false },
       ]
     };
-    setQuestions(prev => [...prev, newQ]);
+    setQuestions(prev => {
+      setEditingQIdx(prev.length);
+      return [...prev, newQ];
+    });
   };
 
   if (step === "generating") return (
-    <main className="flex-1 flex items-center justify-center bg-slate-50">
-      <div className="text-center space-y-6 max-w-sm w-full">
-        <div className="relative w-20 h-20 mx-auto">
-          <div className="absolute inset-0 rounded-full bg-blue-100 animate-ping opacity-25" />
-          <div className="w-20 h-20 rounded-full bg-blue-900 flex items-center justify-center shadow-xl">
-            <span className="material-symbols-outlined text-white text-4xl animate-spin">sync</span>
+    <main className="flex-1 flex items-center justify-center bg-[#F8FAFC] p-6">
+      <div className="w-full max-w-lg">
+        {/* Main Loading Card */}
+        <div className="bg-white rounded-[40px] p-12 shadow-[0_32px_64px_-16px_rgba(0,53,95,0.1)] border border-slate-100 relative overflow-hidden group">
+          {/* Subtle Background Glow */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity" />
+          
+          <div className="relative z-10 flex flex-col items-center">
+            {/* Progress Circle - More Compact */}
+            <div className="relative w-40 h-40 mb-10">
+              <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                {/* Background Ring */}
+                <circle 
+                  cx="50" cy="50" r="46" 
+                  className="stroke-slate-100 fill-none" 
+                  strokeWidth="6" 
+                />
+                {/* Progress Ring */}
+                <circle 
+                  cx="50" cy="50" r="46" 
+                  className="stroke-[#00355f] fill-none transition-all duration-700 ease-out" 
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 46}`}
+                  strokeDashoffset={`${2 * Math.PI * 46 * (1 - genProgress / 100)}`}
+                />
+              </svg>
+              
+              {/* Inner Content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="bg-[#00355f]/5 p-3 rounded-2xl mb-1">
+                  <span className="material-symbols-outlined text-[#00355f] text-2xl animate-pulse">auto_awesome</span>
+                </div>
+                <div className="text-2xl font-black text-[#00355f] tabular-nums">{genProgress}%</div>
+              </div>
+            </div>
+
+            {/* Status Text */}
+            <div className="text-center space-y-3">
+              <h2 className="text-2xl font-black text-[#00355f] tracking-tight">Aura AI đang làm việc</h2>
+              <div className="flex items-center justify-center gap-2 text-slate-500 font-medium h-6">
+                <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                <p className="text-sm ml-1 italic">{genLog}</p>
+              </div>
+            </div>
+
+            {/* Linear Progress Bar (Minimalist) */}
+            <div className="w-full mt-10 space-y-2">
+              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#00355f] to-[#0f4c81] transition-all duration-700 ease-out rounded-full"
+                  style={{ width: `${genProgress}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tiến trình xử lý</span>
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse">Đang trích xuất</span>
+              </div>
+            </div>
           </div>
         </div>
-        <h2 className="text-xl font-bold text-slate-800">AI đang phân tích tài liệu...</h2>
-        <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-          <div className="h-full bg-blue-600 transition-all duration-500" style={{ width: `${genProgress}%` }} />
-        </div>
-        <p className="text-xs text-slate-400">Vui lòng không đóng trình duyệt</p>
+
+        {/* Footer Hint */}
+        <p className="text-center mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
+          <span className="w-8 h-px bg-slate-200" />
+          Vui lòng không đóng trình duyệt
+          <span className="w-8 h-px bg-slate-200" />
+        </p>
       </div>
     </main>
   );
@@ -202,56 +494,121 @@ export default function ExamBuilder() {
             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
               <span>QUẢN LÝ KỲ THI</span>
               <span className="material-symbols-outlined text-[10px]">chevron_right</span>
-              <span className="text-blue-600">AI QUESTION BUILDER</span>
+              <span className="text-blue-600">QUESTION BUILDER</span>
             </div>
-            <h1 className="text-3xl font-black text-[#00355f] tracking-tight">Thiết lập câu hỏi AI</h1>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#4c2b00] text-[#FFD700] rounded-full text-xs font-bold shadow-sm border border-[#FFD700]/20">
-            <span className="material-symbols-outlined text-[16px] animate-pulse">auto_awesome</span>
-            AI đang hoạt động
-          </div>
-        </div>
-
-        {/* Upload Area */}
-        <div 
-          onClick={() => fileRef.current?.click()}
-          className={`relative border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer group ${
-            file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/10"
-          }`}
-        >
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-            <span className="material-symbols-outlined text-3xl">cloud_upload</span>
-          </div>
-          <h3 className="text-lg font-bold text-slate-700">
-            {file ? file.name : "Tải tài liệu để AI tự động tạo câu hỏi"}
-          </h3>
-          <p className="text-sm text-slate-400 mt-2">Hỗ trợ các định dạng PDF, Word, TXT (Tối đa 25MB)</p>
-          <button className="mt-4 text-blue-600 font-bold text-sm hover:underline">Chọn tệp từ máy tính</button>
-          <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
-          
-          {file && !questions.length && (
-            <div className="mt-6 flex flex-col items-center gap-4">
-              <div className="w-64">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Số lượng câu hỏi muốn tạo</label>
-                <input 
-                  type="number" 
-                  value={questionCount} 
-                  onChange={e => setQuestionCount(Number(e.target.value))}
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-center font-bold text-blue-900 outline-none"
-                />
-              </div>
+            <h1 className="text-3xl font-black text-[#00355f] tracking-tight">Thiết kế bộ câu hỏi</h1>
+            
+            <div className="flex gap-2 mt-4 bg-slate-100 p-1 rounded-xl w-fit">
               <button 
-                onClick={(e) => { e.stopPropagation(); handleGenerate(); }}
-                className="px-8 py-3 bg-blue-900 text-white rounded-xl font-bold text-sm shadow-xl hover:bg-blue-800 transition-all"
+                onClick={() => setCreationMode("ai")}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "ai" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
               >
-                Bắt đầu tạo câu hỏi
+                <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">auto_awesome</span>
+                Tạo bằng AI
+              </button>
+              <button 
+                onClick={() => setCreationMode("import")}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "import" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">file_open</span>
+                Nhập từ file
+              </button>
+              <button 
+                onClick={() => {
+                  setCreationMode("manual");
+                  if (questions.length > 0 && step === "upload") setStep("review");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "manual" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">edit_square</span>
+                Tạo thủ công
               </button>
             </div>
-          )}
+
+          </div>
+          <div className="flex flex-col gap-2 items-end">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#4c2b00] text-[#FFD700] rounded-full text-xs font-bold shadow-sm border border-[#FFD700]/20">
+              <span className="material-symbols-outlined text-[16px] animate-pulse">auto_awesome</span>
+              AI đang hoạt động
+            </div>
+          </div>
         </div>
 
+        {/* Upload Area - Chỉ hiển thị ở chế độ AI hoặc IMPORT */}
+        {(creationMode === "ai" || creationMode === "import") && step === "upload" && (
+          <div 
+            onClick={() => fileRef.current?.click()}
+            className={`relative border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer group ${
+              file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/10"
+            }`}
+          >
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-3xl">cloud_upload</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-700">
+              {file ? file.name : (creationMode === "ai" ? "Tải tài liệu để AI tự động tạo câu hỏi" : "Tải lên file DOCX/PDF để trích xuất câu hỏi")}
+            </h3>
+            <p className="text-sm text-slate-400 mt-2">Hỗ trợ các định dạng PDF, Word, TXT (Tối đa 25MB)</p>
+            {creationMode === "import" && !file && (
+              <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl p-4 text-[11px] text-amber-700 text-left max-w-md mx-auto">
+                <p className="font-bold mb-1 uppercase tracking-wider">Định dạng hỗ trợ:</p>
+                <p className="font-mono">Câu 1: Nội dung...<br/>A. Đáp án 1  B. Đáp án 2  C. Đáp án 3  D. Đáp án 4</p>
+                <p className="mt-1 opacity-70 italic">* Hệ thống sẽ tự động nhận diện đáp án đúng nếu được tô đậm hoặc đánh dấu *.</p>
+              </div>
+            )}
+            <button className="mt-4 text-blue-600 font-bold text-sm hover:underline">Chọn tệp từ máy tính</button>
+            <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+            
+            {file && !questions.length && (
+              <div className="mt-6 flex flex-col items-center gap-4">
+                {creationMode === "ai" && (
+                  <div className="w-64">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">SỐ LƯỢNG CÂU HỎI MUỐN TẠO</label>
+                    <input 
+                      type="number" 
+                      value={questionCount} 
+                      onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="VD: 20"
+                      className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-center font-bold text-blue-900 outline-none"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleGenerate(); }}
+                  className="px-8 py-3 bg-blue-900 text-white rounded-xl font-bold text-sm shadow-xl hover:bg-blue-800 transition-all flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">{creationMode === "ai" ? "auto_awesome" : "content_paste_search"}</span>
+                  {creationMode === "ai" ? "Bắt đầu tạo câu hỏi" : "Bắt đầu trích xuất"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Empty State cho chế độ Thủ công */}
+        {creationMode === "manual" && questions.length === 0 && (
+          <div className="border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center bg-white flex flex-col items-center justify-center">
+            <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-4xl">post_add</span>
+            </div>
+            <h3 className="text-xl font-bold text-slate-700 mb-2">Chưa có câu hỏi nào</h3>
+            <p className="text-slate-500 max-w-md mx-auto mb-6">Bạn đang ở chế độ tạo đề thi thủ công. Hãy bắt đầu bằng việc thêm câu hỏi đầu tiên cho đề thi của bạn.</p>
+            <button 
+              onClick={() => {
+                addManualQuestion();
+                setStep("review");
+              }}
+              className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-md shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined">add</span>
+              Thêm câu hỏi đầu tiên
+            </button>
+          </div>
+        )}
+
         {/* Question List Header */}
-        {(questions.length > 0 || step === "review") && (
+        {questions.length > 0 && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
@@ -267,46 +624,96 @@ export default function ExamBuilder() {
               </button>
             </div>
 
+            {/* Hidden image upload input */}
+            <input ref={imgUploadRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+
             {/* Questions List */}
             <div className="space-y-4">
               {questions.map((q, idx) => (
                 <div key={q.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow group relative">
+                  {/* Header */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider">
-                        CÂU {String(idx + 1).padStart(2, '0')} - {q.type.toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider">
+                      CÂU {String(idx + 1).padStart(2, '0')} - {q.type.toUpperCase()}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        title="Thêm hình ảnh"
+                        onClick={() => { setPendingImgQIdx(idx); imgUploadRef.current?.click(); }}
+                        className="p-2 text-slate-300 hover:text-blue-500 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+                      </button>
+                      <button
+                        title={editingQIdx === idx ? "Xong chỉnh sửa" : "Chỉnh sửa câu hỏi"}
+                        onClick={() => setEditingQIdx(editingQIdx === idx ? null : idx)}
+                        className={`p-2 transition-colors ${ editingQIdx === idx ? "text-blue-600" : "text-slate-300 hover:text-blue-500"}`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">{editingQIdx === idx ? "check_circle" : "edit"}</span>
+                      </button>
                       <button onClick={() => deleteQuestion(idx)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
                         <span className="material-symbols-outlined text-[20px]">delete</span>
                       </button>
-                      <button className="p-2 text-slate-300 cursor-grab">
-                        <span className="material-symbols-outlined text-[20px]">drag_indicator</span>
-                      </button>
                     </div>
                   </div>
 
-                  <div className="text-lg font-bold text-slate-800 mb-6 leading-tight">
-                    {q.text}
-                  </div>
+                  {/* Question Text — editable or rendered */}
+                  {editingQIdx === idx ? (
+                    <textarea
+                      className="w-full text-base font-semibold text-slate-800 mb-4 leading-relaxed bg-slate-50 border border-blue-200 rounded-xl p-3 outline-none resize-y min-h-[80px]"
+                      value={q.text}
+                      onChange={e => updateQuestionText(idx, e.target.value)}
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="text-base font-semibold text-slate-800 mb-5 leading-relaxed prose prose-sm max-w-none">
+                      {renderContent(q.text)}
+                    </div>
+                  )}
 
+                  {/* Hình ảnh đính kèm câu hỏi (từ import file DOCX) */}
+                  {q.imageUrl && (
+                    <div className="mb-4">
+                      <img
+                        src={q.imageUrl.startsWith("data:") ? q.imageUrl : `data:image/jpeg;base64,${q.imageUrl}`}
+                        alt="Hình ảnh câu hỏi"
+                        className="max-w-[450px] max-h-[300px] rounded-lg border border-slate-200 shadow-sm object-contain"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Options */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {q.options.map((opt) => (
-                      <div 
+                    {q.options.map((opt, oIdx) => (
+                      <div
                         key={opt.id}
-                        className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all ${
-                          opt.isCorrect ? "bg-blue-50 border-blue-500/50" : "bg-slate-50 border-transparent hover:border-slate-200"
+                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${
+                          opt.isCorrect ? "bg-blue-50 border-blue-400" : "bg-slate-50 border-transparent hover:border-slate-200"
                         }`}
                       >
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                          opt.isCorrect ? "bg-blue-900 border-blue-900" : "bg-white border-slate-300"
-                        }`}>
+                        {/* Radio — click to set correct */}
+                        <button
+                          onClick={() => setCorrectOption(idx, oIdx)}
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                            opt.isCorrect ? "bg-blue-900 border-blue-900" : "bg-white border-slate-300 hover:border-blue-400"
+                          }`}
+                        >
                           {opt.isCorrect && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
-                        <span className={`text-sm font-medium ${opt.isCorrect ? "text-blue-900" : "text-slate-600"}`}>
-                          {opt.text}
-                        </span>
+                        </button>
+
+                        {/* Option text — editable inline */}
+                        {editingQIdx === idx ? (
+                          <input
+                            className="flex-1 text-sm bg-transparent border-b border-blue-200 outline-none py-0.5 font-medium text-slate-700"
+                            value={opt.text}
+                            onChange={e => updateOptionText(idx, oIdx, e.target.value)}
+                          />
+                        ) : (
+                          <span className={`text-sm font-medium flex-1 ${ opt.isCorrect ? "text-blue-900" : "text-slate-600"}`}>
+                            {opt.text}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -339,11 +746,23 @@ export default function ExamBuilder() {
                 <input 
                   type="number"
                   value={duration} 
-                  onChange={e => setDuration(Number(e.target.value))}
+                  onChange={e => setDuration(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="VD: 60"
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">MINS</span>
               </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">SỐ LƯỢNG ĐỀ (PHIÊN BẢN)</label>
+              <input 
+                type="number"
+                value={versionCount} 
+                onChange={e => setVersionCount(e.target.value === "" ? "" : Number(e.target.value))}
+                placeholder="VD: 1"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700"
+              />
             </div>
 
             <div className="space-y-4 pt-4">
@@ -417,5 +836,17 @@ export default function ExamBuilder() {
         </button>
       </div>
     </main>
+  );
+}
+
+export default function ExamBuilder() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00355f]" />
+      </div>
+    }>
+      <ExamBuilderContent />
+    </Suspense>
   );
 }
