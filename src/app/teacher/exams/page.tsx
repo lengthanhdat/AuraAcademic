@@ -136,7 +136,20 @@ function ExamBuilderContent() {
         headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` },
         body: formData,
       });
-      const uploadData = await uploadRes.json();
+
+      // Xử lý 401: Token hết hạn → redirect về login
+      if (uploadRes.status === 401 || uploadRes.status === 403) {
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        router.push("/login");
+        return;
+      }
+
+      // Parse an toàn: đọc text trước, tránh crash khi body rỗng
+      const rawText = await uploadRes.text();
+      if (!rawText || !rawText.trim()) {
+        throw new Error("Máy chủ trả về phản hồi rỗng (HTTP " + uploadRes.status + "). Vui lòng thử lại.");
+      }
+      const uploadData = JSON.parse(rawText);
       if (!uploadRes.ok) throw new Error(uploadData.error || "Không thể gửi file.");
       
       jobId = uploadData.jobId;
@@ -228,27 +241,46 @@ function ExamBuilderContent() {
         headers: { "Authorization": `Bearer ${token}` },
         body: formData,
       });
-      
+
+      // Xử lý 401: Token hết hạn → redirect về login
+      if (res.status === 401 || res.status === 403) {
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        router.push("/login");
+        return;
+      }
+
+      // Parse an toàn: đọc text trước, tránh crash khi body rỗng
+      const rawText = await res.text();
+      if (!rawText || !rawText.trim()) {
+        toast.error("Máy chủ trả về phản hồi rỗng (HTTP " + res.status + "). Vui lòng thử lại.");
+        setStep("upload");
+        setIsAiLoading(false);
+        return;
+      }
+
       if (!res.ok) {
-        toast.error("Lỗi khi trích xuất câu hỏi từ file.");
+        let errMsg = "Lỗi khi trích xuất câu hỏi từ file.";
+        try { errMsg = JSON.parse(rawText).error || errMsg; } catch(_) {}
+        toast.error(errMsg);
         setStep("upload");
         setIsAiLoading(false);
         return;
       }
       
-      const data = await res.json();
+      const data = JSON.parse(rawText);
       setGenProgress(100);
       setGenLog("Hoàn tất!");
       
       const qs = (data.questions || []).map((q: any, i: number) => ({
         id: q.id || String(Date.now() + i),
         type: "Trắc nghiệm",
-        text: q.text,
+        text: q.text || q.content || q.question || "",
         imageUrl: q.imageBase64 || null,
-        options: q.options.map((o: any) => ({
-          id: o.id,
-          text: o.text,
-          isCorrect: o.isCorrect
+        options: (q.options || []).map((o: any) => ({
+          id: o.id || o.label?.toLowerCase() || String(i),
+          text: o.text || o.content || "",
+          // Jackson serialize isCorrect() getter thành "correct" trong JSON (bỏ prefix "is")
+          isCorrect: o.isCorrect ?? o.correct ?? false
         }))
       }));
 
@@ -363,8 +395,12 @@ function ExamBuilderContent() {
   };
 
   // Render nội dung câu hỏi: chuyển [IMG_N] → <img>, còn lại → ReactMarkdown
-  const renderContent = (text: string) => {
-    const parts = text.split(/(\[IMG_\d+\])/g);
+  const renderContent = (text: string | null | undefined) => {
+    const safeText = text || ""; // Guard: tránh crash khi text = null/undefined
+    if (!safeText.trim()) {
+      return <span className="text-slate-400 italic text-sm">(Chưa có nội dung câu hỏi — nhấn ✅ để chỉnh sửa)</span>;
+    }
+    const parts = safeText.split(/(\[IMG_\d+\])/g);
     return (
       <>
         {parts.map((part, i) => {
@@ -500,14 +536,22 @@ function ExamBuilderContent() {
             
             <div className="flex gap-2 mt-4 bg-slate-100 p-1 rounded-xl w-fit">
               <button 
-                onClick={() => setCreationMode("ai")}
+                onClick={() => {
+                  setCreationMode("ai");
+                  setStep("upload");
+                  setFile(null);
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "ai" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">auto_awesome</span>
                 Tạo bằng AI
               </button>
               <button 
-                onClick={() => setCreationMode("import")}
+                onClick={() => {
+                  setCreationMode("import");
+                  setStep("upload");
+                  setFile(null);
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "import" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">file_open</span>
@@ -661,7 +705,7 @@ function ExamBuilderContent() {
                   {editingQIdx === idx ? (
                     <textarea
                       className="w-full text-base font-semibold text-slate-800 mb-4 leading-relaxed bg-slate-50 border border-blue-200 rounded-xl p-3 outline-none resize-y min-h-[80px]"
-                      value={q.text}
+                      value={q.text || ""}
                       onChange={e => updateQuestionText(idx, e.target.value)}
                       autoFocus
                     />

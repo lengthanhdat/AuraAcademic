@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useProctoring, VIOLATION_LABELS } from "@/hooks/useProctoring";
+import { useBrowserProctoring, BROWSER_VIOLATION_LABELS } from "@/hooks/useBrowserProctoring";
 
 
 export default function TakeExam() {
@@ -18,6 +19,7 @@ export default function TakeExam() {
   const [submissionResult, setSubmissionResult] = useState<any>(null);
   const [showReview, setShowReview] = useState(false);
   const [isTimeUp, setIsTimeUp] = useState(false); // Hiển thị thông báo hết giờ
+  const [examStarted, setExamStarted] = useState(false); // Màn hình nội quy
 
   // --- AI PROCTORING LOGIC ---
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -46,6 +48,26 @@ export default function TakeExam() {
     true
   );
   // ---------------------------
+
+  // --- BROWSER PROCTORING ---
+  const user = JSON.parse(typeof window !== "undefined" ? localStorage.getItem("user") || "{}" : "{}");
+  const {
+    violationCount,
+    lastViolation,
+    showWarningModal,
+    isFullscreen,
+    requestFullscreen,
+    dismissWarning,
+    maxViolations,
+  } = useBrowserProctoring({
+    examCode: accessCode || "",
+    studentId: user.id || "",
+    studentName: user.fullName || user.name || "Học sinh",
+    isActive: examStarted && !submissionResult,
+    maxViolations: 3,
+    onForceSubmit: () => handleAutoSubmit(),
+  });
+  // --------------------------
 
   useEffect(() => {
     const storedExam = sessionStorage.getItem("currentExam");
@@ -245,8 +267,124 @@ export default function TakeExam() {
 
   if (!examVersion) return <div className="p-10 text-center">Đang tải phòng thi...</div>;
 
+  // Màn hình nội quy phòng thi (trước khi bắt đầu)
+  if (!examStarted) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4">
+        <div className="bg-white rounded-3xl p-10 shadow-2xl border border-slate-100 max-w-lg w-full">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-amber-600 text-2xl">shield_lock</span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800">Nội quy phòng thi</h1>
+              <p className="text-sm text-slate-500 font-medium">{examVersion.title}</p>
+            </div>
+          </div>
+
+          {/* Rules */}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8 space-y-4">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-amber-600 shrink-0 mt-0.5">fullscreen</span>
+              <p className="text-slate-700 text-sm font-medium">
+                Hệ thống sẽ ép buộc chạy ở chế độ <strong className="text-slate-900">Toàn màn hình</strong>.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-amber-600 shrink-0 mt-0.5">block</span>
+              <p className="text-slate-700 text-sm font-medium">
+                <strong className="text-slate-900">Nghiêm cấm:</strong> Bấm ESC, mở Tab/Cửa sổ mới, F12, Copy văn bản.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-red-600 shrink-0 mt-0.5">report</span>
+              <p className="text-slate-700 text-sm font-medium">
+                Vi phạm <strong className="text-red-600">3 lần</strong> hệ thống sẽ{" "}
+                <strong className="text-red-600">tự động đình chỉ và nộp bài</strong>.
+              </p>
+            </div>
+          </div>
+
+          {/* Exam Info */}
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-slate-50 rounded-xl p-4">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Thời gian làm bài</p>
+              <p className="text-2xl font-black text-slate-800">{examVersion.duration || 60} phút</p>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Số câu hỏi</p>
+              <p className="text-2xl font-black text-slate-800">{examVersion.questions?.length || 0} câu</p>
+            </div>
+          </div>
+
+          {/* Start Button */}
+          <button
+            onClick={async () => {
+              await requestFullscreen();
+              setExamStarted(true);
+            }}
+            className="w-full py-4 bg-[#00355f] text-white font-black text-base rounded-2xl shadow-xl shadow-blue-900/20 hover:bg-[#002848] active:scale-95 transition-all flex items-center justify-center gap-3"
+          >
+            <span className="material-symbols-outlined">play_circle</span>
+            Tôi đã đọc và đồng ý, bắt đầu thi
+          </button>
+          <p className="text-center text-xs text-slate-400 mt-4 font-medium">
+            Mã phòng: <strong className="text-slate-600">{accessCode}</strong>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-[#f8fafc] pb-20">
+    <main className="min-h-screen bg-[#f8fafc] pb-20" style={{ userSelect: "none" }}>
+
+      {/* Modal cảnh báo vi phạm */}
+      {showWarningModal && (
+        <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center px-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full border-2 border-red-200">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 animate-pulse">
+                <span className="material-symbols-outlined text-red-600 text-4xl">warning</span>
+              </div>
+              <h2 className="text-2xl font-black text-slate-800 mb-2">
+                {violationCount >= maxViolations ? "Đình chỉ thi!" : `Cảnh báo lần ${violationCount}/${maxViolations}`}
+              </h2>
+              <p className="text-slate-500 font-medium mb-2">
+                {lastViolation && BROWSER_VIOLATION_LABELS[lastViolation]}
+              </p>
+              {violationCount >= maxViolations ? (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 w-full mt-2">
+                  <p className="text-red-700 text-sm font-bold">Bài thi của bạn đã bị đình chỉ và đang tự động nộp...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 w-full mt-2 mb-6">
+                    <p className="text-amber-700 text-sm font-medium">
+                      Còn <strong>{maxViolations - violationCount}</strong> lần cảnh báo trước khi bị đình chỉ thi.
+                    </p>
+                  </div>
+                  <button
+                    onClick={dismissWarning}
+                    className="w-full py-3.5 bg-[#00355f] text-white font-bold rounded-xl hover:bg-[#002848] active:scale-95 transition-all"
+                  >
+                    Tôi hiểu, tiếp tục làm bài
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chỉ báo số vi phạm (hiển thị khi đang thi) */}
+      {violationCount > 0 && !submissionResult && (
+        <div className="fixed top-20 right-4 z-50 flex items-center gap-2 bg-white border-2 border-red-200 text-red-600 rounded-xl px-3 py-2 shadow-lg text-xs font-bold">
+          <span className="material-symbols-outlined text-[16px]">warning</span>
+          Vi phạm: {violationCount}/{maxViolations}
+        </div>
+      )}
       
       {/* Cửa sổ Camera AI góc dưới */}
       {!submissionResult && (
