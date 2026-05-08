@@ -127,10 +127,10 @@ export default function TeacherMaterials() {
             displayMsg = errObj.message || errObj.error || rawMsg;
           } catch { /* raw text */ }
           // Lọc prefix "Tài liệu bị từ chối bởi AI kiểm duyệt: " để hiển thị gọn hơn
-          const isAiReject = displayMsg.includes("AI kiểm duyệt");
+          const isAiReject = displayMsg.includes("AI kiểm duyệt") || displayMsg.includes("Tài liệu bị từ chối");
           setQueue(q => q.map(i => i.key === item.key ? {
             ...i, status: "error",
-            error: isAiReject ? displayMsg : `Lỗi server: ${displayMsg}`
+            error: displayMsg
           } : i));
           if (isAiReject) {
             showAlert({ title: "❌ AI từ chối tài liệu", message: displayMsg, type: "error" });
@@ -301,11 +301,11 @@ export default function TeacherMaterials() {
                           )}
                         </div>
                         <p className="text-xs text-red-600 leading-relaxed">{item.error}</p>
-                        <p className="text-[10px] text-red-400 mt-1">
-                          {isAiReject
-                            ? "Vui lòng chỉnh sửa tiêu đề, mô tả và tên file, sau đó thử lại."
-                            : "Vui lòng kiểm tra kết nối và thử lại."}
-                        </p>
+                        {isAiReject && (
+                          <p className="text-[10px] text-red-400 mt-1">
+                            Vui lòng chỉnh sửa tiêu đề, mô tả và tên file, sau đó thử lại.
+                          </p>
+                        )}
                       </div>
                       <button
                         onClick={() => setQueue(q => q.map(i => i.key === item.key ? { ...i, status: "idle", progress: 0, error: undefined } : i))}

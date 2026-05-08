@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import NotificationBell from "@/components/layout/NotificationBell";
 
 export function StudentHeader() {
   const [user, setUser] = useState<any>(null);
@@ -35,10 +36,8 @@ export function StudentHeader() {
           <span className="material-symbols-outlined text-primary text-sm">timer</span>
           <span className="text-xs font-bold text-primary">Có thể thi: 59:00</span>
         </div>
-        <div className="flex items-center gap-4">
-          <button className="material-symbols-outlined text-on-surface-variant hover:bg-[#f2f4f6] p-2 rounded-full transition-colors duration-200">notifications</button>
+          <NotificationBell />
           <button className="material-symbols-outlined text-on-surface-variant hover:bg-[#f2f4f6] p-2 rounded-full transition-colors duration-200">schedule</button>
-        </div>
         <div className="h-8 w-[1px] bg-outline-variant/30 hidden sm:block"></div>
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">

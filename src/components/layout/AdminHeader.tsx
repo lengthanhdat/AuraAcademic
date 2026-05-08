@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import NotificationBell from "@/components/layout/NotificationBell";
 
 const pageTitles: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
@@ -19,7 +20,6 @@ export function AdminHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [notifCount] = useState(3);
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -68,15 +68,7 @@ export function AdminHeader() {
           <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Online</span>
         </div>
 
-        {/* Notification bell */}
-        <button className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
-          <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>notifications</span>
-          {notifCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[9px] font-black text-white">
-              {notifCount}
-            </span>
-          )}
-        </button>
+        <NotificationBell />
 
         {/* Settings */}
         <button onClick={() => router.push("/admin/settings")} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">

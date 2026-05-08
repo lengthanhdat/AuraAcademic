@@ -39,6 +39,52 @@ export const useAlert = () => {
 };
 
 export const AlertProvider = ({ children }: { children: ReactNode }) => {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const redirectToMaintenance = () => {
+      const path = window.location.pathname;
+      if (!path.startsWith("/admin") && !path.startsWith("/maintenance") && !path.startsWith("/login")) {
+        localStorage.setItem("prevPath", path + window.location.search);
+        window.location.href = "/maintenance";
+      }
+    };
+
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      const response = await originalFetch(...args);
+      if (response.status === 503) {
+        redirectToMaintenance();
+      }
+      return response;
+    };
+
+    // Polling phát hiện bảo trì thời gian thực khi người dùng đang treo máy
+    const interval = setInterval(async () => {
+      const path = window.location.pathname;
+      if (path.startsWith("/admin") || path.startsWith("/maintenance") || path.startsWith("/login")) return;
+
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+
+      try {
+        const res = await originalFetch("http://localhost:8088/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.status === 503) {
+          redirectToMaintenance();
+        }
+      } catch {
+        // Bỏ qua lỗi kết nối tạm thời
+      }
+    }, 4000);
+
+    return () => {
+      window.fetch = originalFetch;
+      clearInterval(interval);
+    };
+  }, []);
+
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const [options, setOptions] = useState<AlertOptions | null>(null);
