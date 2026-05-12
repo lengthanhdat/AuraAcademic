@@ -44,7 +44,8 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
 
     const redirectToMaintenance = () => {
       const path = window.location.pathname;
-      if (!path.startsWith("/admin") && !path.startsWith("/maintenance") && !path.startsWith("/login")) {
+      // Dùng includes() để hỗ trợ các đường dẫn đã localization như /vi/maintenance, /en/admin...
+      if (!path.includes("/admin") && !path.includes("/maintenance") && !path.includes("/login")) {
         localStorage.setItem("prevPath", path + window.location.search);
         window.location.href = "/maintenance";
       }
@@ -62,7 +63,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     // Polling phát hiện bảo trì thời gian thực khi người dùng đang treo máy
     const interval = setInterval(async () => {
       const path = window.location.pathname;
-      if (path.startsWith("/admin") || path.startsWith("/maintenance") || path.startsWith("/login")) return;
+      if (path.includes("/admin") || path.includes("/maintenance") || path.includes("/login")) return;
 
       const token = localStorage.getItem("accessToken");
       if (!token) return;

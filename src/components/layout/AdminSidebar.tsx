@@ -31,6 +31,7 @@ const navSections = [
   {
     title: "HỆ THỐNG",
     items: [
+      { href: "/admin/ai-tokens", icon: "smart_toy", label: "Cấu hình AI Hub" },
       { href: "/admin/settings", icon: "settings_suggest", label: "Cấu hình hệ thống" },
       { href: "/admin/notifications", icon: "notifications", label: "Thông báo" },
     ],

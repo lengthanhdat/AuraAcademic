@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 export default function StudentExams() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function StudentExams() {
   const [accessCode, setAccessCode] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState("");
+  const locale = useLocale();
   const [recentExams, setRecentExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +50,7 @@ export default function StudentExams() {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
-        window.location.href = `/student/lobby?code=${code}`;
+        window.location.href = `/${locale}/student/lobby?code=${code}`;
       } else if (res.status === 401 || res.status === 403) {
         setError(t('session_expired'));
       } else {

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 export default function StudentDashboard() {
   const t = useTranslations('StudentDashboard');
@@ -10,6 +10,7 @@ export default function StudentDashboard() {
   const [accessCode, setAccessCode] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState("");
+  const locale = useLocale();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -59,7 +60,7 @@ export default function StudentDashboard() {
       
       if (res.ok) {
         // Phòng hợp lệ → đưa vào phòng chờ
-        window.location.href = `/student/lobby?code=${cleanCode}`;
+        window.location.href = `/${locale}/student/lobby?code=${cleanCode}`;
       } else if (res.status === 401 || res.status === 403) {
         setError(t('session_expired'));
       } else {

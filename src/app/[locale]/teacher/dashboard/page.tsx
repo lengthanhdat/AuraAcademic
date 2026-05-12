@@ -9,7 +9,7 @@ export default function TeacherDashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCountMap, setActiveCountMap] = useState<Record<string, number>>({});
-  
+
   const t = useTranslations('Dashboard');
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function TeacherDashboard() {
             const data = await res.json();
             updates[exam.accessCode] = data.activeCount;
           }
-        } catch {}
+        } catch { }
       }));
       setActiveCountMap(prev => ({ ...prev, ...updates }));
     };
@@ -77,7 +77,7 @@ export default function TeacherDashboard() {
   const deleteExam = async (id: string) => {
     if (!confirm(t('actions.delete_confirm'))) return;
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${id}`, { 
+      const res = await fetch(`http://localhost:8088/api/exams/${id}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
@@ -94,7 +94,7 @@ export default function TeacherDashboard() {
   const closeExam = async (id: string) => {
     if (!confirm(t('actions.close_confirm'))) return;
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${id}/close`, { 
+      const res = await fetch(`http://localhost:8088/api/exams/${id}/close`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
@@ -111,7 +111,7 @@ export default function TeacherDashboard() {
   const reopenExam = async (id: string) => {
     if (!confirm(t('actions.reopen_confirm'))) return;
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${id}/reopen`, { 
+      const res = await fetch(`http://localhost:8088/api/exams/${id}/reopen`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
@@ -171,7 +171,7 @@ export default function TeacherDashboard() {
             <span className="text-5xl font-black text-[#00355f] font-headline">{activeExamsCount}</span>
             <span className="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 rounded-full">{t('stats.live_now')}</span>
           </div>
-          <div 
+          <div
             onClick={() => router.push("/teacher/monitoring")}
             className="mt-6 flex items-center gap-2 text-[#00355f] text-sm font-semibold cursor-pointer hover:underline"
           >
@@ -190,7 +190,7 @@ export default function TeacherDashboard() {
             <span className="text-5xl font-black text-on-surface font-headline">{draftExamsCount}</span>
             <span className="text-on-surface-variant text-sm font-medium">{t('stats.editing')}</span>
           </div>
-          <div 
+          <div
             onClick={() => router.push("/teacher/reports")}
             className="mt-6 flex items-center gap-2 text-on-surface-variant text-sm font-semibold cursor-pointer hover:underline"
           >
@@ -270,7 +270,7 @@ export default function TeacherDashboard() {
                           <p className="font-bold text-on-surface text-sm">{exam.title}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-[11px] text-on-surface-variant">
-                              {exam.versions?.[0]?.questions?.length || 0} {t('table.questions')} • {exam.duration} {t('table.minutes')} 
+                              {exam.versions?.[0]?.questions?.length || 0} {t('table.questions')} • {exam.duration} {t('table.minutes')}
                               {exam.versions?.length > 1 && ` • ${exam.versions.length} ${t('table.versions')}`}
                             </p>
                             {exam.status === 'PUBLISHED' && (
@@ -293,8 +293,8 @@ export default function TeacherDashboard() {
                       {exam.startTime ? (
                         <>
                           <p className="text-sm font-semibold text-on-surface">
-                            {new Date(exam.startTime).toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})} 
-                            {" - "} 
+                            {new Date(exam.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                            {" - "}
                             {new Date(exam.startTime).toLocaleDateString(undefined)}
                           </p>
                           <p className="text-[11px] text-on-surface-variant">{t('table.start_at_publish')}</p>
@@ -319,6 +319,16 @@ export default function TeacherDashboard() {
                               );
                             }
                           }
+                          
+                          if (exam.status === 'PUBLISHED') {
+                            return (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-black uppercase tracking-wider">
+                                <span className="material-symbols-outlined text-[12px]">schedule</span>
+                                {t('status.published')}
+                              </span>
+                            );
+                          }
+
                           return (
                             <div className="flex flex-col items-center gap-1">
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 text-[10px] font-black uppercase tracking-wider">
@@ -356,23 +366,28 @@ export default function TeacherDashboard() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button 
+                        <button
                           onClick={() => viewExam(exam)}
-                          className="p-2 text-on-surface-variant hover:text-[#00355f] hover:bg-blue-50 rounded-lg transition-all" 
+                          className="p-2 text-on-surface-variant hover:text-[#00355f] hover:bg-blue-50 rounded-lg transition-all"
                           title={t('actions.view')}
                         >
                           <span className="material-symbols-outlined text-xl">visibility</span>
                         </button>
-                        <button 
+                        <button
                           onClick={() => editExam(exam)}
-                          className="p-2 text-on-surface-variant hover:text-[#00355f] hover:bg-blue-50 rounded-lg transition-all" 
-                          title={t('actions.edit')}
+                          disabled={exam.status !== 'DRAFT'}
+                          className={`p-2 rounded-lg transition-all ${
+                            exam.status === 'DRAFT' 
+                              ? "text-on-surface-variant hover:text-[#00355f] hover:bg-blue-50" 
+                              : "text-slate-200 cursor-not-allowed opacity-50"
+                          }`}
+                          title={exam.status === 'DRAFT' ? t('actions.edit') : "Chỉ có thể chỉnh sửa bản nháp"}
                         >
                           <span className="material-symbols-outlined text-xl">edit</span>
                         </button>
-                        <button 
+                        <button
                           onClick={() => deleteExam(exam.id)}
-                          className="p-2 text-on-surface-variant hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" 
+                          className="p-2 text-on-surface-variant hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                           title={t('actions.delete')}
                         >
                           <span className="material-symbols-outlined text-xl">delete</span>

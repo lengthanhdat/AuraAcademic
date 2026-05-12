@@ -3,6 +3,43 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAlert } from "@/components/ui/AlertProvider";
 
+const TRANS: Record<string, string> = {
+  file_error: "Lỗi tệp",
+  avatar_type_error: "Chỉ chấp nhận file ảnh",
+  file_large: "Tệp quá lớn",
+  avatar_size_error: "Ảnh đại diện không được vượt quá 2MB",
+  success: "Thành công",
+  avatar_success: "Cập nhật ảnh đại diện thành công",
+  avatar_error: "Lỗi",
+  avatar_error_msg: "Không thể cập nhật ảnh",
+  connect_error: "Lỗi kết nối",
+  server_error: "Không thể kết nối đến máy chủ",
+  profile_success: "Cập nhật hồ sơ thành công",
+  update_error: "Lỗi cập nhật",
+  profile_error_msg: "Không thể lưu thông tin",
+  pw_mismatch: "Mật khẩu xác nhận không khớp",
+  pw_success: "Đổi mật khẩu thành công",
+  pw_error: "Đổi mật khẩu thất bại",
+  server_conn_error: "Lỗi kết nối máy chủ",
+  ended: "Đã kết thúc",
+  draft: "Bản nháp",
+  ongoing: "Đang diễn ra",
+  instructor: "Giảng viên",
+  department: "Chưa cập nhật khoa/bộ môn",
+  cancel_update: "Hủy cập nhật",
+  update_profile: "Cập nhật hồ sơ",
+  select_gender: "Chọn giới tính...",
+  female: "Nữ",
+  other: "Khác",
+  certificates: "Chứng chỉ & Giải thưởng",
+  saving: "Đang lưu...",
+  save_changes: "Lưu thay đổi",
+  no_experience: "Chưa cập nhật kinh nghiệm làm việc",
+  no_certificates: "Chưa cập nhật chứng chỉ & giải thưởng"
+};
+const t = (key: string) => TRANS[key] ?? key;
+
+
 export default function TeacherProfile() {
   const router = useRouter();
   const { showAlert } = useAlert();
@@ -314,7 +351,7 @@ export default function TeacherProfile() {
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Chức danh</label>
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder="VD: {t('instructor')} Cao cấp" />
+                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder={`VD: ${t('instructor')} Cao cấp`} />
               </div>
               <div>
                 <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Khoa / Bộ môn</label>
@@ -341,8 +378,8 @@ export default function TeacherProfile() {
                 <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors">
                   <option value="">{t('select_gender')}</option>
                   <option value="Nam">Nam</option>
-                  <option value=t("female")>{t('female')}</option>
-                  <option value=t("other")>{t('other')}</option>
+                  <option value={t("female")}>{t('female')}</option>
+                  <option value={t("other")}>{t('other')}</option>
                 </select>
               </div>
               <div className="md:col-span-2">

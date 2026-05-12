@@ -85,6 +85,10 @@ export function updateSettings(settings: Record<string, any>) {
   return apiFetch<any>("/api/admin/settings", { method: "PUT", body: JSON.stringify(settings) });
 }
 
+export function checkAiToken(type: "gemini" | "groq") {
+  return apiFetch<any>(`/api/admin/ai-tokens/check?type=${type}`);
+}
+
 // ─── Sessions ────────────────────────────────────────────────────────────────
 export function fetchAdminSessions() {
   return apiFetch<any[]>("/api/admin/sessions");

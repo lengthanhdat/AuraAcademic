@@ -2,6 +2,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const TRANS: Record<string, string> = {
+  ended: "Đã hoàn thành",
+  closed: "Đã đóng",
+  ongoing: "Đang diễn ra"
+};
+const t = (key: string) => TRANS[key] ?? key;
+
 export default function ReportsPage() {
   const router = useRouter();
   const [exams, setExams] = useState<any[]>([]);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
+import 'katex/dist/katex.min.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
@@ -26,7 +27,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} className="light">
       <head>
-        <link rel="icon" href="/logo.png" />
+        <link rel="icon" href="/logoweb.png" />
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"

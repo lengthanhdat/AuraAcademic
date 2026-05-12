@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useProctoring, VIOLATION_LABELS } from "@/hooks/useProctoring";
 
 export default function StudentLobby() {
@@ -9,6 +9,7 @@ export default function StudentLobby() {
   const searchParams = useSearchParams();
   const code = searchParams.get("code")?.toUpperCase() || "";
   const t = useTranslations('StudentLobby');
+  const locale = useLocale();
 
   // ── State ──────────────────────────────────────────────────
   const [examInfo, setExamInfo] = useState<any>(null);
@@ -25,7 +26,7 @@ export default function StudentLobby() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // ── AI Proctoring ──────────────────────────────────────────
-  const { currentViolations } = useProctoring(videoRef, code, cameraReady);
+  const { currentViolations } = useProctoring(videoRef, code, cameraReady && !!examInfo?.aiProctoring);
 
   // ── Helpers ────────────────────────────────────────────────
   const enterExam = async (accessCode: string) => {
@@ -40,7 +41,7 @@ export default function StudentLobby() {
       if (res.ok) {
         const versionData = await res.json();
         sessionStorage.setItem("currentExam", JSON.stringify(versionData));
-        router.push(`/student/exams/take?code=${accessCode}`);
+        window.location.href = `/${locale}/student/exams/take?code=${accessCode}`;
       } else {
         const msg = await res.text();
         setError(msg);
@@ -62,10 +63,11 @@ export default function StudentLobby() {
 
     es.addEventListener("status", (e) => {
       const data = JSON.parse(e.data);
-      // Chỉ vào thi khi GV bấm "Bắt đầu thi" (STARTED) — không vào khi PUBLISHED
+      setExamInfo((prev: any) => prev ? { ...prev, status: data.status, startTime: data.startTime } : prev);
+
+      // Khi GV bấm "Bắt đầu thi" (STARTED) -> Cập nhật UI để học sinh bấm nút, không tự nhảy
       if (data.status === "STARTED") {
-        es.close(); esRef.current = null;
-        enterExam(examCode);
+        // Giữ nguyên, không cần tự động gọi enterExam nữa, để học sinh tự bấm
       }
       if (data.status === "FINISHED" || data.status === "COMPLETED") {
         es.close(); esRef.current = null;
@@ -75,7 +77,7 @@ export default function StudentLobby() {
 
     es.onerror = () => {
       es.close(); esRef.current = null;
-      setTimeout(() => { if (examCode) startSSE(examCode); }, 3000);
+      setTimeout(() => { if (examCode) startSSE(examCode); }, 500);
     };
   };
 
@@ -92,13 +94,9 @@ export default function StudentLobby() {
         if (res.ok) {
           const data = await res.json();
           setExamInfo(data);
-          // Chỉ tự động vào thi khi GV đã bấm Bắt đầu (STARTED)
-          // Nếu PUBLISHED → học sinh vào phòng chờ, chờ SSE báo STARTED
-          if (data.status === "STARTED") {
-            enterExam(code);
-          } else {
-            startSSE(code); // Kết nối SSE để đợi GV bắt đầu
-          }
+          // Cập nhật info xong thì khởi động SSE để lắng nghe các thay đổi tiếp theo
+          startSSE(code); 
+
         } else {
           const msg = await res.text();
           setError(msg || "Không tìm thấy phòng thi.");
@@ -116,16 +114,25 @@ export default function StudentLobby() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!user.id) return;
 
-    const sendHeartbeat = () => {
-      const token = localStorage.getItem("accessToken");
-      fetch(`http://localhost:8088/api/exams/${code}/heartbeat`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ studentId: user.id, status: "LOBBY" }),
-      }).catch(() => {});
+    const sendHeartbeat = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(`http://localhost:8088/api/exams/${code}/heartbeat`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ studentId: user.id, status: "LOBBY" }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status && data.status !== examInfo.status) {
+            setExamInfo((prev: any) => ({ ...prev, status: data.status }));
+            // Xoá bỏ tự động nhảy vào thi tại đây, chỉ update UI để sáng nút
+          }
+        }
+      } catch (e) {}
     };
 
     const sendLeaveFetch = () => {
@@ -148,7 +155,7 @@ export default function StudentLobby() {
     };
 
     sendHeartbeat();
-    heartbeatRef.current = setInterval(sendHeartbeat, 15000);
+    heartbeatRef.current = setInterval(sendHeartbeat, 5000);
     // Không gọi startSSE ở đây — đã được gọi trong fetchLobbyInfo khi status=PUBLISHED/WAITING
 
     window.addEventListener("beforeunload", sendLeaveBeacon);
@@ -163,10 +170,18 @@ export default function StudentLobby() {
 
   // ── Effect: camera ─────────────────────────────────────────
   useEffect(() => {
+    if (!examInfo) return; 
+    if (examInfo.aiProctoring === false) return; // Không bật AI -> Không bật cam
+
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+          video: { 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 }, 
+            frameRate: { ideal: 30 },
+            facingMode: "user" 
+          },
           audio: false,
         });
         if (videoRef.current) {
@@ -183,7 +198,7 @@ export default function StudentLobby() {
         (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
       }
     };
-  }, []);
+  }, [examInfo?.aiProctoring]);
 
   // ── Early returns (sau tất cả hooks) ───────────────────────
   if (error) return (
@@ -232,7 +247,7 @@ export default function StudentLobby() {
       <main className="flex-1 flex items-center justify-center p-4 md:p-6">
         <div className="max-w-6xl w-full grid md:grid-cols-2 gap-6 items-start">
 
-          {/* LEFT — Camera */}
+          {/* LEFT — Camera (nếu có AI) HOẶC Info Card (nếu không AI) */}
           <div className="space-y-4">
             <div>
               <p className="text-xs text-primary font-bold uppercase tracking-widest mb-1">{t('room_code')} {code}</p>
@@ -240,62 +255,75 @@ export default function StudentLobby() {
               <p className="text-on-surface-variant text-sm mt-1">{t('duration_label')}<strong>{examInfo.duration}{t('duration_unit')}</strong></p>
             </div>
 
-            <div className={`relative aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-lg transition-all duration-300 ${currentViolations.length > 0 ? "border-4 border-error shadow-error/30 shadow-2xl scale-[1.02]" : "border-4 border-green-500/80 shadow-green-500/20 shadow-xl"}`}>
-              {cameraError ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
-                  <span className="material-symbols-outlined text-4xl text-red-400">videocam_off</span>
-                  <p className="text-red-300 text-sm font-medium">{cameraError}</p>
+            {examInfo.aiProctoring ? (
+              <>
+                <div className={`relative aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-lg transition-all duration-300 ${currentViolations.length > 0 ? "border-4 border-error shadow-error/30 shadow-2xl scale-[1.02]" : "border-4 border-green-500/80 shadow-green-500/20 shadow-xl"}`}>
+                  {cameraError ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+                      <span className="material-symbols-outlined text-4xl text-red-400">videocam_off</span>
+                      <p className="text-red-300 text-sm font-medium">{cameraError}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${currentViolations.length > 0 ? "opacity-70 grayscale-[30%]" : "opacity-100"}`} />
+                      
+                      {/* Trạng thái CHUẨN */}
+                      {currentViolations.length === 0 && cameraReady && (
+                        <div className="absolute inset-0 border-4 border-green-400 pointer-events-none rounded-xl"></div>
+                      )}
+
+                      {/* Cảnh báo AI (Hiển thị khi có vi phạm) */}
+                      {currentViolations.length > 0 && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-error/10 pointer-events-none p-4 text-center">
+                          <div className="bg-error text-on-error px-4 py-2 rounded-full font-bold shadow-lg animate-bounce flex items-center gap-2 mb-2">
+                            <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>warning</span>
+                            PHÁT HIỆN VI PHẠM
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            {currentViolations.map((v: string) => (
+                              <span key={v} className="bg-surface-container-highest/90 text-error backdrop-blur-md px-3 py-1.5 rounded-lg font-medium text-sm shadow-sm border border-error/20">
+                                {VIOLATION_LABELS[v as keyof typeof VIOLATION_LABELS]}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full z-10">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                        <span className="text-white text-xs font-bold">LIVE</span>
+                      </div>
+                      <div className={`absolute top-3 right-3 flex items-center gap-1.5 backdrop-blur-sm px-3 py-1.5 rounded-full z-10 transition-colors ${currentViolations.length > 0 ? "bg-error text-on-error" : (cameraReady ? "bg-green-600/90 text-white shadow-lg" : "bg-black/60 text-white")}`}>
+                        <span className="material-symbols-outlined text-sm">{currentViolations.length > 0 ? "gpp_bad" : (cameraReady ? "verified_user" : "shield")}</span>
+                        <span className="text-xs font-medium">{currentViolations.length > 0 ? t('ai_warning') : (cameraReady ? t('ai_ok') : t('ai_monitoring'))}</span>
+                      </div>
+                      
+                      {!cameraReady && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${currentViolations.length > 0 ? "opacity-70 grayscale-[30%]" : "opacity-100"}`} />
-                  
-                  {/* Trạng thái CHUẨN */}
-                  {currentViolations.length === 0 && cameraReady && (
-                    <div className="absolute inset-0 border-4 border-green-400 pointer-events-none rounded-xl"></div>
-                  )}
 
-                  {/* Cảnh báo AI (Hiển thị khi có vi phạm) */}
-                  {currentViolations.length > 0 && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-error/10 pointer-events-none p-4 text-center">
-                      <div className="bg-error text-on-error px-4 py-2 rounded-full font-bold shadow-lg animate-bounce flex items-center gap-2 mb-2">
-                        <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>warning</span>
-                        PHÁT HIỆN VI PHẠM
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {currentViolations.map((v) => (
-                          <span key={v} className="bg-surface-container-highest/90 text-error backdrop-blur-md px-3 py-1.5 rounded-lg font-medium text-sm shadow-sm border border-error/20">
-                            {VIOLATION_LABELS[v]}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full z-10">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                    <span className="text-white text-xs font-bold">LIVE</span>
-                  </div>
-                  <div className={`absolute top-3 right-3 flex items-center gap-1.5 backdrop-blur-sm px-3 py-1.5 rounded-full z-10 transition-colors ${currentViolations.length > 0 ? "bg-error text-on-error" : (cameraReady ? "bg-green-600/90 text-white shadow-lg" : "bg-black/60 text-white")}`}>
-                    <span className="material-symbols-outlined text-sm">{currentViolations.length > 0 ? "gpp_bad" : (cameraReady ? "verified_user" : "shield")}</span>
-                    <span className="text-xs font-medium">{currentViolations.length > 0 ? t('ai_warning') : (cameraReady ? t('ai_ok') : t('ai_monitoring'))}</span>
-                  </div>
-                  
-                  {!cameraReady && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className={`rounded-xl p-4 border-l-4 transition-colors duration-300 flex gap-3 ${currentViolations.length > 0 ? "bg-error-container border-error text-on-error-container" : "bg-tertiary-container border-on-tertiary-container/30 text-on-tertiary-container"}`}>
-              <span className={`material-symbols-outlined mt-0.5 shrink-0 ${currentViolations.length > 0 ? "animate-pulse" : ""}`} style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
-              <p className="text-sm leading-relaxed font-medium">
-                <strong>Cảnh báo:</strong> Hệ thống AI giám sát camera liên tục. Không được chuyển tab, cúi gập mặt, quay sang hai bên, dùng điện thoại hoặc nhờ người hỗ trợ.
-              </p>
-            </div>
+                <div className={`rounded-xl p-4 border-l-4 transition-colors duration-300 flex gap-3 ${currentViolations.length > 0 ? "bg-error-container border-error text-on-error-container" : "bg-tertiary-container border-on-tertiary-container/30 text-on-tertiary-container"}`}>
+                  <span className={`material-symbols-outlined mt-0.5 shrink-0 ${currentViolations.length > 0 ? "animate-pulse" : ""}`} style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+                  <p className="text-sm leading-relaxed font-medium">
+                    <strong>Cảnh báo:</strong> Hệ thống AI giám sát camera liên tục. Không được chuyển tab, cúi gập mặt, quay sang hai bên, dùng điện thoại hoặc nhờ người hỗ trợ.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant/20 shadow-sm flex flex-col items-center justify-center text-center aspect-video relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-4xl">security_update_good</span>
+                </div>
+                <h3 className="text-xl font-bold text-on-surface mb-2">Sẵn sàng tham gia</h3>
+                <p className="text-on-surface-variant text-sm max-w-xs">Kỳ thi này không kích hoạt chế độ giám sát bằng Camera. Vui lòng chuẩn bị tâm lý tốt nhất để làm bài.</p>
+              </div>
+            )}
           </div>
 
           {/* RIGHT — Rules + Action */}
@@ -341,13 +369,13 @@ export default function StudentLobby() {
               ) : (
                 <button
                   onClick={() => enterExam(code)}
-                  disabled={!agreed || isEntering}
-                  className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white font-bold rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 text-lg"
+                  disabled={!agreed || isEntering || examInfo.status !== 'STARTED'}
+                  className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white font-bold rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                 >
                   <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    {isEntering ? "sync" : "play_circle"}
+                    {isEntering ? "sync" : (examInfo.status === 'STARTED' ? "play_circle" : "schedule")}
                   </span>
-                  {isEntering ? t('btn_entering') : t('btn_enter')}
+                  {isEntering ? t('btn_entering') : (examInfo.status === 'STARTED' ? t('btn_enter') : "Chưa đến giờ làm bài")}
                 </button>
               )}
             </div>

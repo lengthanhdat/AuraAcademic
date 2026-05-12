@@ -32,8 +32,8 @@ export function useProctoring(
   useEffect(() => {
     if (!canvasRef.current) {
       canvasRef.current = document.createElement("canvas");
-      canvasRef.current.width = 320;
-      canvasRef.current.height = 240;
+      canvasRef.current.width = 640;
+      canvasRef.current.height = 480;
     }
 
     if (!isActive || !videoRef.current || !examCode) return;
@@ -69,13 +69,13 @@ export function useProctoring(
       if (!ctx) return;
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const base64Image = canvas.toDataURL("image/jpeg", 0.6);
+      const base64Image = canvas.toDataURL("image/jpeg", 0.8);
       
       ws.send(base64Image);
     };
 
-    // Gửi liên tục 3 khung hình / giây (~333ms)
-    const interval = setInterval(sendFrame, 333);
+    // Gửi liên tục 10 khung hình / giây (100ms) để tăng chất lượng video lưu trữ
+    const interval = setInterval(sendFrame, 100);
 
     return () => {
       clearInterval(interval);

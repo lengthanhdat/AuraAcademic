@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { useProctoring, VIOLATION_LABELS } from "@/hooks/useProctoring";
 import { useTranslations } from "next-intl";
 import { useBrowserProctoring, BROWSER_VIOLATION_LABELS } from "@/hooks/useBrowserProctoring";
@@ -22,23 +24,84 @@ export default function TakeExam() {
   const [showReview, setShowReview] = useState(false);
   const [isTimeUp, setIsTimeUp] = useState(false); // Hiển thị thông báo hết giờ
   const [examStarted, setExamStarted] = useState(false); // Màn hình nội quy
+  const [showSubmitModal, setShowSubmitModal] = useState(false); // Modal xác nhận nộp bài
 
   // --- AI PROCTORING LOGIC ---
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const streamRef = useRef<MediaStream | null>(null);
 
+  // Khởi động camera CHỈ SAU KHI đã bắt đầu thi (đã vào fullscreen)
+  // Tránh bị đen màn hình camera khi trình duyệt chuyển sang fullscreen mode
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
-      .then(stream => {
+    if (!examStarted) return;
+    if (examVersion?.aiProctoring === false) return; // Không bật AI Proctoring -> Không mở Cam
+
+    const startCamera = async () => {
+      try {
+        // Nếu đã có stream, dừng trước để tránh leak
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(t => t.stop());
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 }, 
+            frameRate: { ideal: 30 },
+            facingMode: "user" 
+          },
+          audio: false,
+        });
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          await videoRef.current.play();
           setCameraReady(true);
         }
-      })
-      .catch(err => {
+      } catch {
         alert(t("camera_required"));
-      });
+      }
+    };
+
+    // Chờ một chút để fullscreen transition hoàn tất trước khi gắn camera
+    const timer = setTimeout(startCamera, 300);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [examStarted]);
+
+  // Phục hồi camera nếu video element bị đen sau khi fullscreen change
+  useEffect(() => {
+    if (!examStarted) return;
+
+    const reattachStream = () => {
+      if (videoRef.current && streamRef.current) {
+        const video = videoRef.current;
+        // Kiểm tra nếu video đang paused hoặc stream bị ngắt
+        if (video.paused || !video.srcObject) {
+          video.srcObject = streamRef.current;
+          video.play().catch(() => {});
+        }
+      }
+    };
+
+    document.addEventListener("fullscreenchange", reattachStream);
+    document.addEventListener("visibilitychange", reattachStream);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", reattachStream);
+      document.removeEventListener("visibilitychange", reattachStream);
+    };
+  }, [examStarted]);
+
+  // Dọn dẹp stream camera khi component unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
   }, []);
 
   // Kích hoạt AI Monitoring, CÓ ghi lại lịch sử vi phạm (record = true)
@@ -46,7 +109,7 @@ export default function TakeExam() {
   const { currentViolations } = useProctoring(
     videoRef, 
     accessCode || "", 
-    cameraReady && !submissionResult, 
+    cameraReady && !submissionResult && !!examVersion?.aiProctoring, 
     true
   );
   // ---------------------------
@@ -65,7 +128,7 @@ export default function TakeExam() {
     examCode: accessCode || "",
     studentId: user.id || "",
     studentName: user.fullName || user.name || "Học sinh",
-    isActive: examStarted && !submissionResult,
+    isActive: examStarted && !submissionResult && !!examVersion?.aiProctoring,
     maxViolations: 3,
     onForceSubmit: () => handleAutoSubmit(),
   });
@@ -143,9 +206,10 @@ export default function TakeExam() {
 
   const handleAutoSubmit = () => {
     if (isSubmitting) return;
+    setShowSubmitModal(false); // Tắt modal xác nhận thủ công nếu đang mở
     setIsTimeUp(true); // Hiển thị overlay thông báo hết giờ
     // Tự động nộp sau 2 giây để UX mượt hơn
-    setTimeout(() => handleSubmit(), 2000);
+    setTimeout(() => handleSubmit(true), 2000);
   };
 
   const formatTime = (seconds: number | null) => {
@@ -179,7 +243,8 @@ export default function TakeExam() {
       return (
         <ReactMarkdown 
           key={i} 
-          remarkPlugins={[remarkGfm]}
+          remarkPlugins={[remarkGfm, remarkMath]}
+          rehypePlugins={[rehypeKatex]}
           components={{
             table: ({node, ...props}) => <div className="overflow-x-auto my-3"><table className="border-collapse w-full text-sm" {...props} /></div>,
             th: ({node, ...props}) => <th className="border border-slate-300 bg-blue-50 px-3 py-2 text-left font-bold text-slate-700" {...props} />,
@@ -197,11 +262,21 @@ export default function TakeExam() {
     setAnswers(prev => ({ ...prev, [qId]: oId }));
   };
 
-  const handleSubmit = async () => {
+  // Số lượng câu đã trả lời và chưa trả lời
+  const totalQuestionsCount = examVersion?.questions?.length || 0;
+  const answeredCount = Object.keys(answers).length;
+  const unansweredCount = totalQuestionsCount - answeredCount;
+
+  const handleSubmit = async (force = false) => {
     if (!examVersion) return;
-    // Nếu gọi từ autoSubmit thì không confirm, nếu gọi từ nút bấm thì có confirm
-    if ((timeLeft ?? 0) > 0 && !confirm(t("submit_confirm"))) return;
     
+    // Bọc xử lý xác nhận: Nếu không force (ấn thủ công) và chưa hiện modal, thì hiện modal lên rồi dừng
+    if (!force && (timeLeft ?? 0) > 0) {
+      setShowSubmitModal(true);
+      return;
+    }
+
+    setShowSubmitModal(false);
     setIsSubmitting(true);
     try {
       // 1. TÍNH ĐIỂM
@@ -255,6 +330,12 @@ export default function TakeExam() {
           timeSpent
         });
         localStorage.removeItem(`exam_start_${accessCode}`);
+        // Tự động thoát chế độ toàn màn hình sau khi nộp bài
+        setTimeout(() => {
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
+        }, 200);
         // Không redirect nữa, hiển thị trang tổng quan kết quả
       } else {
         alert(t("submit_error"));
@@ -286,27 +367,38 @@ export default function TakeExam() {
           </div>
 
           {/* Rules */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8 space-y-4">
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-amber-600 shrink-0 mt-0.5">fullscreen</span>
-              <p className="text-slate-700 text-sm font-medium">
-                Hệ thống sẽ ép buộc chạy ở chế độ <strong className="text-slate-900">{t('rule_fullscreen_highlight')}</strong>.
-              </p>
+          {examVersion?.aiProctoring ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8 space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-amber-600 shrink-0 mt-0.5">fullscreen</span>
+                <p className="text-slate-700 text-sm font-medium">
+                  Hệ thống sẽ ép buộc chạy ở chế độ <strong className="text-slate-900">{t('rule_fullscreen_highlight')}</strong>.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-amber-600 shrink-0 mt-0.5">block</span>
+                <p className="text-slate-700 text-sm font-medium">
+                  <strong className="text-slate-900">Nghiêm cấm:</strong> Bấm ESC, mở Tab/Cửa sổ mới, F12, Copy văn bản.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-red-600 shrink-0 mt-0.5">report</span>
+                <p className="text-slate-700 text-sm font-medium">
+                  Vi phạm <strong className="text-red-600">{t('rule_violation_count')}</strong> hệ thống sẽ{" "}
+                  <strong className="text-red-600">{t('rule_auto_submit')}</strong>.
+                </p>
+              </div>
             </div>
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-amber-600 shrink-0 mt-0.5">block</span>
-              <p className="text-slate-700 text-sm font-medium">
-                <strong className="text-slate-900">Nghiêm cấm:</strong> Bấm ESC, mở Tab/Cửa sổ mới, F12, Copy văn bản.
-              </p>
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8 space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-blue-600 shrink-0 mt-0.5">info</span>
+                <p className="text-slate-700 text-sm font-medium">
+                  Kỳ thi này không yêu cầu chế độ giám sát. Bạn không bị ép buộc toàn màn hình, tuy nhiên vui lòng tự giác làm bài trung thực để đánh giá đúng năng lực.
+                </p>
+              </div>
             </div>
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-red-600 shrink-0 mt-0.5">report</span>
-              <p className="text-slate-700 text-sm font-medium">
-                Vi phạm <strong className="text-red-600">{t('rule_violation_count')}</strong> hệ thống sẽ{" "}
-                <strong className="text-red-600">{t('rule_auto_submit')}</strong>.
-              </p>
-            </div>
-          </div>
+          )}
 
           {/* Exam Info */}
           <div className="grid grid-cols-2 gap-4 mb-8">
@@ -323,7 +415,9 @@ export default function TakeExam() {
           {/* Start Button */}
           <button
             onClick={async () => {
-              await requestFullscreen();
+              if (examVersion?.aiProctoring) {
+                await requestFullscreen();
+              }
               setExamStarted(true);
             }}
             className="w-full py-4 bg-[#00355f] text-white font-black text-base rounded-2xl shadow-xl shadow-blue-900/20 hover:bg-[#002848] active:scale-95 transition-all flex items-center justify-center gap-3"
@@ -341,6 +435,74 @@ export default function TakeExam() {
 
   return (
     <main className="min-h-screen bg-[#f8fafc] pb-20" style={{ userSelect: "none" }}>
+
+      {/* Modal Xác Nhận Nộp Bài Mới */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 bg-slate-900/40 z-[999] flex items-center justify-center backdrop-blur-md animate-in fade-in duration-300 px-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 transform transition-all animate-in zoom-in-95 duration-300">
+            {/* Header Modal */}
+            <div className={`py-6 px-8 text-center relative ${unansweredCount > 0 ? 'bg-amber-50' : 'bg-blue-50'}`}>
+              <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 shadow-sm rotate-3 ${unansweredCount > 0 ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+                <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {unansweredCount > 0 ? 'warning' : 'task_alt'}
+                </span>
+              </div>
+              <h3 className="text-xl font-black text-slate-800">
+                Bạn chắc chắn muốn nộp bài?
+              </h3>
+            </div>
+
+            {/* Body Modal */}
+            <div className="p-8">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                  <p className="text-2xl font-black text-emerald-600">{answeredCount}</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đã hoàn thành</p>
+                </div>
+                <div className={`${unansweredCount > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'} rounded-2xl p-4 text-center border`}>
+                  <p className={`text-2xl font-black ${unansweredCount > 0 ? 'text-red-500' : 'text-slate-600'}`}>{unansweredCount}</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Chưa trả lời</p>
+                </div>
+              </div>
+
+              {unansweredCount > 0 && (
+                <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl mb-6 text-red-700 animate-pulse">
+                  <span className="material-symbols-outlined mt-0.5 shrink-0">report_problem</span>
+                  <p className="text-sm font-bold leading-tight">
+                    Chú ý: Bạn vẫn còn {unansweredCount} câu hỏi chưa làm!
+                  </p>
+                </div>
+              )}
+
+              <p className="text-center text-slate-500 text-sm mb-8 leading-relaxed font-medium">
+                Sau khi bấm "Xác nhận nộp", hệ thống sẽ tự động chấm điểm và bạn sẽ không thể chỉnh sửa bài thi này được nữa.
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => handleSubmit(true)}
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-[#00355f] text-white font-bold rounded-xl shadow-lg shadow-blue-900/20 hover:bg-[#002848] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                     <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <><span className="material-symbols-outlined">check_circle</span> Xác nhận nộp bài</>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setShowSubmitModal(false)}
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-white text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all border border-slate-200 text-sm"
+                >
+                  Quay lại làm tiếp
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal cảnh báo vi phạm */}
       {showWarningModal && (
@@ -381,51 +543,14 @@ export default function TakeExam() {
       )}
 
       {/* Chỉ báo số vi phạm (hiển thị khi đang thi) */}
-      {violationCount > 0 && !submissionResult && (
+      {examVersion?.aiProctoring && violationCount > 0 && !submissionResult && (
         <div className="fixed top-20 right-4 z-50 flex items-center gap-2 bg-white border-2 border-red-200 text-red-600 rounded-xl px-3 py-2 shadow-lg text-xs font-bold">
           <span className="material-symbols-outlined text-[16px]">warning</span>
           {t('violation_badge')}: {violationCount}/{maxViolations}
         </div>
       )}
       
-      {/* Cửa sổ Camera AI góc dưới */}
-      {!submissionResult && (
-        <div className={`fixed bottom-4 left-4 w-48 bg-white p-2 rounded-xl shadow-2xl border-2 transition-colors duration-300 z-50 overflow-hidden ${currentViolations.length > 0 ? "border-red-400 shadow-red-500/20" : "border-green-400 shadow-green-500/20"}`}>
-          <div className="relative rounded-lg overflow-hidden bg-black">
-            <video ref={videoRef} autoPlay playsInline muted className={`w-full aspect-[4/3] object-cover scale-x-[-1] transition-opacity ${currentViolations.length > 0 ? "opacity-70 grayscale-[30%]" : "opacity-100"}`} />
-            {currentViolations.length > 0 ? (
-              <div className="absolute inset-0 border-[3px] border-red-500 bg-red-500/20 pointer-events-none animate-pulse"></div>
-            ) : (
-              <div className="absolute inset-0 border-[3px] border-green-500/40 pointer-events-none"></div>
-            )}
-            
-            {/* Nhãn trạng thái góc trái trên của video */}
-            <div className={`absolute top-1 right-1 px-1.5 py-0.5 rounded-md text-[8px] font-bold flex items-center gap-1 backdrop-blur-sm ${currentViolations.length > 0 ? "bg-red-500 text-white" : "bg-green-500/90 text-white"}`}>
-              {currentViolations.length > 0 ? (
-                <><span className="material-symbols-outlined text-[10px]">gpp_bad</span> CẢNH BÁO</>
-              ) : (
-                <><span className="material-symbols-outlined text-[10px]">verified_user</span> TƯ THẾ CHUẨN</>
-              )}
-            </div>
-          </div>
 
-          {currentViolations.length > 0 ? (
-            <div className="mt-2 text-[10px] font-bold text-red-600 space-y-1 leading-tight">
-              {currentViolations.map((v, i) => (
-                <div key={i} className="flex items-start gap-1">
-                  <span className="material-symbols-outlined text-[12px] shrink-0 mt-0.5">warning</span>
-                  <span>{VIOLATION_LABELS[v] || v}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-2 text-[10px] font-bold text-green-600 flex items-center justify-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              AI Đang giám sát...
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Overlay hết giờ */}
       {isTimeUp && (
@@ -469,10 +594,11 @@ export default function TakeExam() {
                   </p>
                 </div>
                 <button 
-                  onClick={handleSubmit}
+                  onClick={() => handleSubmit(false)}
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-[#00355f] text-white font-bold rounded-xl shadow-lg shadow-blue-900/20 active:scale-95 transition-all"
+                  className="px-6 py-2.5 bg-[#00355f] text-white font-bold rounded-xl shadow-lg shadow-blue-900/20 hover:bg-[#002848] active:scale-95 transition-all flex items-center gap-2"
                 >
+                  <span className="material-symbols-outlined">send</span>
                   Nộp bài thi
                 </button>
               </>
@@ -635,9 +761,15 @@ export default function TakeExam() {
                               className="w-5 h-5 accent-[#00355f]" 
                             />
                           )}
-                          <span className={`text-base ${textClass}`}>
-                            {opt.text}
-                          </span>
+                           <div className={`text-base inline-block flex-1 ${textClass}`}>
+                             <ReactMarkdown 
+                               remarkPlugins={[remarkGfm, remarkMath]} 
+                               rehypePlugins={[rehypeKatex]}
+                               components={{ p: ({node, ...props}) => <span {...props} /> }}
+                             >
+                               {opt.text}
+                             </ReactMarkdown>
+                           </div>
                         </div>
                         {showIcon}
                       </label>
@@ -650,44 +782,104 @@ export default function TakeExam() {
         </div>
 
         {/* Sơ đồ câu hỏi (Right Sidebar) */}
-        <div className="w-full lg:w-80 shrink-0 sticky top-32 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hidden md:block">
-          <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-600">grid_view</span>
-            Sơ đồ câu hỏi
-          </h3>
-          <div className="grid grid-cols-5 gap-2">
-            {examVersion.questions.map((q: any, idx: number) => {
-              let btnClass = 'bg-slate-100 text-slate-500 hover:bg-slate-200';
-              if (submissionResult) {
-                const isCorrect = q.options.find((o: any) => o.isCorrect)?.id === answers[q.id];
-                btnClass = isCorrect ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300';
-              } else if (answers[q.id]) {
-                btnClass = 'bg-[#00355f] text-white shadow-md';
-              }
+        <div className="w-full lg:w-80 shrink-0 lg:sticky lg:top-32 space-y-6">
+          
+          {/* AI Proctoring Camera Block */}
+          {examVersion?.aiProctoring && !submissionResult && (
+            <div className={`bg-white rounded-2xl p-4 shadow-sm border-2 transition-all duration-300 ${currentViolations.length > 0 ? "border-red-400 shadow-red-500/10" : "border-slate-200"}`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                  <span className={`material-symbols-outlined ${currentViolations.length > 0 ? "text-red-500 animate-pulse" : "text-green-600"}`}>
+                    {currentViolations.length > 0 ? "gpp_bad" : "security"}
+                  </span>
+                  AI Proctoring
+                </h3>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${currentViolations.length > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"}`}>
+                  {currentViolations.length > 0 ? "Cảnh báo" : "Trực tiếp"}
+                </span>
+              </div>
+              
+              <div className="relative rounded-xl overflow-hidden bg-black shadow-inner border border-slate-200">
+                <video ref={videoRef} autoPlay playsInline muted className={`w-full aspect-video object-cover scale-x-[-1] transition-all duration-500 ${currentViolations.length > 0 ? "opacity-70 grayscale-[30%] blur-[1px]" : "opacity-100"}`} />
+                
+                {/* HUD Overlay */}
+                <div className="absolute inset-0 pointer-events-none border-2 border-transparent">
+                  {currentViolations.length === 0 && cameraReady && (
+                    <div className="absolute inset-0 border-2 border-green-500/30 rounded-xl"></div>
+                  )}
+                  {currentViolations.length > 0 && (
+                    <div className="absolute inset-0 border-4 border-red-500/80 rounded-xl bg-red-500/10 animate-pulse"></div>
+                  )}
+                </div>
 
-              return (
-                <button 
-                  key={q.id}
-                  onClick={() => {
-                    document.getElementById(`question-${q.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }} 
-                  className={`w-10 h-10 rounded-lg font-bold flex items-center justify-center transition-all ${btnClass}`}
-                >
-                  {idx + 1}
-                </button>
-              );
-            })}
-          </div>
-          {!submissionResult && (
-            <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
-              <div className="flex items-center gap-3 text-sm text-slate-600">
-                <div className="w-4 h-4 rounded bg-[#00355f]"></div> Đã làm
+                {!cameraReady && (
+                  <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white animate-spin">sync</span>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-3 text-sm text-slate-600">
-                <div className="w-4 h-4 rounded bg-slate-100 border border-slate-200"></div> Chưa làm
-              </div>
+
+              {currentViolations.length > 0 ? (
+                <div className="mt-3 bg-red-50 rounded-lg p-2 border border-red-100">
+                  <p className="text-[10px] font-bold text-red-700 mb-1">PHÁT HIỆN VI PHẠM:</p>
+                  <div className="space-y-1">
+                    {currentViolations.map((v, i) => (
+                      <div key={i} className="flex items-start gap-1 text-[11px] text-red-600 font-medium">
+                        <span className="material-symbols-outlined text-[14px] shrink-0">warning</span>
+                        <span>{VIOLATION_LABELS[v] || v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 bg-slate-50 rounded-lg p-2 flex items-center justify-center gap-2 border border-slate-100">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                  <span className="text-xs font-bold text-slate-500">Hệ thống đang giám sát</span>
+                </div>
+              )}
             </div>
           )}
+
+          {/* Map Block */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hidden md:block">
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-600">grid_view</span>
+              Sơ đồ câu hỏi
+            </h3>
+            <div className="grid grid-cols-5 gap-2">
+              {examVersion.questions.map((q: any, idx: number) => {
+                let btnClass = 'bg-slate-100 text-slate-500 hover:bg-slate-200';
+                if (submissionResult) {
+                  const isCorrect = q.options.find((o: any) => o.isCorrect)?.id === answers[q.id];
+                  btnClass = isCorrect ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300';
+                } else if (answers[q.id]) {
+                  btnClass = 'bg-[#00355f] text-white shadow-md hover:bg-[#002848]';
+                }
+
+                return (
+                  <button 
+                    key={q.id}
+                    onClick={() => {
+                      document.getElementById(`question-${q.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }} 
+                    className={`w-10 h-10 rounded-xl font-bold flex items-center justify-center transition-all ${btnClass}`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+            {!submissionResult && (
+              <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
+                <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                  <div className="w-4 h-4 rounded-md bg-[#00355f] shadow-inner"></div> Đã làm
+                </div>
+                <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                  <div className="w-4 h-4 rounded-md bg-slate-100 border border-slate-200 shadow-inner"></div> Chưa làm
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       )}

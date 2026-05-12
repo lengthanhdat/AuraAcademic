@@ -21,7 +21,7 @@ export default function MaintenancePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Polling phát hiện bảo trì đã tắt để đưa người dùng quay lại trang cũ
+  // Polling phát hiện bảo trì đã tắt để tự động đưa người dùng quay lại trang cũ
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -29,17 +29,19 @@ export default function MaintenancePage() {
         const headers: Record<string, string> = {};
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        // Gọi thử API, nếu không trả về 503 nghĩa là đã hết bảo trì!
-        const res = await fetch("http://localhost:8088/api/materials/published", { headers });
-        if (res.status !== 503) {
+        // Gọi thử một API công khai để kiểm tra trạng thái hệ thống
+        const res = await fetch("http://localhost:8088/api/health", { headers }).catch(() => null);
+
+        // Nếu server hoạt động bình thường (ví dụ trả về 200 OK), chuyển về trang cũ
+        if (res && res.status === 200) {
           const prevPath = localStorage.getItem("prevPath") || "/";
           localStorage.removeItem("prevPath");
-          window.location.href = prevPath; // Quay lại trang cũ với đầy đủ context re-load
+          window.location.href = prevPath;
         }
-      } catch {
-        // Bỏ qua lỗi kết nối
+      } catch (e) {
+        // Bỏ qua lỗi
       }
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, []);
@@ -152,16 +154,6 @@ export default function MaintenancePage() {
             <p className="text-white text-sm font-bold">Đang xử lý</p>
           </div>
         </div>
-
-        {/* Retry button */}
-        <button
-          onClick={handleRetry}
-          className="w-full flex items-center justify-center gap-2 bg-white text-[#00355f] font-bold py-3.5 rounded-2xl hover:bg-[#d2e4ff] active:scale-95 transition-all duration-200 shadow-lg shadow-black/20 text-sm"
-        >
-          <span className="material-symbols-outlined text-base">refresh</span>
-          Thử lại
-        </button>
-
         {/* Footer note */}
         <p className="text-white/30 text-[10px] mt-5">
           Nếu bạn là quản trị viên,{" "}

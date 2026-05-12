@@ -3,6 +3,8 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
@@ -26,6 +28,7 @@ function ExamBuilderContent() {
   const [questionCount, setQuestionCount] = useState<number | "">("");
   const [shuffle, setShuffle] = useState(true);
   const [aiProctoring, setAiProctoring] = useState(false);
+  const [scheduledStartTime, setScheduledStartTime] = useState<string>("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [extractedText, setExtractedText] = useState("");
   const [extractedImages, setExtractedImages] = useState<string[]>([]);
@@ -35,10 +38,17 @@ function ExamBuilderContent() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiCommand, setAiCommand] = useState("");
   const [error, setError] = useState("");
+  // --- Prompt mode states ---
+  const [topic, setTopic] = useState("");
+  const [difficulty, setDifficulty] = useState("MEDIUM");
+  const [language, setLanguage] = useState("vi");
+  const [generatingMode, setGeneratingMode] = useState<"file" | "prompt">("file");
+  const [aiSubMode, setAiSubMode] = useState<"file" | "prompt">("file");
+  // -------------------------
   const [genLog, setGenLog] = useState(t('generating.log_start'));
   const [genProgress, setGenProgress] = useState(0);
   const [editingQIdx, setEditingQIdx] = useState<number | null>(null);
-  const [editingOptIdx, setEditingOptIdx] = useState<{q: number; o: number} | null>(null);
+  const [editingOptIdx, setEditingOptIdx] = useState<{ q: number; o: number } | null>(null);
   const imgUploadRef = useRef<HTMLInputElement>(null);
   const [pendingImgQIdx, setPendingImgQIdx] = useState<number | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -63,7 +73,13 @@ function ExamBuilderContent() {
       setVersionCount(exam.versions?.length || 1);
       setShuffle(exam.shuffle ?? true);
       setAiProctoring(exam.aiProctoring ?? false);
+      if (exam.scheduledStartTime) {
+        const d = new Date(exam.scheduledStartTime);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        setScheduledStartTime(d.toISOString().slice(0, 16));
+      }
       setExtractedImages(exam.extractedImages || []); // <-- Added this line to load images
+      if (exam.difficulty) setDifficulty(exam.difficulty);
       setEditingId(editId);
       setStep("review");
     }).finally(() => setIsLoadingFromUrl(false));
@@ -127,6 +143,7 @@ function ExamBuilderContent() {
     setStep("generating");
     setGenProgress(5);
     setGenLog(t('generating.log_start'));
+    setGeneratingMode("file");
     let jobId = "";
     try {
       const formData = new FormData();
@@ -153,7 +170,7 @@ function ExamBuilderContent() {
       }
       const uploadData = JSON.parse(rawText);
       if (!uploadRes.ok) throw new Error(uploadData.error || t('toast.upload_error'));
-      
+
       jobId = uploadData.jobId;
       setGenProgress(15);
       setGenLog(t('generating.log_uploading'));
@@ -165,7 +182,7 @@ function ExamBuilderContent() {
 
     let startTime = Date.now();
     let pseudoProgress = 15;
-    
+
     pollingRef.current = setInterval(async () => {
       // 1. Cập nhật tiến trình giả lập để người dùng không cảm thấy treo
       pseudoProgress += Math.random() * 2;
@@ -210,7 +227,7 @@ function ExamBuilderContent() {
           const imgs = job.extractedImages || [];
           setExtractedImages(imgs);
           sessionStorage.setItem("exam_extracted_images", JSON.stringify(imgs));
-          
+
           setTimeout(() => {
             toast.success(t('toast.generate_success'));
             setStep("review");
@@ -218,12 +235,83 @@ function ExamBuilderContent() {
         } else if (job.status === "FAILED") {
           clearInterval(pollingRef.current!);
           setError(job.errorMessage || "AI gặp lỗi khi xử lý tài liệu này.");
-          toast.error(t('toast.ai_failed') +  + job.errorMessage);
+          toast.error(t('toast.ai_failed') + + job.errorMessage);
           setStep("upload");
         }
       } catch (err) {
         console.error("Polling error:", err);
       }
+    }, 2500);
+  };
+
+  const handleGenerateFromPrompt = async () => {
+    if (!topic.trim()) { toast.error("Vui lòng nhập chủ đề hoặc mô tả đề thi."); return; }
+    if (!questionCount || questionCount <= 0) { toast.error(t('toast.invalid_count')); return; }
+
+    setStep("generating");
+    setGenProgress(5);
+    setGenLog("Đang khởi động Aura AI...");
+    setGeneratingMode("prompt");
+
+    let jobId = "";
+    try {
+      const res = await fetch("http://localhost:8088/api/ai/generate-from-prompt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+        body: JSON.stringify({ topic, difficulty, language, count: questionCount })
+      });
+      if (res.status === 401 || res.status === 403) { toast.error(t('toast.session_expired')); router.push("/login"); return; }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Lỗi khởi động AI.");
+      jobId = data.jobId;
+      setGenProgress(15);
+      setGenLog("AI đang tra cứu kiến thức và biên soạn câu hỏi...");
+    } catch (e: any) {
+      toast.error(e.message || t('toast.connection_error'));
+      setStep("upload");
+      return;
+    }
+
+    let pseudoProgress = 15;
+    const startTime = Date.now();
+    pollingRef.current = setInterval(async () => {
+      pseudoProgress += Math.random() * 3;
+      if (pseudoProgress > 95) pseudoProgress = 95;
+      setGenProgress(Math.floor(pseudoProgress));
+      if (pseudoProgress > 25 && pseudoProgress < 55) setGenLog("AI đang suy luận và biên soạn câu hỏi...");
+      if (pseudoProgress >= 55 && pseudoProgress < 80) setGenLog("Đang kiểm tra chất lượng và phân hóa độ khó...");
+      if (pseudoProgress >= 80) setGenLog("Đang đóng gói bộ câu hỏi hoàn chỉnh...");
+
+      if (Date.now() - startTime > 300000) {
+        clearInterval(pollingRef.current!);
+        toast.error(t('toast.timeout'));
+        setStep("upload");
+        return;
+      }
+
+      try {
+        const poll = await fetch(`http://localhost:8088/api/ai/jobs/${jobId}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
+        });
+        if (!poll.ok) return;
+        const job = await poll.json();
+        if (job.status === "DONE") {
+          clearInterval(pollingRef.current!);
+          setGenProgress(100);
+          setGenLog(t('generating.log_done'));
+          setQuestions(job.questions || []);
+          setExtractedText(job.extractedText || "");
+          setExtractedImages([]);
+          setTimeout(() => { toast.success(`✨ AI đã biên soạn xong ${job.questions?.length || 0} câu hỏi!`); setStep("review"); }, 500);
+        } else if (job.status === "FAILED") {
+          clearInterval(pollingRef.current!);
+          toast.error("AI không thể tạo câu hỏi cho chủ đề này. Vui lòng thử lại.");
+          setStep("upload");
+        }
+      } catch { }
     }, 2500);
   };
 
@@ -233,7 +321,7 @@ function ExamBuilderContent() {
     setStep("generating");
     setGenProgress(20);
     setGenLog(t('generating.log_start'));
-    
+
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -262,17 +350,17 @@ function ExamBuilderContent() {
 
       if (!res.ok) {
         let errMsg = "Lỗi khi trích xuất câu hỏi từ file.";
-        try { errMsg = JSON.parse(rawText).error || errMsg; } catch(_) {}
+        try { errMsg = JSON.parse(rawText).error || errMsg; } catch (_) { }
         toast.error(errMsg);
         setStep("upload");
         setIsAiLoading(false);
         return;
       }
-      
+
       const data = JSON.parse(rawText);
       setGenProgress(100);
       setGenLog(t('generating.log_done'));
-      
+
       const qs = (data.questions || []).map((q: any, i: number) => ({
         id: q.id || String(Date.now() + i),
         type: "Trắc nghiệm",
@@ -288,7 +376,7 @@ function ExamBuilderContent() {
 
       setQuestions(qs);
       setTimeout(() => {
-        toast.success(t('toast.extract_success', {count: qs.length}));
+        toast.success(t('toast.extract_success', { count: qs.length }));
         setStep("review");
         setIsAiLoading(false);
       }, 500);
@@ -317,22 +405,23 @@ function ExamBuilderContent() {
         });
       }
 
-      const payload = { 
-        title, duration, shuffle, aiProctoring, 
+      const payload = {
+        title, duration, shuffle, aiProctoring, difficulty,
         teacherId: user.id, teacherName: user.fullName,
-        status: status === "WAITING" ? "PUBLISHED" : status, 
+        status: status === "WAITING" ? "PUBLISHED" : status,
+        scheduledStartTime: scheduledStartTime ? new Date(scheduledStartTime).getTime() : null,
         versions, extractedImages
       };
 
-      const url = editingId 
+      const url = editingId
         ? `http://localhost:8088/api/exams/${editingId}`
         : "http://localhost:8088/api/exams";
-      
+
       const method = editingId ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method: method,
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
         },
@@ -415,12 +504,14 @@ function ExamBuilderContent() {
               : <span key={i} className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-mono">[IMG_{imgIdx} — chưa có ảnh]</span>;
           }
           return part ? (
-            <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}
+            <ReactMarkdown key={i}
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex]}
               components={{
-                table: ({node, ...props}) => <div className="overflow-x-auto my-2"><table className="text-sm border-collapse w-full" {...props} /></div>,
-                th: ({node, ...props}) => <th className="border border-slate-300 bg-slate-100 px-3 py-1.5 text-left font-bold" {...props} />,
-                td: ({node, ...props}) => <td className="border border-slate-200 px-3 py-1.5" {...props} />,
-                p: ({node, ...props}) => <span {...props} />,
+                table: ({ node, ...props }) => <div className="overflow-x-auto my-2"><table className="text-sm border-collapse w-full" {...props} /></div>,
+                th: ({ node, ...props }) => <th className="border border-slate-300 bg-slate-100 px-3 py-1.5 text-left font-bold" {...props} />,
+                td: ({ node, ...props }) => <td className="border border-slate-200 px-3 py-1.5" {...props} />,
+                p: ({ node, ...props }) => <span {...props} />,
               }}
             >{part}</ReactMarkdown>
           ) : null;
@@ -448,77 +539,140 @@ function ExamBuilderContent() {
   };
 
   if (step === "generating") return (
-    <main className="flex-1 flex items-center justify-center bg-[#F8FAFC] p-6">
-      <div className="w-full max-w-lg">
-        {/* Main Loading Card */}
-        <div className="bg-white rounded-[40px] p-12 shadow-[0_32px_64px_-16px_rgba(0,53,95,0.1)] border border-slate-100 relative overflow-hidden group">
-          {/* Subtle Background Glow */}
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity" />
-          
-          <div className="relative z-10 flex flex-col items-center">
-            {/* Progress Circle - More Compact */}
-            <div className="relative w-40 h-40 mb-10">
-              <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                {/* Background Ring */}
-                <circle 
-                  cx="50" cy="50" r="46" 
-                  className="stroke-slate-100 fill-none" 
-                  strokeWidth="6" 
-                />
-                {/* Progress Ring */}
-                <circle 
-                  cx="50" cy="50" r="46" 
-                  className="stroke-[#00355f] fill-none transition-all duration-700 ease-out" 
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 46}`}
-                  strokeDashoffset={`${2 * Math.PI * 46 * (1 - genProgress / 100)}`}
-                />
+    <main className={`flex-1 flex items-center justify-center p-6 relative overflow-hidden ${generatingMode === "prompt" ? "bg-[#06030f]" : "bg-[#F8FAFC]"}`}>
+
+      {/* ── PROMPT MODE: Neural Cinematic Screen ── */}
+      {generatingMode === "prompt" && (
+        <>
+          {/* Matrix falling characters */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div key={i} className="absolute top-0 text-violet-400 font-mono text-xs leading-tight animate-pulse"
+                style={{
+                  left: `${i * 5.2}%`,
+                  animationDelay: `${i * 0.18}s`,
+                  animationDuration: `${1.5 + (i % 4) * 0.5}s`
+                }}>
+                {"AI⚡✦◈❖⬡⬢✶∞⌬⊛".split("").map((c, j) => (
+                  <div key={j} style={{ opacity: 1 - j * 0.08, marginBottom: 4 }}>{c}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Ambient glow orbs */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+
+          <div className="relative z-10 w-full max-w-lg flex flex-col items-center">
+            {/* Neural orb */}
+            <div className="relative w-48 h-48 mb-8">
+              {/* Rotating rings */}
+              {[0, 1, 2].map(i => (
+                <div key={i} className="absolute inset-0 rounded-full border border-violet-500/30"
+                  style={{
+                    transform: `scale(${1 + i * 0.18}) rotate(${i * 60}deg)`,
+                    animation: `spin ${3 + i * 1.5}s linear infinite ${i % 2 === 1 ? 'reverse' : ''}`,
+                  }} />
+              ))}
+              {/* Core glow */}
+              <div className="absolute inset-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-[0_0_60px_20px_rgba(139,92,246,0.4)] flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-4xl animate-pulse">psychology</span>
+              </div>
+              {/* SVG progress ring */}
+              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" className="fill-none stroke-violet-900/40" strokeWidth="2" />
+                <circle cx="50" cy="50" r="48" className="fill-none stroke-violet-400 transition-all duration-700"
+                  strokeWidth="2" strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 48}`}
+                  strokeDashoffset={`${2 * Math.PI * 48 * (1 - genProgress / 100)}`} />
               </svg>
-              
-              {/* Inner Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="bg-[#00355f]/5 p-3 rounded-2xl mb-1">
-                  <span className="material-symbols-outlined text-[#00355f] text-2xl animate-pulse">auto_awesome</span>
+            </div>
+
+            {/* Card */}
+            <div className="w-full bg-white/5 backdrop-blur-xl border border-violet-500/20 rounded-3xl p-8 text-center shadow-[0_32px_64px_rgba(139,92,246,0.15)]">
+              <div className="text-5xl font-black text-white tabular-nums mb-2">{genProgress}<span className="text-2xl text-violet-400">%</span></div>
+              <h2 className="text-lg font-black text-white mb-1">Aura AI — Đang Suy Luận</h2>
+              <p className="text-sm text-violet-300 italic mb-6">{genLog}</p>
+
+              {/* Topic preview */}
+              {topic && (
+                <div className="text-left bg-violet-950/60 border border-violet-500/20 rounded-2xl p-4 mb-6">
+                  <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest mb-1">Chủ đề đề thi</p>
+                  <p className="text-xs text-white/80 leading-relaxed line-clamp-2">{topic}</p>
                 </div>
-                <div className="text-2xl font-black text-[#00355f] tabular-nums">{genProgress}%</div>
+              )}
+
+              {/* Progress bar */}
+              <div className="h-1 w-full bg-violet-950 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-700 rounded-full"
+                  style={{ width: `${genProgress}%` }} />
+              </div>
+
+              {/* Animated dots */}
+              <div className="flex justify-center gap-2 mt-4">
+                {[0, 1, 2, 3].map(i => (
+                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce"
+                    style={{ animationDelay: `${i * 0.15}s` }} />
+                ))}
               </div>
             </div>
 
-            {/* Status Text */}
-            <div className="text-center space-y-3">
-              <h2 className="text-2xl font-black text-[#00355f] tracking-tight">{t('generating.title')}</h2>
-              <div className="flex items-center justify-center gap-2 text-slate-500 font-medium h-6">
-                <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-                <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-                <p className="text-sm ml-1 italic">{genLog}</p>
-              </div>
-            </div>
+            <p className="mt-6 text-[10px] text-violet-500/60 font-bold uppercase tracking-[0.2em]">
+              Gemini 2.5 Flash — Aura Academic AI Engine
+            </p>
+          </div>
 
-            {/* Linear Progress Bar (Minimalist) */}
-            <div className="w-full mt-10 space-y-2">
-              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-[#00355f] to-[#0f4c81] transition-all duration-700 ease-out rounded-full"
-                  style={{ width: `${genProgress}%` }}
-                />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </>
+      )}
+
+      {/* ── FILE MODE: Original clean loading screen ── */}
+      {generatingMode === "file" && (
+        <div className="w-full max-w-lg">
+          <div className="bg-white rounded-[40px] p-12 shadow-[0_32px_64px_-16px_rgba(0,53,95,0.1)] border border-slate-100 relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60" />
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="relative w-40 h-40 mb-10">
+                <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="46" className="stroke-slate-100 fill-none" strokeWidth="6" />
+                  <circle cx="50" cy="50" r="46" className="stroke-[#00355f] fill-none transition-all duration-700 ease-out"
+                    strokeWidth="6" strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 46}`}
+                    strokeDashoffset={`${2 * Math.PI * 46 * (1 - genProgress / 100)}`} />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="bg-[#00355f]/5 p-3 rounded-2xl mb-1">
+                    <span className="material-symbols-outlined text-[#00355f] text-2xl animate-pulse">auto_awesome</span>
+                  </div>
+                  <div className="text-2xl font-black text-[#00355f] tabular-nums">{genProgress}%</div>
+                </div>
               </div>
-              <div className="flex justify-between items-center px-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('generating.progress_label')}</span>
-                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse">{t('generating.progress_value')}</span>
+              <div className="text-center space-y-3">
+                <h2 className="text-2xl font-black text-[#00355f] tracking-tight">{t('generating.title')}</h2>
+                <div className="flex items-center justify-center gap-2 text-slate-500 font-medium h-6">
+                  {[0, 0.2, 0.4].map((d, i) => <span key={i} className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />)}
+                  <p className="text-sm ml-1 italic">{genLog}</p>
+                </div>
+              </div>
+              <div className="w-full mt-10 space-y-2">
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#00355f] to-[#0f4c81] transition-all duration-700 ease-out rounded-full" style={{ width: `${genProgress}%` }} />
+                </div>
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('generating.progress_label')}</span>
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse">{t('generating.progress_value')}</span>
+                </div>
               </div>
             </div>
           </div>
+          <p className="text-center mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
+            <span className="w-8 h-px bg-slate-200" />
+            Vui lòng không đóng trình duyệt
+            <span className="w-8 h-px bg-slate-200" />
+          </p>
         </div>
-
-        {/* Footer Hint */}
-        <p className="text-center mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
-          <span className="w-8 h-px bg-slate-200" />
-          Vui lòng không đóng trình duyệt
-          <span className="w-8 h-px bg-slate-200" />
-        </p>
-      </div>
+      )}
     </main>
   );
 
@@ -535,20 +689,16 @@ function ExamBuilderContent() {
               <span className="text-blue-600">{t('header.breadcrumb_current')}</span>
             </div>
             <h1 className="text-3xl font-black text-[#00355f] tracking-tight">{t('header.title')}</h1>
-            
+
             <div className="flex gap-2 mt-4 bg-slate-100 p-1 rounded-xl w-fit">
-              <button 
-                onClick={() => {
-                  setCreationMode("ai");
-                  setStep("upload");
-                  setFile(null);
-                }}
+              <button
+                onClick={() => { setCreationMode("ai"); setStep("upload"); setFile(null); }}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "ai" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">auto_awesome</span>
                 Tạo bằng AI
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setCreationMode("import");
                   setStep("upload");
@@ -559,7 +709,7 @@ function ExamBuilderContent() {
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">file_open</span>
                 Nhập từ file
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setCreationMode("manual");
                   if (questions.length > 0 && step === "upload") setStep("review");
@@ -580,55 +730,204 @@ function ExamBuilderContent() {
           </div>
         </div>
 
-        {/* Upload Area - Chỉ hiển thị ở chế độ AI hoặc IMPORT */}
-        {(creationMode === "ai" || creationMode === "import") && step === "upload" && (
-          <div 
-            onClick={() => fileRef.current?.click()}
-            className={`relative border-2 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer group ${
-              file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/10"
-            }`}
-          >
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-3xl">cloud_upload</span>
+        {/* Unified AI Area */}
+        {creationMode === "ai" && step === "upload" && (
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            {/* Sub-mode toggle */}
+            <div className="flex border-b border-slate-100">
+              <button
+                onClick={() => { setAiSubMode("prompt"); setFile(null); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "prompt" ? "bg-violet-50 text-violet-700 border-b-2 border-violet-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                  }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">psychology</span>
+                Tạo từ chủ đề
+              </button>
+              <button
+                onClick={() => { setAiSubMode("file"); setTopic(""); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "file" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                  }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">upload_file</span>
+                Tạo từ tài liệu
+              </button>
             </div>
-            <h3 className="text-lg font-bold text-slate-700">
-              {file ? file.name : (creationMode === "ai" ? t('upload.title_ai') : t('upload.title_import'))}
-            </h3>
-            <p className="text-sm text-slate-400 mt-2">{t('upload.hint')}</p>
-            {creationMode === "import" && !file && (
-              <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl p-4 text-[11px] text-amber-700 text-left max-w-md mx-auto">
-                <p className="font-bold mb-1 uppercase tracking-wider">{t('upload.format_support')}</p>
-                <p className="font-mono">{t('upload.format_example').split('\n').map((line, i) => <span key={i}>{line}<br/></span>)}</p>
-                <p className="mt-1 opacity-70 italic">{t('upload.format_note')}</p>
-              </div>
-            )}
-            <button className="mt-4 text-blue-600 font-bold text-sm hover:underline">{t('upload.btn_choose')}</button>
-            <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
-            
-            {file && !questions.length && (
-              <div className="mt-6 flex flex-col items-center gap-4">
-                {creationMode === "ai" && (
-                  <div className="w-64">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('upload.label_count')}</label>
-                    <input 
-                      type="number" 
-                      value={questionCount} 
-                      onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
-                      placeholder={t('upload.placeholder_count')}
-                      className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-center font-bold text-blue-900 outline-none"
-                      onClick={(e) => e.stopPropagation()}
-                    />
+
+            {/* ── Sub-mode: FROM FILE ── */}
+            {aiSubMode === "file" && (
+              <div
+                onClick={() => fileRef.current?.click()}
+                className={`relative border-2 border-dashed m-6 rounded-2xl p-10 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/10"
+                  }`}
+              >
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-3xl">cloud_upload</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-700">
+                  {file ? file.name : t('upload.title_ai')}
+                </h3>
+                <p className="text-sm text-slate-400 mt-1">{t('upload.hint')}</p>
+                <button className="mt-3 text-blue-600 font-bold text-sm hover:underline">{t('upload.btn_choose')}</button>
+                <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+
+                {file && !questions.length && (
+                  <div className="mt-5 flex flex-col items-center gap-3">
+                    <div className="w-56">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('upload.label_count')}</label>
+                      <input
+                        type="number"
+                        value={questionCount}
+                        onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
+                        placeholder={t('upload.placeholder_count')}
+                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-center font-bold text-blue-900 outline-none"
+                        onClick={e => e.stopPropagation()}
+                      />
+                    </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); handleGenerate(); }}
+                      className="px-8 py-3 bg-blue-900 text-white rounded-xl font-bold text-sm shadow-xl hover:bg-blue-800 transition-all flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                      {t('upload.btn_generate')}
+                    </button>
                   </div>
                 )}
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleGenerate(); }}
-                  className="px-8 py-3 bg-blue-900 text-white rounded-xl font-bold text-sm shadow-xl hover:bg-blue-800 transition-all flex items-center gap-2"
+              </div>
+            )}
+
+            {/* ── Sub-mode: FROM TOPIC ── */}
+            {aiSubMode === "prompt" && (
+              <div className="p-6 space-y-5">
+                {/* Chips */}
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "Toán 12 — Tích phân",
+                    "Vật lý 11 — Điện từ học",
+                    "Tiếng Anh IELTS 6.0",
+                    "Lập trình Java cơ bản",
+                    "Lịch sử Việt Nam — 1945",
+                    "Hóa học hữu cơ lớp 11"
+                  ].map(chip => (
+                    <button key={chip} onClick={() => setTopic(chip)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${topic === chip ? "bg-violet-600 text-white border-violet-600" : "bg-slate-50 text-slate-500 border-slate-200 hover:border-violet-300 hover:text-violet-600"
+                        }`}>
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Textarea */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Mô tả yêu cầu đề thi</label>
+                  <textarea
+                    value={topic}
+                    onChange={e => setTopic(e.target.value)}
+                    rows={3}
+                    placeholder="Ví dụ: Tạo 15 câu trắc nghiệm môn Toán lớp 12 chương tích phân bất định, tập trung vào kỹ thuật đổi biến..."
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-violet-400 focus:bg-white transition-all text-sm text-slate-700 resize-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Settings Row */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Độ khó</label>
+                    <select value={difficulty} onChange={e => setDifficulty(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-violet-400">
+                      <option value="EASY">🟢 Dễ</option>
+                      <option value="MEDIUM">🟡 Trung bình</option>
+                      <option value="HARD">🔴 Khó</option>
+                      <option value="EXPERT">🟣 Chuyên gia</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Ngôn ngữ</label>
+                    <select value={language} onChange={e => setLanguage(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-violet-400">
+                      <option value="vi">🆻🇳 Tiếng Việt</option>
+                      <option value="en">🇺🇸 English</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Số câu</label>
+                    <input type="number" value={questionCount}
+                      onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 text-center outline-none focus:border-violet-400"
+                      placeholder="10" min={1} max={100} />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleGenerateFromPrompt}
+                  disabled={!topic.trim()}
+                  className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-violet-500/20 hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
                 >
-                  <span className="material-symbols-outlined text-sm">{creationMode === "ai" ? "auto_awesome" : "content_paste_search"}</span>
-                  {creationMode === "ai" ? t('upload.btn_generate') : t('upload.btn_extract')}
+                  <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                  Aura AI — Biên soạn đề thi ngay
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Chế độ Nhập từ file truyền thống ── */}
+        {creationMode === "import" && step === "upload" && (
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <span className="material-symbols-outlined">upload_file</span>
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-800 text-base">Tải lên tài liệu đề thi</h3>
+                  <p className="text-xs text-slate-500 font-medium">Hệ thống tự động tách câu hỏi và đáp án trực tiếp từ tệp</p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              onClick={() => fileRef.current?.click()}
+              className={`relative border-2 border-dashed m-8 rounded-2xl p-12 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/10"
+                }`}
+            >
+              <div className="w-20 h-20 rounded-3xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-sm">
+                <span className="material-symbols-outlined text-4xl">cloud_upload</span>
+              </div>
+              <h3 className="text-lg font-black text-slate-700">
+                {file ? file.name : t('upload.title')}
+              </h3>
+              <p className="text-sm text-slate-400 mt-2 font-medium max-w-md mx-auto">{t('upload.hint')}</p>
+              
+              <div className="mt-4 flex items-center justify-center gap-4">
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500">
+                  <span className="w-2 h-2 rounded-full bg-red-400"></span> PDF
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500">
+                  <span className="w-2 h-2 rounded-full bg-blue-400"></span> DOCX
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500">
+                  <span className="w-2 h-2 rounded-full bg-slate-400"></span> TXT
+                </div>
+              </div>
+
+              <button className="mt-6 px-6 py-2.5 bg-white text-blue-700 border border-blue-200 shadow-sm font-bold text-sm rounded-xl hover:bg-blue-50 transition-all">
+                {t('upload.btn_choose')}
+              </button>
+              
+              <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+
+              {file && !questions.length && (
+                <div className="mt-8 pt-8 border-t border-blue-100/50 animate-in fade-in slide-in-from-bottom-2">
+                  <button
+                    onClick={e => { e.stopPropagation(); handleGenerate(); }}
+                    className="px-10 py-4 bg-[#00355f] text-white rounded-xl font-black text-base shadow-xl hover:bg-[#002848] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 mx-auto"
+                  >
+                    <span className="material-symbols-outlined text-xl">arrow_circle_right</span>
+                    Tiến hành trích xuất đề thi
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -640,7 +939,7 @@ function ExamBuilderContent() {
             </div>
             <h3 className="text-xl font-bold text-slate-700 mb-2">{t('empty.title')}</h3>
             <p className="text-slate-500 max-w-md mx-auto mb-6">{t('empty.desc')}</p>
-            <button 
+            <button
               onClick={() => {
                 addManualQuestion();
                 setStep("review");
@@ -661,7 +960,7 @@ function ExamBuilderContent() {
                 <span className="material-symbols-outlined text-slate-400">list_alt</span>
                 <h2 className="text-xl font-black text-slate-800">{t('list.title')}</h2>
               </div>
-              <button 
+              <button
                 onClick={addManualQuestion}
                 className="flex items-center gap-2 text-blue-600 font-bold text-sm hover:bg-blue-50 px-4 py-2 rounded-xl transition-all"
               >
@@ -693,7 +992,7 @@ function ExamBuilderContent() {
                       <button
                         title={editingQIdx === idx ? t('list.tooltip_done') : t('list.tooltip_edit')}
                         onClick={() => setEditingQIdx(editingQIdx === idx ? null : idx)}
-                        className={`p-2 transition-colors ${ editingQIdx === idx ? "text-blue-600" : "text-slate-300 hover:text-blue-500"}`}
+                        className={`p-2 transition-colors ${editingQIdx === idx ? "text-blue-600" : "text-slate-300 hover:text-blue-500"}`}
                       >
                         <span className="material-symbols-outlined text-[20px]">{editingQIdx === idx ? "check_circle" : "edit"}</span>
                       </button>
@@ -734,16 +1033,14 @@ function ExamBuilderContent() {
                     {q.options.map((opt, oIdx) => (
                       <div
                         key={opt.id}
-                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${
-                          opt.isCorrect ? "bg-blue-50 border-blue-400" : "bg-slate-50 border-transparent hover:border-slate-200"
-                        }`}
+                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${opt.isCorrect ? "bg-blue-50 border-blue-400" : "bg-slate-50 border-transparent hover:border-slate-200"
+                          }`}
                       >
                         {/* Radio — click to set correct */}
                         <button
                           onClick={() => setCorrectOption(idx, oIdx)}
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                            opt.isCorrect ? "bg-blue-900 border-blue-900" : "bg-white border-slate-300 hover:border-blue-400"
-                          }`}
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${opt.isCorrect ? "bg-blue-900 border-blue-900" : "bg-white border-slate-300 hover:border-blue-400"
+                            }`}
                         >
                           {opt.isCorrect && <div className="w-2 h-2 rounded-full bg-white" />}
                         </button>
@@ -756,9 +1053,15 @@ function ExamBuilderContent() {
                             onChange={e => updateOptionText(idx, oIdx, e.target.value)}
                           />
                         ) : (
-                          <span className={`text-sm font-medium flex-1 ${ opt.isCorrect ? "text-blue-900" : "text-slate-600"}`}>
-                            {opt.text}
-                          </span>
+                          <div className={`text-sm font-medium flex-1 ${opt.isCorrect ? "text-blue-900" : "text-slate-600"}`}>
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm, remarkMath]}
+                              rehypePlugins={[rehypeKatex]}
+                              components={{ p: ({ node, ...props }) => <span {...props} /> }}
+                            >
+                              {opt.text}
+                            </ReactMarkdown>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -774,12 +1077,12 @@ function ExamBuilderContent() {
       <div className="w-80 bg-white border-l border-slate-200 p-8 overflow-y-auto space-y-8 shrink-0 shadow-2xl shadow-slate-200/50">
         <div>
           <h2 className="text-xl font-black text-slate-800 mb-6">{t('sidebar.title')}</h2>
-          
+
           <div className="space-y-6">
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('sidebar.label_title')}</label>
-              <input 
-                value={title} 
+              <input
+                value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder={t('sidebar.placeholder_title')}
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-semibold text-slate-700"
@@ -789,9 +1092,9 @@ function ExamBuilderContent() {
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('sidebar.label_duration')}</label>
               <div className="relative">
-                <input 
+                <input
                   type="number"
-                  value={duration} 
+                  value={duration}
                   onChange={e => setDuration(e.target.value === "" ? "" : Number(e.target.value))}
                   placeholder={t('sidebar.placeholder_duration')}
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700"
@@ -802,13 +1105,38 @@ function ExamBuilderContent() {
 
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('sidebar.label_versions')}</label>
-              <input 
+              <input
                 type="number"
-                value={versionCount} 
+                value={versionCount}
                 onChange={e => setVersionCount(e.target.value === "" ? "" : Number(e.target.value))}
                 placeholder={t('sidebar.placeholder_versions')}
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700"
               />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Bắt đầu tự động (Tùy chọn)</label>
+              <input
+                type="datetime-local"
+                value={scheduledStartTime}
+                onChange={e => setScheduledStartTime(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700"
+              />
+            </div>
+            
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Độ khó tổng thể</label>
+              <select 
+                value={difficulty} 
+                onChange={e => setDifficulty(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700 appearance-none cursor-pointer"
+                style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
+              >
+                <option value="EASY">🟢 Dễ</option>
+                <option value="MEDIUM">🟡 Trung bình</option>
+                <option value="HARD">🔴 Khó</option>
+                <option value="EXPERT">🟣 Chuyên gia</option>
+              </select>
             </div>
 
             <div className="space-y-4 pt-4">
@@ -849,20 +1177,24 @@ function ExamBuilderContent() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-500 font-medium">{t('sidebar.difficulty')}</span>
-              <span className="font-bold text-blue-900">{t('sidebar.difficulty_medium')}</span>
+              <span className="font-bold text-blue-900">
+                {difficulty === "EASY" ? "Dễ" : 
+                 difficulty === "MEDIUM" ? "Trung bình" : 
+                 difficulty === "HARD" ? "Khó" : "Chuyên gia"}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="space-y-3 pt-4">
-          <button 
+          <button
             onClick={() => handleSave("WAITING")}
             disabled={isSaving || !questions.length}
             className="w-full py-4 bg-blue-900 text-white rounded-2xl font-bold text-sm shadow-xl shadow-blue-900/20 hover:bg-blue-800 active:scale-95 transition-all disabled:opacity-50"
           >
             {isSaving ? t('sidebar.btn_processing') : t('sidebar.btn_publish')}
           </button>
-          <button 
+          <button
             onClick={() => handleSave("DRAFT")}
             disabled={isSaving || !questions.length}
             className="w-full py-4 bg-white border-2 border-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all disabled:opacity-50"
@@ -874,8 +1206,8 @@ function ExamBuilderContent() {
 
       {/* Floating AI Action Button */}
       <div className="fixed bottom-8 right-8 z-50">
-        <button 
-          onClick={() => {}} 
+        <button
+          onClick={() => { }}
           className="w-14 h-14 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined text-3xl">auto_awesome</span>

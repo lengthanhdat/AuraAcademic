@@ -30,6 +30,176 @@ export default function StudentMaterials() {
   const [category, setCategory] = useState("all");
   const [sortBy, setSortBy] = useState<"date"|"downloads">("date");
   const [previewItem, setPreviewItem] = useState<Material|null>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [docxHtml, setDocxHtml] = useState<string | null>(null);
+  
+  // PPTX state hooks
+  const [pptxLoading, setPptxLoading] = useState<boolean | string>(false);
+  const [pptxSlideCount, setPptxSlideCount] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [pptxRenderer, setPptxRenderer] = useState<any>(null);
+
+  // Xử lý chuyển đổi Base64 -> Blob URL an toàn để trình duyệt xem mượt mà
+  useEffect(() => {
+    setDocxHtml(null); // Reset HTML khi đổi file
+    setPptxSlideCount(0);
+    setCurrentSlide(0);
+    setPptxRenderer(null);
+    setPptxLoading(false);
+    if (!previewItem?.fileUrl) {
+      setBlobUrl(null);
+      return;
+    }
+    
+    // Nếu fileUrl đã là link https:// thì dùng luôn
+    if (!previewItem.fileUrl.startsWith("data:")) {
+      setBlobUrl(previewItem.fileUrl);
+      return;
+    }
+
+    try {
+      const [header, base64Data] = previewItem.fileUrl.split(",");
+      const mime = header.match(/:(.*?);/)?.[1] || "application/octet-stream";
+      const byteChars = atob(base64Data);
+      const byteArrays = [];
+      for (let i = 0; i < byteChars.length; i += 512) {
+        const slice = byteChars.slice(i, i + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let j = 0; j < slice.length; j++) byteNumbers[j] = slice.charCodeAt(j);
+        byteArrays.push(new Uint8Array(byteNumbers));
+      }
+      const blob = new Blob(byteArrays, { type: mime });
+      const url = URL.createObjectURL(blob);
+      setBlobUrl(url);
+
+      // XỬ LÝ ĐẶC BIỆT CHO DOCX
+      if (previewItem.fileType === 'docx' || mime.includes("wordprocessingml.document")) {
+        renderDocx(blob);
+      }
+      
+      // XỬ LÝ ĐẶC BIỆT CHO PPTX
+      if (previewItem.fileType === 'pptx' || mime.includes("presentationml.presentation")) {
+        renderPptx(blob);
+      }
+
+      // Dọn dẹp bộ nhớ khi đóng modal
+      return () => URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Lỗi parse file preview:", e);
+      setBlobUrl(null);
+    }
+  }, [previewItem]);
+
+  const renderDocx = async (blob: Blob) => {
+    try {
+      // Tải động thư viện mammoth để parse Docx -> Html trên Client
+      if (!(window as any).mammoth) {
+        const script = document.createElement("script");
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise(resolve => script.onload = resolve);
+      }
+      
+      const arrayBuffer = await blob.arrayBuffer();
+      const result = await (window as any).mammoth.convertToHtml({ arrayBuffer });
+      setDocxHtml(result.value);
+    } catch (err) {
+      console.error("Lỗi render docx:", err);
+      setDocxHtml("ERR");
+    }
+  };
+
+  const renderPptx = async (blob: Blob) => {
+    setPptxLoading(true);
+    try {
+      // Bước 1: Nạp thư viện nén JSZip bắt buộc (Standard UMD script)
+      if (!(window as any).JSZip) {
+        const jsZipScript = document.createElement("script");
+        jsZipScript.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+        jsZipScript.async = true;
+        document.body.appendChild(jsZipScript);
+        await new Promise(r => jsZipScript.onload = r);
+      }
+
+      // Bước 1.5: Nạp Chart.js (Một số slide có đồ thị yêu cầu bắt buộc này)
+      if (!(window as any).Chart) {
+        const chartScript = document.createElement("script");
+        chartScript.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
+        chartScript.async = true;
+        document.body.appendChild(chartScript);
+        await new Promise(r => chartScript.onload = r);
+      }
+
+      // Bước 2: Nạp thư viện PptxViewJS nguyên khối (Standard UMD script)
+      if (!(window as any).PptxViewJS) {
+        const pptxScript = document.createElement("script");
+        pptxScript.src = "https://cdn.jsdelivr.net/npm/pptxviewjs@1.1.9/dist/PptxViewJS.min.js";
+        pptxScript.async = true;
+        document.body.appendChild(pptxScript);
+        await new Promise(r => pptxScript.onload = r);
+      }
+
+      // Chờ thêm 100ms đảm bảo window đã nhận diện namespace toàn cục
+      await new Promise(r => setTimeout(r, 150));
+
+      const lib = (window as any).PptxViewJS;
+      if (!lib) throw new Error("PptxViewJS not exposed to window");
+
+      // Khởi tạo Presentation để lấy số slide trước
+      // Thư viện này cần Canvas để gắn kết lúc Render
+      // Sẽ lưu instance thư viện lại vào state
+      const PPTXViewer = lib.PPTXViewer;
+      // Lưu trữ reference thư viện và blob để useEffect xử lý render canvas sau
+      setPptxRenderer({ PPTXViewer, blob });
+      // Mặc định set tạm slide, số lượng thật sẽ update khi parse xong ở hook
+      setPptxLoading(false);
+    } catch (err: any) {
+      console.error("Lỗi nạp UMD PowerPoint:", err);
+      setPptxLoading("ERR: " + (err.message || "Failed to load UMD"));
+    }
+  };
+
+  // Hook render Canvas PowerPoint khi đổi slide hoặc khi lib sẵn sàng
+  useEffect(() => {
+    if (!pptxRenderer?.PPTXViewer || !pptxRenderer?.blob) return;
+    
+    const runRender = async () => {
+      const canvas = document.getElementById("pptx-canvas") as HTMLCanvasElement;
+      if (!canvas) return;
+
+      try {
+        // Nếu chưa có instance renderer thật sự, khởi tạo nó gắn với canvas
+        if (!pptxRenderer.instance) {
+          const viewerInstance = new pptxRenderer.PPTXViewer({ canvas });
+          
+          // Quan trọng: Lắng nghe sự kiện đã nạp xong hoàn toàn trước khi cập nhật UI
+          viewerInstance.on('loadComplete', (data: any) => {
+            const count = viewerInstance.getSlideCount();
+            console.log("Loaded slides count:", count);
+            setPptxSlideCount(count > 0 ? count : 1);
+            viewerInstance.goToSlide(0).catch(()=>{});
+          });
+
+          // CHUYỂN ĐỔI BLOB SANG ARRAYBUFFER ĐỂ THƯ VIỆN TIÊU THỤ CHUẨN XÁC
+          const buffer = await pptxRenderer.blob.arrayBuffer();
+          await viewerInstance.loadFile(buffer);
+          
+          // Chạy render lần đầu để dựng hình cơ bản
+          await viewerInstance.render().catch(()=>{});
+          
+          // Cập nhật instance
+          setPptxRenderer((prev: any) => ({ ...prev, instance: viewerInstance }));
+        } else {
+          // Chuyển slide bằng instance đã cache
+          await pptxRenderer.instance.goToSlide(currentSlide).catch(()=>{});
+        }
+      } catch (err: any) {
+        console.error("Render error:", err);
+      }
+    };
+    runRender();
+  }, [pptxRenderer?.PPTXViewer, currentSlide]);
 
   useEffect(() => { fetchMaterials(); }, []);
 
@@ -220,59 +390,203 @@ export default function StudentMaterials() {
 
       {/* Preview Modal */}
       {previewItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-surface-container-lowest rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-surface-container">
-              <div>
-                <h3 className="font-bold text-on-surface">{previewItem.title}</h3>
-                <p className="text-xs text-on-surface-variant">{previewItem.uploaderName} · {CAT_LABELS[previewItem.category]||previewItem.category}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/10">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface/80 backdrop-blur-md z-10">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-10 h-10 rounded-xl ${(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).bg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                  <span className={`material-symbols-outlined ${(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).color}`}>{(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).icon}</span>
+                </div>
+                <div className="truncate">
+                  <h3 className="font-bold text-on-surface truncate leading-tight">{previewItem.title}</h3>
+                  <p className="text-xs text-on-surface-variant/80 mt-0.5 flex items-center gap-1.5">
+                    <span className="font-medium">{previewItem.uploaderName}</span>
+                    <span className="opacity-40">•</span>
+                    <span>{CAT_LABELS[previewItem.category]||previewItem.category}</span>
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button onClick={()=>trackDownload(previewItem)}
-                  className="px-3 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary/90 flex items-center gap-1.5 transition-all">
-                  <span className="material-symbols-outlined text-sm">download</span>Tải xuống
+                  className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary/90 flex items-center gap-2 transition-all shadow-md shadow-primary/20 active:scale-95">
+                  <span className="material-symbols-outlined text-base">download</span>Tải xuống
                 </button>
-                <button onClick={()=>setPreviewItem(null)} className="p-2 rounded-xl hover:bg-surface-container text-on-surface-variant transition-all">
+                <div className="w-px h-6 bg-outline-variant mx-1" />
+                <button onClick={()=>setPreviewItem(null)} className="p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all">
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-auto p-6 space-y-4">
-              {previewItem.description && (
-                <div className="bg-surface-container p-4 rounded-xl">
-                  <p className="text-sm text-on-surface-variant leading-relaxed">{previewItem.description}</p>
+
+            {/* Modal Content Split */}
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-[#121212]/5">
+              
+              {/* Left/Main Pane: The actual viewer */}
+              <div className="flex-1 bg-slate-900/5 relative flex items-center justify-center overflow-hidden border-b lg:border-b-0 lg:border-r border-outline-variant">
+                {!blobUrl ? (
+                   <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
+                      <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      <p className="text-sm font-medium">Đang tải tệp tin...</p>
+                   </div>
+                ) : previewItem.fileType === 'pdf' || previewItem.fileUrl?.includes("application/pdf") ? (
+                  <iframe 
+                    src={`${blobUrl}#toolbar=0&navpanes=0`} 
+                    className="w-full h-full border-none shadow-inner bg-slate-800"
+                    title="PDF Viewer"
+                  />
+                ) : previewItem.fileType === 'video' || previewItem.fileUrl?.includes("video/") ? (
+                  <video src={blobUrl} controls controlsList="nodownload" className="max-w-full max-h-full bg-black object-contain" />
+                ) : previewItem.fileType === 'image' || previewItem.fileUrl?.includes("image/") ? (
+                  <img src={blobUrl} alt={previewItem.title} className="max-w-full max-h-full object-contain drop-shadow-2xl p-4" />
+                ) : (previewItem.fileType === 'docx' || previewItem.fileUrl?.includes("wordprocessingml.document")) ? (
+                   docxHtml === "ERR" ? (
+                    <div className="flex flex-col items-center justify-center text-center p-8">
+                      <span className="material-symbols-outlined text-6xl text-red-400 mb-4">error_outline</span>
+                      <h4 className="font-bold text-on-surface">Lỗi đọc tài liệu Word</h4>
+                      <p className="text-sm text-on-surface-variant">Không thể mở tệp xem trước.</p>
+                    </div>
+                  ) : !docxHtml ? (
+                    <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
+                      <div className="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+                      <p className="text-sm font-medium text-blue-600">Đang chuyển đổi Docx...</p>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full overflow-y-auto bg-[#f8fafc] p-8 sm:p-12 shadow-inner scrollbar-thin">
+                      <style>{`
+                        .docx-preview-content p { margin-bottom: 1rem; line-height: 1.6; }
+                        .docx-preview-content h1 { font-size: 1.8em; font-weight: 800; margin: 1.5em 0 0.5em; color: #1e293b; }
+                        .docx-preview-content h2 { font-size: 1.5em; font-weight: 700; margin: 1.2em 0 0.5em; color: #1e293b; }
+                        .docx-preview-content h3 { font-size: 1.25em; font-weight: 600; margin: 1em 0 0.5em; color: #334155; }
+                        .docx-preview-content table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+                        .docx-preview-content td, .docx-preview-content th { border: 1px solid #cbd5e1; padding: 8px; }
+                        .docx-preview-content ul, .docx-preview-content ol { padding-left: 1.5em; margin-bottom: 1rem; }
+                        .docx-preview-content li { margin-bottom: 0.25rem; }
+                      `}</style>
+                      <div 
+                        className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-lg rounded-sm p-8 sm:p-12 docx-preview-content text-slate-800 min-h-[800px]"
+                        dangerouslySetInnerHTML={{ __html: docxHtml }} 
+                      />
+                    </div>
+                  )
+                ) : (previewItem.fileType === 'pptx' || previewItem.fileUrl?.includes("presentationml.presentation")) ? (
+                  pptxLoading === true ? (
+                    <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
+                      <div className="w-10 h-10 border-4 border-orange-300 border-t-orange-500 rounded-full animate-spin" />
+                      <p className="text-sm font-medium text-orange-500">Đang chuẩn bị bản trình chiếu...</p>
+                    </div>
+                  ) : (!pptxRenderer || typeof pptxLoading === "string") ? (
+                    <div className="flex flex-col items-center justify-center text-center p-8">
+                      <span className="material-symbols-outlined text-6xl text-red-400 mb-4">warning_amber</span>
+                      <h4 className="font-bold text-on-surface">Không thể giải mã bản trình chiếu</h4>
+                      <p className="text-sm text-on-surface-variant max-w-md mb-4">Rất tiếc, trình duyệt không thể tự dựng hình tệp tin PPTX này.</p>
+                      {typeof pptxLoading === "string" && (
+                        <p className="text-[10px] font-mono bg-red-50 text-red-600 p-2 rounded border border-red-100 max-w-md overflow-hidden truncate">
+                          Debug: {pptxLoading}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-[#1e1e1e] flex flex-col">
+                      {/* Navigation Overlay Bottom */}
+                      <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
+                        <div className="relative bg-white shadow-2xl max-w-full flex items-center justify-center">
+                          <canvas id="pptx-canvas" className="max-w-full max-h-[calc(85vh-180px)] object-contain" />
+                        </div>
+                        
+                        {/* Previous/Next Hover zones */}
+                        <button 
+                          disabled={currentSlide === 0}
+                          onClick={()=>setCurrentSlide(s => Math.max(0, s-1))}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all disabled:opacity-20 group cursor-pointer active:scale-90"
+                        >
+                          <span className="material-symbols-outlined text-2xl">chevron_left</span>
+                        </button>
+                        <button 
+                          disabled={currentSlide >= pptxSlideCount - 1}
+                          onClick={()=>setCurrentSlide(s => Math.min(pptxSlideCount - 1, s+1))}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all disabled:opacity-20 group cursor-pointer active:scale-90"
+                        >
+                          <span className="material-symbols-outlined text-2xl">chevron_right</span>
+                        </button>
+                      </div>
+                      
+                      {/* Control Bar */}
+                      <div className="bg-black/90 backdrop-blur-md px-6 py-3 flex items-center justify-between text-white/90 text-sm border-t border-white/10">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-orange-400 flex items-center gap-1"><span className="material-symbols-outlined text-base">slideshow</span> SLIDE</span>
+                          <div className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-lg border border-white/10">
+                             <span className="font-black text-white">{currentSlide + 1}</span>
+                             <span className="opacity-40">/</span>
+                             <span className="font-medium text-white/60">{pptxSlideCount}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            disabled={currentSlide === 0}
+                            onClick={()=>setCurrentSlide(0)}
+                            className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30" title="Về đầu trang">
+                            <span className="material-symbols-outlined text-lg">first_page</span>
+                          </button>
+                          <button 
+                            disabled={currentSlide >= pptxSlideCount - 1}
+                            onClick={()=>setCurrentSlide(pptxSlideCount - 1)}
+                            className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30" title="Cuối trang">
+                            <span className="material-symbols-outlined text-lg">last_page</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center p-8">
+                    <span className="material-symbols-outlined text-6xl text-primary/30 mb-4">insert_drive_file</span>
+                    <h4 className="font-bold text-on-surface mb-2">Định dạng này yêu cầu tải xuống</h4>
+                    <p className="text-sm text-on-surface-variant max-w-xs mb-6">Rất tiếc, trình duyệt không hỗ trợ xem trước trực tiếp định dạng {previewItem.fileType}. Vui lòng tải về máy để xem nội dung.</p>
+                    <button onClick={()=>trackDownload(previewItem)} className="px-6 py-2.5 bg-surface-container-highest text-on-surface font-bold rounded-xl hover:bg-outline-variant transition-all flex items-center gap-2">
+                       <span className="material-symbols-outlined text-lg">download_for_offline</span> Tải ngay ({previewItem.fileSizeBytes?fmt(previewItem.fileSizeBytes):"Unknown"})
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Pane: Sidebar for info */}
+              <div className="w-full lg:w-72 flex-shrink-0 bg-surface overflow-y-auto p-6 space-y-6 flex flex-col">
+                <div>
+                  <h4 className="text-xs font-black text-on-surface-variant uppercase tracking-wider mb-2">Mô tả tài liệu</h4>
+                  <p className="text-sm text-on-surface leading-relaxed bg-surface-container-lowest p-4 rounded-xl border border-outline-variant">
+                    {previewItem.description || <span className="italic opacity-50">Không có mô tả bổ sung.</span>}
+                  </p>
                 </div>
-              )}
-              {previewItem.tags?.length>0&&(
-                <div className="flex flex-wrap gap-2">
-                  {previewItem.tags.map(t=>(
-                    <span key={t} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">#{t}</span>
+
+                {previewItem.tags?.length>0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-on-surface-variant uppercase tracking-wider mb-2">Từ khóa (Tags)</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {previewItem.tags.map(t=>(
+                        <span key={t} className="px-2.5 py-1 bg-primary/10 text-primary rounded-lg text-[11px] font-bold">#{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-auto pt-6 space-y-2">
+                  <h4 className="text-xs font-black text-on-surface-variant uppercase tracking-wider mb-3">Thông tin tệp</h4>
+                  {[
+                    { icon: "database", label: t("modal_size"), value: previewItem.fileSizeBytes ? fmt(previewItem.fileSizeBytes) : "—" },
+                    { icon: "download", label: t("modal_downloads"), value: `${previewItem.downloadCount} lượt` },
+                    { icon: "calendar_today", label: t("modal_date"), value: new Date(previewItem.createdAt).toLocaleDateString("vi-VN") },
+                  ].map(({icon, label, value})=>(
+                    <div key={label} className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant">
+                      <span className="material-symbols-outlined text-on-surface-variant text-lg">{icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-on-surface-variant font-bold uppercase leading-none mb-1">{label}</p>
+                        <p className="text-sm font-black text-on-surface truncate">{value}</p>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              )}
-              {previewItem.fileUrl?.startsWith("data:image/") && (
-                <img src={previewItem.fileUrl} alt={previewItem.title} className="rounded-xl max-h-80 object-contain mx-auto" />
-              )}
-              {previewItem.fileUrl?.startsWith("data:video/") && (
-                <video src={previewItem.fileUrl} controls className="w-full rounded-xl" />
-              )}
-              {previewItem.fileUrl?.startsWith("data:application/pdf") && (
-                <div className="bg-surface-container rounded-xl p-8 text-center">
-                  <span className="material-symbols-outlined text-5xl text-red-500 block mb-3">picture_as_pdf</span>
-                  <p className="text-sm text-on-surface-variant mb-4">{t('preview_pdf')}</p>
-                </div>
-              )}
-              <div className="grid grid-cols-3 gap-3 pt-2">
-                {[
-                  { label: t("modal_size"), value: previewItem.fileSizeBytes ? `${(previewItem.fileSizeBytes/1048576).toFixed(1)} MB` : "—" },
-                  { label: t("modal_downloads"), value: `${previewItem.downloadCount}` },
-                  { label: t("modal_date"), value: new Date(previewItem.createdAt).toLocaleDateString("vi-VN") },
-                ].map(({label,value})=>(
-                  <div key={label} className="bg-surface-container p-3 rounded-xl text-center">
-                    <p className="text-[10px] uppercase font-bold text-on-surface-variant">{label}</p>
-                    <p className="font-black text-on-surface">{value}</p>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

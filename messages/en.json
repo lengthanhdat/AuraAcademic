@@ -62,6 +62,7 @@
       "live": "Live Now",
       "closed": "Closed",
       "draft": "Draft",
+      "published": "Ready",
       "active_students": "active students"
     },
     "actions": {

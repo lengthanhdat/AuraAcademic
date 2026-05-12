@@ -25,6 +25,28 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string; icon: string }
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 
+const TRANS: Record<string, string> = {
+  profanity:      "Ngôn ngữ thô tục",
+  sexual_content: "Nội dung khiêu dâm",
+  violence:       "Bạo lực",
+  hate_speech:    "Phát ngôn thù ghét",
+  political:      "Chính trị nhạy cảm",
+  copyright:      "Vi phạm bản quyền",
+  ai_rejected:    "AI TỪ CHỐI",
+  upload_error:   "LỖI TẢI LÊN",
+  uploading:      "Đang tải lên...",
+  ai_checking:    "AI đang kiểm duyệt...",
+  search_material:"Tìm kiếm tài liệu...",
+  all:            "Tất cả",
+  edit:           "Chỉnh sửa",
+  delete:         "Xóa",
+  title:          "Tiêu đề",
+  subject:        "Môn học",
+  description:    "Mô tả",
+  tags:           "Thẻ (tag)",
+};
+const t = (key: string) => TRANS[key] ?? key;
+
 type Material = {
   id: string; title: string; description: string; subject: string;
   category: string; fileType: string; fileName: string; fileSizeBytes: number;
@@ -365,7 +387,7 @@ export default function TeacherMaterials() {
               <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-base">search</span>
               <input value={search} onChange={e=>setSearch(e.target.value)}
                 className="w-full pl-8 pr-3 py-2 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:border-primary"
-                placeholder=t("search_material") />
+                placeholder={t("search_material")} />
             </div>
             <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}
               className="px-3 py-2 rounded-xl border border-outline-variant bg-surface text-xs font-bold focus:outline-none">
@@ -414,12 +436,12 @@ export default function TeacherMaterials() {
                     <span className="text-xs text-on-surface-variant mr-2">{m.downloadCount} tải</span>
                     <button onClick={() => openEdit(m)}
                       className="p-2 rounded-xl hover:bg-surface-container-high transition-all text-on-surface-variant hover:text-primary"
-                      title=t("edit")>
+                      title={t("edit")}>
                       <span className="material-symbols-outlined text-lg">edit</span>
                     </button>
                     <button onClick={() => handleDelete(m.id)}
                       className="p-2 rounded-xl hover:bg-red-50 transition-all text-on-surface-variant hover:text-red-600"
-                      title=t("delete")>
+                      title={t("delete")}>
                       <span className="material-symbols-outlined text-lg">delete</span>
                     </button>
                   </div>

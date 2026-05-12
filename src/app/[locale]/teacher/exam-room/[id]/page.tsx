@@ -19,6 +19,7 @@ export default function TeacherExamRoom() {
   const [isClosing, setIsClosing] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [startCountDown, setStartCountDown] = useState<number | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
 
   // Helper: lấy src video từ Base64 (mới) hoặc URL (legacy)
@@ -104,7 +105,7 @@ export default function TeacherExamRoom() {
     fetchViolations(code);
 
     // Polling dự phòng mỗi 10s (đặc biệt hữu ích cho số lượng người)
-    const pollId = setInterval(() => fetchActiveCount(code), 10000);
+    const pollId = setInterval(() => fetchActiveCount(code), 3000);
 
     return () => {
       es.close();
@@ -253,6 +254,35 @@ export default function TeacherExamRoom() {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  // Khởi tạo thời gian đếm ngược bắt đầu tự động
+  useEffect(() => {
+    if (exam?.status === "PUBLISHED" && exam.scheduledStartTime) {
+      const remaining = Math.max(0, Math.floor((exam.scheduledStartTime - Date.now()) / 1000));
+      setStartCountDown(remaining);
+    } else {
+      setStartCountDown(null);
+    }
+  }, [exam?.status, exam?.scheduledStartTime]);
+
+  // Bộ đếm ngược bắt đầu tự động — dùng timestamp để tránh drift
+  useEffect(() => {
+    if (startCountDown === null || startCountDown <= 0) return;
+    const target = Date.now() + startCountDown * 1000;
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((target - Date.now()) / 1000));
+      setStartCountDown(remaining);
+      if (remaining <= 0) clearInterval(timer);
+    }, 200); // poll nhanh hơn để bắt đúng giây cuối
+    return () => clearInterval(timer);
+  }, [startCountDown === null || startCountDown <= 0 ? startCountDown : 'running']);
+
+  // Tự động load lại exam nếu đếm ngược tự động về 0 (để cập nhật sang STARTED)
+  useEffect(() => {
+    if (exam?.status === "PUBLISHED" && startCountDown === 0) {
+      fetchExam();
+    }
+  }, [startCountDown, exam?.status]);
+
   // Tự động đóng phòng thi khi hết giờ (delay 3 giây để nhận nốt các bài nộp cuối)
   useEffect(() => {
     if (isActive && timeLeft === 0 && !isClosing) {
@@ -268,6 +298,21 @@ export default function TeacherExamRoom() {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
+  const updateScheduledTime = async (val: string) => {
+    const newTime = val ? new Date(val).getTime() : null;
+    try {
+      await fetch(`http://localhost:8088/api/exams/${examId}`, {
+        method: "PUT",
+        headers: { 
+          "Authorization": `Bearer ${getToken()}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ ...exam, scheduledStartTime: newTime })
+      });
+      fetchExam();
+    } catch {}
   };
 
   if (!exam) return (
@@ -370,18 +415,32 @@ export default function TeacherExamRoom() {
 
       {/* Action Buttons */}
       {!isFinished && (
-        <div className="flex gap-4 mb-8">
+        <div className="flex gap-4 mb-8 items-start">
           {isWaiting && (
-            <button
-              onClick={handleStart}
-              disabled={isStarting}
-              className="flex-1 py-4 bg-gradient-to-br from-green-600 to-green-700 text-white font-extrabold rounded-xl text-lg shadow-lg shadow-green-700/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-60"
-            >
-              <span className="material-symbols-outlined text-2xl" style={{fontVariationSettings:"'FILL' 1"}}>
-                {isStarting ? "sync" : "play_circle"}
-              </span>
-              {isStarting ? t('actions.btn_starting') : t('actions.btn_start')}
-            </button>
+            <div className="flex-1 flex flex-col gap-3">
+              <button
+                onClick={handleStart}
+                disabled={isStarting}
+                className="w-full py-4 bg-gradient-to-br from-green-600 to-green-700 text-white font-extrabold rounded-xl text-lg shadow-lg shadow-green-700/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined text-2xl" style={{fontVariationSettings:"'FILL' 1"}}>
+                  {isStarting ? "sync" : "play_circle"}
+                </span>
+                {isStarting ? t('actions.btn_starting') : t('actions.btn_start')}
+                {startCountDown !== null && startCountDown > 0 && ` (Tự động bắt đầu sau ${formatTime(startCountDown)})`}
+              </button>
+              
+              <div className="flex items-center gap-2 justify-center text-sm text-slate-500 bg-white p-2 rounded-xl border border-slate-200">
+                <span className="material-symbols-outlined text-sm">schedule</span>
+                <span>Hẹn giờ tự động:</span>
+                <input 
+                  type="datetime-local" 
+                  className="bg-transparent border-none outline-none font-bold text-slate-700 cursor-pointer"
+                  value={exam.scheduledStartTime ? new Date(exam.scheduledStartTime - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ""}
+                  onChange={(e) => updateScheduledTime(e.target.value)}
+                />
+              </div>
+            </div>
           )}
           {isActive && (
             timeLeft === 0 ? (
