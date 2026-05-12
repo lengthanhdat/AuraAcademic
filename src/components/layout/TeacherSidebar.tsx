@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export function TeacherSidebar() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
+  const t = useTranslations('Sidebar');
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -16,16 +18,16 @@ export function TeacherSidebar() {
   }, []);
 
   const menuItems = [
-    { label: "Bảng Điều Khiển", icon: "dashboard", href: "/teacher/dashboard" },
-    { label: "Thiết Kế Đề Thi", icon: "magic_button", href: "/teacher/exams" },
-    { label: "Tài Liệu Giảng Dạy", icon: "menu_book", href: "/teacher/materials" },
-    { label: "Giám Sát Trực Tiếp", icon: "videocam", href: "/teacher/monitoring" },
-    { label: "Báo Cáo Phân Tích", icon: "assessment", href: "/teacher/reports" },
+    { label: t("menu.dashboard"), icon: "dashboard", href: "/teacher/dashboard" },
+    { label: t("menu.exams"), icon: "magic_button", href: "/teacher/exams" },
+    { label: t("menu.materials"), icon: "menu_book", href: "/teacher/materials" },
+    { label: t("menu.monitoring"), icon: "videocam", href: "/teacher/monitoring" },
+    { label: t("menu.reports"), icon: "assessment", href: "/teacher/reports" },
   ];
 
   const bottomItems = [
-    { label: "Hỗ Trợ", icon: "help", href: "/teacher/support" },
-    { label: "Hồ Sơ Cá Nhân", icon: "manage_accounts", href: "/teacher/profile" },
+    { label: t("bottom.support"), icon: "help", href: "/teacher/support" },
+    { label: t("bottom.profile"), icon: "manage_accounts", href: "/teacher/profile" },
   ];
 
   const isActive = (href: string) => {
@@ -40,8 +42,8 @@ export function TeacherSidebar() {
           <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
         </div>
         <div className="overflow-hidden">
-          <h1 className="text-base font-black text-[#00355f] dark:text-blue-100 leading-tight tracking-tight truncate">Digital Proctor</h1>
-          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 mt-0.5">Hội đồng thi</p>
+          <h1 className="text-base font-black text-[#00355f] dark:text-blue-100 leading-tight tracking-tight truncate">{t("title")}</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 mt-0.5">{t("subtitle")}</p>
         </div>
       </div>
       
@@ -49,7 +51,7 @@ export function TeacherSidebar() {
       <div className="px-1">
         <Link href="/teacher/exams" className="w-full py-3.5 px-4 bg-[#00355f] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 hover:bg-[#002a4d] hover:-translate-y-0.5 active:scale-95 transition-all duration-200">
           <span className="material-symbols-outlined text-[18px]">add_circle</span>
-          Tạo Kỳ Thi Mới
+          {t("create_exam")}
         </Link>
       </div>
 
@@ -87,8 +89,13 @@ export function TeacherSidebar() {
         })}
       </nav>
 
+      {/* Language Switcher */}
+      <div className="px-1 pt-2">
+        <LanguageSwitcher />
+      </div>
+
       {/* Bottom Actions */}
-      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-1 px-1">
+      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-1 px-1">
         {bottomItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -119,7 +126,7 @@ export function TeacherSidebar() {
           <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
             <span className="material-symbols-outlined text-[22px]">logout</span>
           </div>
-          <span className="text-sm font-bold tracking-tight">Đăng Xuất</span>
+          <span className="text-sm font-bold tracking-tight">{t("bottom.logout")}</span>
         </Link>
       </div>
     </aside>

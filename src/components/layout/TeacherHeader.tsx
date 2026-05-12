@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import NotificationBell from "@/components/layout/NotificationBell";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 export function TeacherHeader() {
   const [user, setUser] = useState<any>(null);
+  const t = useTranslations('Header');
 
   useEffect(() => {
     const loadUser = () => {
@@ -33,16 +36,17 @@ export function TeacherHeader() {
       <div className="flex items-center gap-6">
         <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-900 rounded-full px-4 py-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
           <span className="material-symbols-outlined text-slate-400 text-xl">search</span>
-          <input className="bg-transparent border-none focus:ring-0 text-sm hidden lg:block w-64 placeholder-slate-400 outline-none px-2" placeholder="Tìm kiếm kỳ thi hoặc học sinh..." type="text"/>
+          <input className="bg-transparent border-none focus:ring-0 text-sm hidden lg:block w-64 placeholder-slate-400 outline-none px-2" placeholder={t('search_placeholder')} type="text"/>
         </div>
         
         <div className="flex items-center gap-4">
           <NotificationBell />
+          <LanguageSwitcher />
           
           <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-blue-900 leading-none">{user?.fullName || "Giáo viên"}</p>
-              <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tighter">Ban Giảng Huấn</p>
+              <p className="text-sm font-bold text-blue-900 leading-none">{user?.fullName || t('teacher_default')}</p>
+              <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tighter">{t('role_teacher')}</p>
             </div>
             <img alt="Giáo viên Profile" className="w-10 h-10 rounded-full object-cover border-2 border-blue-900/10" src={user?.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuA0pRLjsYNuYnvwUAtnEACdq-Kh3GGr4RXIQ29z1hKdw2IL9Q3KxPqR_zaLEFUB-LhS_5bmuZraE_8zRkSZ0FjUMOC287Q8Zkl54rOHbzGYFF5j0XNeYm0dQF26UPv9UprT-afl1-flyFIBUJ0CS0Mb4duE9PlwEEabSJag1HzkAOOF7b8iqUUoqy44mTWJx19DDBOv9SSz2yOTj06gVOgcvkE71qW2IFuOr23H5Zk9LQfc57GjVZ7O1Mhgm1UcA_lFRb_FzBp9SkQ"}/>
           </div>

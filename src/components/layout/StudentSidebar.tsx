@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export function StudentSidebar() {
   const pathname = usePathname();
+  const t = useTranslations('StudentSidebar');
 
   const menuItems = [
-    { label: "Bảng điều khiển", icon: "dashboard", href: "/student/dashboard" },
-    { label: "Thi trực tuyến", icon: "quiz", href: "/student/exams" },
-    { label: "Kết quả thi", icon: "assignment_turned_in", href: "/student/results" },
-    { label: "Tài liệu học", icon: "menu_book", href: "/student/materials" },
-    { label: "Hồ Sơ Cá Nhân", icon: "manage_accounts", href: "/student/profile" },
+    { label: t("menu.dashboard"), icon: "dashboard", href: "/student/dashboard" },
+    { label: t("menu.exams"), icon: "quiz", href: "/student/exams" },
+    { label: t("menu.results"), icon: "assignment_turned_in", href: "/student/results" },
+    { label: t("menu.materials"), icon: "menu_book", href: "/student/materials" },
+    { label: t("menu.profile"), icon: "manage_accounts", href: "/student/profile" },
   ];
 
   const isActive = (href: string) => pathname === href;
@@ -44,13 +46,13 @@ export function StudentSidebar() {
 
       <div className="px-8 mt-auto space-y-1 border-t border-outline-variant/10 pt-6">
         <div className="mb-6 p-4 rounded-xl bg-surface-container-highest/30">
-          <p className="text-xs font-bold text-primary mb-1 uppercase tracking-wider">Ôn tập nhanh</p>
-          <p className="text-[10px] text-on-surface-variant">Lần truy cập trước: 2h</p>
+          <p className="text-xs font-bold text-primary mb-1 uppercase tracking-wider">{t("quick_review")}</p>
+          <p className="text-[10px] text-on-surface-variant">{t("last_visit")}</p>
         </div>
         
         <Link className="flex items-center gap-3 text-[#42474f] dark:text-[#c2c7d1] py-2 hover:text-primary transition-all" href="#">
           <span className="material-symbols-outlined">help_outline</span>
-          <span className="font-label text-sm">Liên hệ hỗ trợ</span>
+          <span className="font-label text-sm">{t("support")}</span>
         </Link>
         
         <Link 
@@ -59,7 +61,7 @@ export function StudentSidebar() {
           href="/login"
         >
           <span className="material-symbols-outlined">logout</span>
-          <span className="font-label text-sm">Đăng xuất</span>
+          <span className="font-label text-sm">{t("logout")}</span>
         </Link>
       </div>
     </aside>
