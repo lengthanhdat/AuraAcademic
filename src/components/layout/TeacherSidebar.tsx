@@ -42,8 +42,8 @@ export function TeacherSidebar() {
           <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
         </div>
         <div className="overflow-hidden">
-          <h1 className="text-base font-black text-[#00355f] dark:text-blue-100 leading-tight tracking-tight truncate">{t("title")}</h1>
-          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 mt-0.5">{t("subtitle")}</p>
+          <h1 className="text-base font-black text-[#00355f] dark:text-blue-100 leading-tight tracking-tight truncate">AuraAcademic</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 mt-0.5">Smart Exam Engine</p>
         </div>
       </div>
       

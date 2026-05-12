@@ -35,7 +35,7 @@ export default function ReportsPage() {
         setExams(closed);
       }
     } catch (e) {
-      console.error("Loi khi lay danh sach bao cao", e);
+      console.error("Lỗi khi lấy danh sách báo cáo", e);
     } finally {
       setLoading(false);
     }

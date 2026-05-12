@@ -44,10 +44,12 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
 
     const redirectToMaintenance = () => {
       const path = window.location.pathname;
+      const localeMatch = path.match(/^\/(vi|en)(?=\/|$)/);
+      const maintenancePath = localeMatch ? `/${localeMatch[1]}/maintenance` : "/maintenance";
       // Dùng includes() để hỗ trợ các đường dẫn đã localization như /vi/maintenance, /en/admin...
       if (!path.includes("/admin") && !path.includes("/maintenance") && !path.includes("/login")) {
         localStorage.setItem("prevPath", path + window.location.search);
-        window.location.href = "/maintenance";
+        window.location.href = maintenancePath;
       }
     };
 

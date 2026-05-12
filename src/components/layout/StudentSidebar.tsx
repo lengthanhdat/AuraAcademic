@@ -21,7 +21,15 @@ export function StudentSidebar() {
   return (
     <aside className="hidden md:flex flex-col h-screen w-64 bg-[#f2f4f6] dark:bg-[#1f2224] py-8 sticky top-0 border-none shrink-0">
       <div className="px-8 mb-10">
-        <h1 className="font-headline font-black text-[#00355f] dark:text-white text-2xl tracking-tight">Aura Academic</h1>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#00355f] flex items-center justify-center text-white shadow-sm">
+            <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+          </div>
+          <div>
+            <h1 className="font-headline font-black text-[#00355f] dark:text-white text-lg tracking-tight leading-none">AuraAcademic</h1>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant mt-1">Smart Exam Engine</p>
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1">

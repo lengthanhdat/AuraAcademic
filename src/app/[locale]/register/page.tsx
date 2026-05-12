@@ -66,78 +66,106 @@ export default function Register() {
   };
 
   return (
-    <div className="bg-surface font-body text-on-surface antialiased min-h-screen">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-6 py-4 mx-auto bg-[#f7f9fb] dark:bg-slate-950">
-        <div className="text-xl font-extrabold text-[#00355f] dark:text-blue-200 font-headline tracking-tight">
-          Digital Proctor
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="material-symbols-outlined text-[#42474f] hover:bg-slate-200/50 p-2 rounded-full transition-colors">help_outline</button>
-          <LanguageSwitcher />
-        </div>
-      </header>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_50%_0%,#f1f5f9,transparent_70%),linear-gradient(135deg,#e2e8f0_0%,#f8fafc_100%)] flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+      {/* Abstract 3D Background Blobs */}
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob"></div>
+      <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob animation-delay-2000"></div>
+      <div className="absolute bottom-1/4 right-1/2 w-[30rem] h-[30rem] bg-emerald-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob animation-delay-4000"></div>
+      
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0) rotateX(20deg) rotateY(20deg); }
+          50% { transform: translateY(-20px) rotateX(25deg) rotateY(15deg); }
+        }
+        @keyframes float-reverse {
+          0%, 100% { transform: translateY(0) rotateX(-20deg) rotateY(-20deg); }
+          50% { transform: translateY(20px) rotateX(-15deg) rotateY(-25deg); }
+        }
+        .animate-blob { animation: blob 10s infinite alternate; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+      `}</style>
 
-      <main className="min-h-screen flex flex-col md:flex-row pt-16">
-        {/* Left Side */}
-        <section className="hidden md:flex md:w-1/2 lg:w-3/5 bg-surface-container-low items-center justify-center p-12 relative overflow-hidden">
-          <div className="relative z-10 w-full max-w-2xl space-y-8">
-            <div className="space-y-4">
-              <h1 className="font-headline text-5xl font-extrabold text-primary tracking-tight leading-tight whitespace-pre-line">
-                {t('hero_title')}
-              </h1>
-              <p className="text-on-surface-variant text-lg max-w-md leading-relaxed">
-                {t('hero_desc')}
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-6 pt-8">
-              <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <span className="material-symbols-outlined text-primary text-4xl mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
-                <h3 className="font-headline font-bold text-on-surface">{t('ai_security')}</h3>
-                <p className="text-sm text-on-surface-variant mt-2">{t('ai_desc')}</p>
-              </div>
-              <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10 translate-y-8">
-                <span className="material-symbols-outlined text-primary text-4xl mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>insights</span>
-                <h3 className="font-headline font-bold text-on-surface">{t('deep_analytics')}</h3>
-                <p className="text-sm text-on-surface-variant mt-2">{t('analytics_desc')}</p>
-              </div>
-            </div>
+      {/* Main Glassmorphic Container */}
+      <div className="w-full max-w-[1300px] bg-white/60 backdrop-blur-2xl rounded-[3rem] border border-white/80 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] flex flex-col lg:flex-row overflow-hidden relative z-10 min-h-[750px]">
+        
+        {/* Left Panel: 3D Visuals & Branding */}
+        <div className="hidden lg:flex w-[45%] bg-gradient-to-br from-[#00355f] to-[#0a192f] p-16 flex-col justify-between relative overflow-hidden">
+          {/* Grid Pattern Overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem]"></div>
+          
+          {/* 3D Floating Elements */}
+          <div className="absolute inset-0 pointer-events-none" style={{ perspective: '1200px' }}>
+            <div className="absolute top-[20%] left-[10%] w-32 h-32 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl" style={{ animation: 'float 6s ease-in-out infinite' }}></div>
+            <div className="absolute bottom-[20%] right-[10%] w-48 h-48 bg-blue-500/20 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl" style={{ animation: 'float-reverse 8s ease-in-out infinite' }}></div>
+            <div className="absolute top-[50%] left-[70%] w-24 h-24 bg-teal-500/20 backdrop-blur-md rounded-full border border-white/10 shadow-xl" style={{ animation: 'float 7s ease-in-out infinite' }}></div>
           </div>
           
-          <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-[5%] left-[-5%] w-64 h-64 bg-secondary-container/20 rounded-full blur-3xl"></div>
-          
-          <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <img alt="Modern learning environment" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJ_0BAMtXGeZad89ZUTCztzl8_TWS3QXwS7vHGsA-Hf7nh6HJ5zcU7Tfg6ACBbO2qhaD6DCaj7PCeM_bcQx-pwvvJ5RUjvQGs3lGEjcyPRig288PhtDfO7QYujFESMmA90OcFLdM9ckZRTHU2lUsOIC99PLFCq92jkbTRPYVIIFuozeRoaet0VTrXR1WY1EEpuUlixZ0upCciakPCxb1YLVg9JteDBgNMWrxUi8wPkOh2PRMHK3HewzEnxnpc2gzdjZuivP72Xa78"/>
+          <div className="relative z-10">
+            <Link href="/" className="inline-flex items-center gap-3 text-white mb-12 hover:opacity-80 transition-opacity">
+               <span className="text-2xl font-extrabold tracking-tight">AuraAcademic</span>
+            </Link>
+            <h1 className="text-5xl font-extrabold text-white leading-[1.15] mb-6 tracking-tight">
+              {t('hero_title')}
+            </h1>
+            <p className="text-blue-100/80 text-lg leading-relaxed max-w-md font-medium">
+              {t('hero_desc')}
+            </p>
           </div>
-        </section>
 
-        {/* Right Side: Registration Form */}
-        <section className="w-full md:w-1/2 lg:w-2/5 flex items-center justify-center p-6 md:p-12 lg:p-16 bg-surface">
-          <div className="w-full max-w-md space-y-8">
-            <div className="space-y-2">
-              <h2 className="font-headline text-3xl font-extrabold text-on-surface">{t('title')}</h2>
-              <p className="text-on-surface-variant text-sm">{t('subtitle')}</p>
+          <div className="relative z-10 grid grid-cols-2 gap-6 mt-12">
+            <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/10 hover:bg-white/20 hover:-translate-y-1 transition-all duration-300 shadow-xl">
+              <div className="w-12 h-12 bg-blue-500/30 rounded-2xl flex items-center justify-center mb-5">
+                <span className="material-symbols-outlined text-blue-200 text-2xl">verified_user</span>
+              </div>
+              <h3 className="text-white font-bold mb-2 text-lg">{t('ai_security')}</h3>
+              <p className="text-blue-100/70 text-sm leading-relaxed">{t('ai_desc')}</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/10 hover:bg-white/20 hover:-translate-y-1 transition-all duration-300 shadow-xl">
+              <div className="w-12 h-12 bg-teal-500/30 rounded-2xl flex items-center justify-center mb-5">
+                <span className="material-symbols-outlined text-teal-200 text-2xl">insights</span>
+              </div>
+              <h3 className="text-white font-bold mb-2 text-lg">{t('deep_analytics')}</h3>
+              <p className="text-blue-100/70 text-sm leading-relaxed">{t('analytics_desc')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel: Register Form */}
+        <div className="w-full lg:w-[55%] p-8 sm:p-12 md:p-16 lg:p-20 flex flex-col justify-center relative bg-white/40">
+          <div className="absolute top-8 right-8 z-20">
+             <LanguageSwitcher />
+          </div>
+          
+          <div className="max-w-md w-full mx-auto">
+            <div className="text-center sm:text-left mb-8">
+              <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">{t('title')}</h2>
+              <p className="text-slate-500 font-medium text-lg">{t('subtitle')}</p>
             </div>
 
             {/* Role Switcher */}
-            <div className="flex p-1 bg-surface-container-high rounded-xl">
+            <div className="flex p-1.5 bg-slate-200/50 rounded-2xl mb-8">
               <button 
                 onClick={() => setRole("student")}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${role === 'student' ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+                className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${role === 'student' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
               >
                 {t('student')}
               </button>
               <button 
                  onClick={() => setRole("teacher")}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${role === 'teacher' ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+                className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${role === 'teacher' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
               >
                 {t('teacher')}
               </button>
             </div>
 
-            <div className="w-full flex justify-center py-2">
+            <div className="w-full mb-8 rounded-2xl overflow-hidden shadow-sm border border-slate-200/60 bg-white hover:shadow-md transition-shadow">
               <GoogleOAuthProvider clientId="800081855688-vvu143d2r2hgoo24h6adsm6j7vaj95mn.apps.googleusercontent.com" locale={currentLocale}>
                 <GoogleLogin 
                   onSuccess={async (creds) => {
@@ -156,95 +184,76 @@ export default function Register() {
                           message: t("google_success_msg"),
                           type: "success",
                           onConfirm: () => {
-                            if (data.user?.role === "admin") {
-                              router.push("/admin/dashboard");
-                            } else if (data.user?.role === "teacher") {
-                              router.push("/teacher/dashboard");
-                            } else {
-                              router.push("/student/dashboard");
-                            }
+                            if (data.user?.role === "admin") router.push("/admin/dashboard");
+                            else if (data.user?.role === "teacher") router.push("/teacher/dashboard");
+                            else router.push("/student/dashboard");
                           }
                         }); 
-                      }
-                      else showAlert({
-                        title: t("google_fail_title"),
-                        message: t("google_fail_msg"),
-                        type: "error"
-                      });
+                      } else showAlert({ title: t("google_fail_title"), message: t("google_fail_msg"), type: "error" });
                     } catch(e) {}
                   }}
-                  onError={() => showAlert({
-                    title: t("google_error_title"),
-                    message: t("google_error_msg"),
-                    type: "error"
-                  })}
+                  onError={() => showAlert({ title: t("google_error_title"), message: t("google_error_msg"), type: "error" })}
                   text="signup_with"
                   width="100%"
+                  shape="rectangular"
+                  size="large"
                 />
               </GoogleOAuthProvider>
             </div>
 
-            <div className="relative flex items-center py-2">
-              <div className="flex-grow border-t border-outline-variant/20"></div>
-              <span className="flex-shrink mx-4 text-xs font-bold text-on-surface-variant tracking-widest">{t('or')}</span>
-              <div className="flex-grow border-t border-outline-variant/20"></div>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-grow h-[1px] bg-slate-200"></div>
+              <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">{t('or')}</span>
+              <div className="flex-grow h-[1px] bg-slate-200"></div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {error && <div className="p-3 bg-error-container text-on-error-container rounded-lg text-sm font-medium">{error}</div>}
+              {error && <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-semibold shadow-sm flex items-center gap-3"><span className="material-symbols-outlined text-red-500">error</span>{error}</div>}
               
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider px-1" htmlFor="full_name">{t('fullname')}</label>
-                <input 
-                  id="full_name"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                  className="w-full bg-surface-container-highest/50 border-none rounded-xl px-4 py-3 text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/40 transition-all outline-none" 
-                  placeholder={t('placeholder_name')} 
-                  type="text"
-                  required
-                />
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" htmlFor="full_name">{t('fullname')}</label>
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-blue-600 transition-colors">badge</span>
+                  <input id="full_name" value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} className="w-full pl-14 pr-5 py-3.5 rounded-2xl bg-white/70 border border-slate-200/80 focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 focus:bg-white transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 shadow-sm" placeholder={t('placeholder_name')} type="text" required />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider px-1" htmlFor="email">{t('email')}</label>
-                <input 
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full bg-surface-container-highest/50 border-none rounded-xl px-4 py-3 text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/40 transition-all outline-none" 
-                  placeholder="example@domain.com" 
-                  type="email"
-                  required
-                />
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" htmlFor="email">{t('email')}</label>
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-blue-600 transition-colors">mail</span>
+                  <input id="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full pl-14 pr-5 py-3.5 rounded-2xl bg-white/70 border border-slate-200/80 focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 focus:bg-white transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 shadow-sm" placeholder="example@domain.com" type="email" required />
+                </div>
               </div>
 
-              <div className="space-y-1.5 relative">
-                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider px-1" htmlFor="password">{t('password')}</label>
-                <input 
-                  id="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="w-full bg-surface-container-highest/50 border-none rounded-xl px-4 py-3 text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/40 transition-all outline-none" 
-                  placeholder="••••••••" 
-                  type="password"
-                  required
-                />
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" htmlFor="password">{t('password')}</label>
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-blue-600 transition-colors">lock</span>
+                  <input id="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full pl-14 pr-5 py-3.5 rounded-2xl bg-white/70 border border-slate-200/80 focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 focus:bg-white transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 shadow-sm" placeholder="••••••••" type="password" required />
+                </div>
               </div>
 
-              <div className="pt-2">
-                <button disabled={loading} className="w-full bg-gradient-to-br from-[#00355f] to-[#0f4c81] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary/20 hover:saturate-150 transition-all duration-200 active:scale-[0.98] disabled:opacity-50" type="submit">
-                  {loading ? t('processing') : t('submit')}
+              <div className="pt-4">
+                <button disabled={loading} type="submit" className="w-full bg-slate-900 text-white font-bold text-lg py-4 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-slate-800 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 disabled:opacity-70 disabled:hover:translate-y-0">
+                  {loading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>{t('processing')}</span>
+                    </div>
+                  ) : t('submit')}
                 </button>
               </div>
             </form>
 
-            <p className="text-center text-sm text-on-surface-variant">
-              {t('have_account')} <Link className="text-primary font-bold hover:underline" href="/login">{t('login_now')}</Link>
-            </p>
+            <div className="mt-8 text-center">
+              <p className="text-slate-500 font-medium text-sm">
+                {t('have_account')} <Link className="text-blue-600 font-bold hover:text-blue-800 transition-colors ml-1" href="/login">{t('login_now')}</Link>
+              </p>
+            </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }

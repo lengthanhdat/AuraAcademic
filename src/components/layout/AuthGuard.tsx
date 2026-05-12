@@ -16,7 +16,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     const token = localStorage.getItem("accessToken");
 
     if (!storedUser || !token) {
-      // Chua dang nhap hoac mat token -> ve trang login
+      // Chưa đăng nhập hoặc mất token -> về trang login
       router.replace("/login");
       return;
     }
@@ -45,7 +45,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
           </svg>
-          <p className="text-sm font-semibold">Dang xac thuc...</p>
+          <p className="text-sm font-semibold">Đang xác thực...</p>
         </div>
       </div>
     );

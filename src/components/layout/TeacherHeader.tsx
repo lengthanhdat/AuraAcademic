@@ -6,9 +6,11 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 export function TeacherHeader() {
   const [user, setUser] = useState<any>(null);
+  const [now, setNow] = useState(new Date());
   const t = useTranslations('Header');
 
   useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
     const loadUser = () => {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
@@ -21,16 +23,28 @@ export function TeacherHeader() {
     window.addEventListener("storage", loadUser);
 
     return () => {
+      clearInterval(timer);
       window.removeEventListener("user-updated", loadUser);
       window.removeEventListener("storage", loadUser);
     };
   }, []);
 
+  const timeStr = now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = now.toLocaleDateString("vi-VN", { weekday: "short", day: "2-digit", month: "2-digit" });
+
   return (
     <header className="w-full h-16 sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-8 border-none">
       <div className="flex items-center gap-4">
         <span className="material-symbols-outlined md:hidden text-on-surface">menu</span>
-        <h2 className="text-xl font-black text-blue-900 dark:text-blue-50 font-headline hidden md:block">The Digital Proctor</h2>
+        <div className="hidden md:flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#00355f] flex items-center justify-center text-white shadow-sm">
+            <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-blue-900 dark:text-blue-50 font-headline leading-none">AuraAcademic</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 mt-1">Smart Exam Engine</p>
+          </div>
+        </div>
       </div>
       
       <div className="flex items-center gap-6">
@@ -40,6 +54,13 @@ export function TeacherHeader() {
         </div>
         
         <div className="flex items-center gap-4">
+          <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900 text-blue-900 dark:text-blue-50">
+            <span className="material-symbols-outlined text-lg text-blue-600">schedule</span>
+            <div className="leading-none">
+              <p className="text-sm font-black tabular-nums">{timeStr}</p>
+              <p className="text-[10px] font-semibold text-slate-500 mt-1">{dateStr}</p>
+            </div>
+          </div>
           <NotificationBell />
           <LanguageSwitcher />
           

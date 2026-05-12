@@ -29,7 +29,7 @@ export default function ExamResults() {
         setResults(data);
       }
     } catch (e) {
-      console.error("Loi khi lay ket qua thi", e);
+      console.error("Lỗi khi lấy kết quả thi", e);
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,7 @@ export default function ExamResults() {
 
   const exportCSV = () => {
     if (results.length === 0) return;
-    const headers = ["Hang", "Ten hoc sinh", "Ma hoc sinh", "Ma de thi", "So cau dung", "Tong cau", "Diem so", "Thoi gian nop"];
+    const headers = ["Hạng", "Tên học sinh", "Mã học sinh", "Mã đề thi", "Số câu đúng", "Tổng câu", "Điểm số", "Thời gian nộp"];
     const rows = results.map((r: any, i: number) => [
       i + 1,
       r.studentName,
@@ -135,7 +135,7 @@ export default function ExamResults() {
       {/* Table Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-800">Danh sach hoc sinh nop bai</h3>
+          <h3 className="text-lg font-bold text-slate-800">Danh sách học sinh nộp bài</h3>
           {results.length > 0 && (
             <button
               onClick={exportCSV}

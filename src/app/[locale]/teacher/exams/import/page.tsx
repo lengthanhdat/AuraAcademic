@@ -88,7 +88,7 @@ export default function ImportFromFile() {
       }
       const qs: ParsedQuestion[] = data.questions || [];
       setQuestions(qs);
-      // Mac dinh chon tat ca
+      // Mặc định chọn tất cả
       setSelected(new Set(qs.map((q) => q.id)));
       setStep("preview");
     } catch {
@@ -160,7 +160,7 @@ export default function ImportFromFile() {
         })),
       }));
 
-      // Tao exam voi 1 version duy nhat chua tat ca cac cau da chon
+      // Tạo exam với 1 version duy nhất chứa tất cả các câu đã chọn
       const examPayload = {
         title: examTitle.trim(),
         duration: duration,

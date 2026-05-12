@@ -23,6 +23,20 @@ export default function MaintenancePage() {
 
   // Polling phát hiện bảo trì đã tắt để tự động đưa người dùng quay lại trang cũ
   useEffect(() => {
+    const getReturnPath = () => {
+      const prevPath = localStorage.getItem("prevPath");
+      if (prevPath && !prevPath.includes("/maintenance") && !prevPath.includes("/login")) {
+        return prevPath;
+      }
+      return "/";
+    };
+
+    const returnToPreviousPage = () => {
+      const returnPath = getReturnPath();
+      localStorage.removeItem("prevPath");
+      window.location.replace(returnPath);
+    };
+
     const interval = setInterval(async () => {
       try {
         const token = localStorage.getItem("accessToken");
@@ -30,13 +44,17 @@ export default function MaintenancePage() {
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
         // Gọi thử một API công khai để kiểm tra trạng thái hệ thống
-        const res = await fetch("http://localhost:8088/api/health", { headers }).catch(() => null);
+        const res = await fetch("http://localhost:8088/api/health/status", {
+          headers,
+          cache: "no-store",
+        }).catch(() => null);
 
         // Nếu server hoạt động bình thường (ví dụ trả về 200 OK), chuyển về trang cũ
-        if (res && res.status === 200) {
-          const prevPath = localStorage.getItem("prevPath") || "/";
-          localStorage.removeItem("prevPath");
-          window.location.href = prevPath;
+        if (res && res.ok) {
+          const data = await res.json().catch(() => null);
+          if (data?.maintenanceMode === false) {
+            returnToPreviousPage();
+          }
         }
       } catch (e) {
         // Bỏ qua lỗi
