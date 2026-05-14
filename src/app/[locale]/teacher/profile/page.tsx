@@ -292,7 +292,7 @@ export default function TeacherProfile() {
       
       {/* Header Profile Card */}
       <section className="mb-8">
-        <div className="bg-surface-container-lowest rounded-xl p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
+        <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
           <div className="relative group cursor-pointer">
             <div className="w-32 h-32 rounded-full border-4 border-surface overflow-hidden shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
@@ -310,20 +310,20 @@ export default function TeacherProfile() {
             <div className="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-white"></div>
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-extrabold text-primary mb-1 tracking-tight">{user.fullName}</h1>
-            <p className="text-lg font-medium text-on-surface-variant flex items-center justify-center md:justify-start gap-2">
-              <span className="material-symbols-outlined text-primary text-sm">workspace_premium</span>
+            <h1 className="text-3xl font-extrabold text-primary dark:text-[#E2E8F0] mb-1 tracking-tight">{user.fullName}</h1>
+            <p className="text-lg font-medium text-on-surface-variant dark:text-slate-400 flex items-center justify-center md:justify-start gap-2">
+              <span className="material-symbols-outlined text-primary dark:text-[#00C6FF] text-sm">workspace_premium</span>
               {user.title || t("instructor")}
             </p>
-            <p className="text-secondary flex items-center justify-center md:justify-start gap-2 mt-1">
-              <span className="material-symbols-outlined text-sm">hub</span>
+            <p className="text-slate-500 dark:text-slate-300 flex items-center justify-center md:justify-start gap-2 mt-1 text-sm font-medium">
+              <span className="material-symbols-outlined text-slate-400 text-sm">hub</span>
               {user.department || t("department")}
             </p>
           </div>
           <div className="flex gap-3">
             <button 
               onClick={() => setIsEditing(!isEditing)}
-              className="bg-surface-container-high text-on-surface font-semibold py-2.5 px-6 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2"
+              className="bg-surface-container-high dark:bg-cyan-950/50 dark:text-slate-200 text-on-surface dark:text-slate-200 font-semibold py-2.5 px-6 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-[20px]">{isEditing ? 'close' : 'edit'}</span>
               {isEditing ? t("cancel_update") : t("update_profile")}
@@ -338,44 +338,44 @@ export default function TeacherProfile() {
 
       {/* Edit Form */}
       {isEditing && (
-        <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-primary/10 mb-8 animate-in fade-in slide-in-from-top-4">
-          <h4 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+        <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm border border-primary/10 mb-8 animate-in fade-in slide-in-from-top-4">
+          <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined">edit_document</span>
             Cập nhật thông tin giảng viên
           </h4>
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Họ và tên</label>
-                <input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" required />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Họ và tên</label>
+                <input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" required />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Chức danh</label>
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder={`VD: ${t('instructor')} Cao cấp`} />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Chức danh</label>
+                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder={`VD: ${t('instructor')} Cao cấp`} />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Khoa / Bộ môn</label>
-                <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder="VD: Khoa CNTT" />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Khoa / Bộ môn</label>
+                <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: Khoa CNTT" />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Số điện thoại</label>
-                <input value={form.phoneNumber} onChange={e => setForm({ ...form, phoneNumber: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Số điện thoại</label>
+                <input value={form.phoneNumber} onChange={e => setForm({ ...form, phoneNumber: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Phòng làm việc</label>
-                <input value={form.workplace} onChange={e => setForm({ ...form, workplace: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder="VD: Phòng 402, Tòa nhà C1" />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Phòng làm việc</label>
+                <input value={form.workplace} onChange={e => setForm({ ...form, workplace: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: Phòng 402, Tòa nhà C1" />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Lịch tiếp SV</label>
-                <input value={form.schedule} onChange={e => setForm({ ...form, schedule: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder="VD: Thứ 3 & Thứ 5 (14:00 - 16:30)" />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Lịch tiếp SV</label>
+                <input value={form.schedule} onChange={e => setForm({ ...form, schedule: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: Thứ 3 & Thứ 5 (14:00 - 16:30)" />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Ngày sinh</label>
-                <input type="date" value={form.birthDate} onChange={e => setForm({ ...form, birthDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Ngày sinh</label>
+                <input type="date" value={form.birthDate} onChange={e => setForm({ ...form, birthDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" />
               </div>
               <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Giới tính</label>
-                <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors">
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Giới tính</label>
+                <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors">
                   <option value="">{t('select_gender')}</option>
                   <option value="Nam">Nam</option>
                   <option value={t("female")}>{t('female')}</option>
@@ -383,12 +383,12 @@ export default function TeacherProfile() {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">Kinh nghiệm làm việc & Dự án</label>
-                <textarea rows={3} value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder="VD: 5 năm giảng dạy bộ môn Kiến trúc phần mềm..." />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Kinh nghiệm làm việc & Dự án</label>
+                <textarea rows={3} value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: 5 năm giảng dạy bộ môn Kiến trúc phần mềm..." />
               </div>
               <div className="md:col-span-2">
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest block mb-1">{t('certificates')}</label>
-                <textarea rows={3} value={form.certificates} onChange={e => setForm({ ...form, certificates: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface transition-colors" placeholder="VD: Chứng chỉ AWS Certified Solutions Architect..." />
+                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">{t('certificates')}</label>
+                <textarea rows={3} value={form.certificates} onChange={e => setForm({ ...form, certificates: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: Chứng chỉ AWS Certified Solutions Architect..." />
               </div>
             </div>
             <div className="flex justify-end pt-2">
@@ -404,34 +404,34 @@ export default function TeacherProfile() {
       {/* Split View */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-surface-container-low rounded-xl p-6">
-            <h3 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">
+          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary-fixed-dim">contact_page</span>
               Thông tin liên hệ & Công tác
             </h3>
             <ul className="space-y-4">
-              <li className="flex items-start gap-4 p-4 bg-surface-container-lowest rounded-lg">
+              <li className="flex items-start gap-4 p-4 bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-lg">
                 <span className="material-symbols-outlined text-blue-600 mt-1">mail</span>
                 <div>
-                  <p className="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Email công vụ</p>
-                  <p className="font-medium">{user.email}</p>
+                  <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-wider font-bold">Email công vụ</p>
+                  <p className="font-medium text-slate-700 dark:text-[#E2E8F0]">{user.email}</p>
                 </div>
               </li>
-              <li className="flex items-start gap-4 p-4 bg-surface-container-lowest rounded-lg">
+              <li className="flex items-start gap-4 p-4 bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-lg">
                 <span className="material-symbols-outlined text-blue-600 mt-1">call</span>
                 <div>
-                  <p className="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Số điện thoại</p>
+                  <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-wider font-bold">Số điện thoại</p>
                   <p className={`font-medium ${!user.phoneNumber ? "text-slate-400 italic" : ""}`}>{user.phoneNumber || "Chưa cập nhật"}</p>
                 </div>
               </li>
-              <li className="flex items-start gap-4 p-4 bg-surface-container-lowest rounded-lg">
+              <li className="flex items-start gap-4 p-4 bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-lg">
                 <span className="material-symbols-outlined text-blue-600 mt-1">apartment</span>
                 <div>
-                  <p className="text-xs text-on-surface-variant uppercase tracking-wider font-bold">Phòng làm việc</p>
+                  <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-wider font-bold">Phòng làm việc</p>
                   <p className={`font-medium ${!user.workplace ? "text-slate-400 italic" : ""}`}>{user.workplace || "Chưa cập nhật"}</p>
                 </div>
               </li>
-              <li className="flex items-start gap-4 p-4 bg-surface-container-lowest rounded-lg border-l-4 border-tertiary-container">
+              <li className="flex items-start gap-4 p-4 bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-lg border-l-4 border-tertiary-container">
                 <span className="material-symbols-outlined text-on-tertiary-container mt-1">event_available</span>
                 <div>
                   <p className="text-xs text-on-tertiary-container uppercase tracking-wider font-bold">Lịch tiếp sinh viên</p>
@@ -442,36 +442,36 @@ export default function TeacherProfile() {
           </div>
 
           {/* Work Experience */}
-          <div className="bg-surface-container-low rounded-xl p-6">
-            <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary-fixed-dim">work</span>
               Kinh nghiệm & Dự án
             </h3>
-            <p className="text-xs text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+            <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed whitespace-pre-wrap">
               {user.experience || t("no_experience")}
             </p>
           </div>
 
           {/* Certificates */}
-          <div className="bg-surface-container-low rounded-xl p-6">
-            <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary-fixed-dim">verified</span>
               Chứng chỉ & Giải thưởng
             </h3>
-            <p className="text-xs text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+            <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed whitespace-pre-wrap">
               {user.certificates || t("no_certificates")}
             </p>
           </div>
 
-          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-            <h4 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">
+          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
+            <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined">lock</span>
               Bảo mật tài khoản
             </h4>
             <form onSubmit={handleChangePassword} className="space-y-4">
-              <input type="password" value={pwForm.currentPassword} onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface" placeholder="Mật khẩu hiện tại" required />
-              <input type="password" value={pwForm.newPassword} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface focus:outline-none focus:border-primary text-on-surface" placeholder="Mật khẩu mới" required />
-              <button type="submit" className="w-full py-3 bg-surface-container-highest text-on-surface font-bold rounded-xl">{changingPw ? "Đang xử lý..." : "Cập nhật mật khẩu"}</button>
+              <input type="password" value={pwForm.currentPassword} onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200" placeholder="Mật khẩu hiện tại" required />
+              <input type="password" value={pwForm.newPassword} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200" placeholder="Mật khẩu mới" required />
+              <button type="submit" className="w-full py-3 bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 text-on-surface dark:text-slate-200 font-bold rounded-xl">{changingPw ? "Đang xử lý..." : "Cập nhật mật khẩu"}</button>
             </form>
           </div>
         </div>
@@ -487,25 +487,25 @@ export default function TeacherProfile() {
               </div>
               <p className="text-sm text-on-primary-container mt-4">Số lớp đang phụ trách giảng dạy</p>
             </div>
-            <div className="bg-surface-container-highest rounded-xl p-6 flex flex-col justify-between group shadow-sm">
+            <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-xl p-6 flex flex-col justify-between group shadow-sm">
               <div>
-                <p className="text-on-surface-variant text-sm font-semibold uppercase tracking-widest">Kỳ thi</p>
-                <h4 className="text-4xl font-black text-primary mt-2">{totalExams}</h4>
+                <p className="text-on-surface-variant dark:text-slate-400 text-sm font-semibold uppercase tracking-widest">Kỳ thi</p>
+                <h4 className="text-4xl font-black text-primary dark:text-[#00C6FF] mt-2">{totalExams}</h4>
               </div>
-              <p className="text-sm text-on-surface-variant mt-4">Tổng số kỳ thi đã được tạo</p>
+              <p className="text-sm text-on-surface-variant dark:text-slate-400 mt-4">Tổng số kỳ thi đã được tạo</p>
             </div>
-            <div className="md:col-span-2 bg-surface-container-lowest rounded-xl p-8 shadow-sm flex items-center justify-between border border-outline-variant/10">
+            <div className="md:col-span-2 bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-8 shadow-sm flex items-center justify-between border border-outline-variant/10">
               <div className="flex items-center gap-6">
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary text-3xl">groups</span>
                 </div>
                 <div>
-                  <p className="text-on-surface-variant text-sm font-semibold uppercase tracking-widest">Sinh viên</p>
-                  <h4 className="text-4xl font-black text-primary">{totalStudents.toLocaleString()}</h4>
+                  <p className="text-on-surface-variant dark:text-slate-400 text-sm font-semibold uppercase tracking-widest">Sinh viên</p>
+                  <h4 className="text-4xl font-black text-primary dark:text-[#00C6FF]">{totalStudents.toLocaleString()}</h4>
                 </div>
               </div>
               <div className="text-right hidden sm:block">
-                <p className="text-xs text-on-surface-variant">Số lượt sinh viên nộp bài thi</p>
+                <p className="text-xs text-on-surface-variant dark:text-slate-400">Số lượt sinh viên nộp bài thi</p>
               </div>
             </div>
           </div>
@@ -513,9 +513,9 @@ export default function TeacherProfile() {
       </div>
 
       {/* Managed Exams Table */}
-      <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-outline-variant/10">
-        <div className="px-8 py-6 flex items-center justify-between bg-surface-container-low/30">
-          <h3 className="text-xl font-bold text-primary flex items-center gap-2">
+      <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl shadow-sm overflow-hidden border border-outline-variant/10">
+        <div className="px-8 py-6 flex items-center justify-between bg-slate-50 dark:bg-[#051329] dark:text-slate-200">
+          <h3 className="text-xl font-bold text-primary dark:text-[#E2E8F0] flex items-center gap-2">
             <span className="material-symbols-outlined text-primary-fixed-dim">assignment</span>
             Các kỳ thi đang quản lý
           </h3>
@@ -523,21 +523,21 @@ export default function TeacherProfile() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-surface-container-low/50 text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">
+              <tr className="bg-slate-50 dark:bg-[#051329] dark:text-slate-400 text-on-surface-variant dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                 <th className="px-8 py-4">Tên bài thi</th>
                 <th className="px-8 py-4">Số lượng thí sinh</th>
                 <th className="px-8 py-4">Trạng thái</th>
                 <th className="px-8 py-4 text-right">Hành động</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-container">
+            <tbody className="divide-y divide-surface-container dark:divide-cyan-950/40">
               {exams.length > 0 ? exams.map((exam) => (
-                <tr key={exam.id} className="hover:bg-surface-container-low/30 transition-colors">
+                <tr key={exam.id} className="hover:bg-slate-50 dark:bg-[#051329] dark:text-slate-200 transition-colors">
                   <td className="px-8 py-5">
-                    <p className="font-bold text-on-surface">{exam.title}</p>
-                    <p className="text-xs text-on-surface-variant">Mã phòng: {exam.accessCode}</p>
+                    <p className="font-bold text-on-surface dark:text-slate-200">{exam.title}</p>
+                    <p className="text-xs text-on-surface-variant dark:text-slate-400">Mã phòng: {exam.accessCode}</p>
                   </td>
-                  <td className="px-8 py-5 font-bold text-primary">{exam.submissionCount || 0} nộp</td>
+                  <td className="px-8 py-5 font-bold text-primary dark:text-[#E2E8F0]">{exam.submissionCount || 0} nộp</td>
                   <td className="px-8 py-5">
                     {(() => {
                       const status = getExamStatus(exam);
@@ -549,11 +549,11 @@ export default function TeacherProfile() {
                     })()}
                   </td>
                   <td className="px-8 py-5 text-right">
-                    <button onClick={() => router.push(`/teacher/exam-editor/${exam.id}`)} className="text-primary hover:underline font-bold text-sm">Chi tiết</button>
+                    <button onClick={() => router.push(`/teacher/exam-editor/${exam.id}`)} className="text-[#0C2E5E] dark:text-[#00C6FF] hover:underline font-bold text-sm">Chi tiết</button>
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={4} className="px-8 py-10 text-center text-on-surface-variant italic">Chưa có bài thi nào.</td></tr>
+                <tr><td colSpan={4} className="px-8 py-10 text-center text-on-surface-variant dark:text-slate-400 italic">Chưa có bài thi nào.</td></tr>
               )}
             </tbody>
           </table>

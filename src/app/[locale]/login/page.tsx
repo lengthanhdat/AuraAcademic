@@ -60,11 +60,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_50%_0%,#f1f5f9,transparent_70%),linear-gradient(135deg,#e2e8f0_0%,#f8fafc_100%)] flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
-      {/* Abstract 3D Background Blobs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob"></div>
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob animation-delay-2000"></div>
-      <div className="absolute bottom-1/4 left-1/2 w-[30rem] h-[30rem] bg-emerald-200 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_80%_20%,rgba(0,198,255,0.12),transparent_40%),radial-gradient(circle_at_20%_80%,rgba(220,168,55,0.05),transparent_45%),linear-gradient(135deg,#f1f5f9_0%,#ffffff_100%)] flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+      {/* Abstract 3D Background Blobs matching brand theme */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#00C6FF]/20 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#DCA837]/15 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob animation-delay-2000"></div>
+      <div className="absolute bottom-1/4 left-1/2 w-[30rem] h-[30rem] bg-[#0C2E5E]/15 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob animation-delay-4000"></div>
       
       <style>{`
         @keyframes blob {
@@ -90,23 +90,26 @@ export default function LoginPage() {
       <div className="w-full max-w-[1300px] bg-white/60 backdrop-blur-2xl rounded-[3rem] border border-white/80 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] flex flex-col lg:flex-row overflow-hidden relative z-10 min-h-[750px]">
         
         {/* Left Panel: 3D Visuals & Branding */}
-        <div className="hidden lg:flex w-[45%] bg-gradient-to-br from-[#00355f] to-[#0a192f] p-16 flex-col justify-between relative overflow-hidden">
+        <div className="hidden lg:flex w-[45%] bg-gradient-to-br from-[#0C2E5E] via-[#0E3E7A] to-[#051630] p-16 flex-col justify-between relative overflow-hidden">
           {/* Grid Pattern Overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem]"></div>
           
+          {/* Radiant Glow inside */}
+          <div className="absolute right-0 top-1/4 w-72 h-72 bg-[#00C6FF]/15 rounded-full blur-[80px]" />
+
           {/* 3D Floating Elements */}
           <div className="absolute inset-0 pointer-events-none" style={{ perspective: '1200px' }}>
-            <div className="absolute top-[15%] left-[60%] w-32 h-32 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl" style={{ animation: 'float 6s ease-in-out infinite' }}></div>
-            <div className="absolute bottom-[20%] right-[10%] w-48 h-48 bg-blue-500/20 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl" style={{ animation: 'float-reverse 8s ease-in-out infinite' }}></div>
-            <div className="absolute top-[40%] left-[10%] w-24 h-24 bg-purple-500/20 backdrop-blur-md rounded-full border border-white/10 shadow-xl" style={{ animation: 'float 7s ease-in-out infinite' }}></div>
+            <div className="absolute top-[15%] left-[60%] w-32 h-32 bg-white/5 backdrop-blur-md rounded-3xl border border-[#00C6FF]/20 shadow-2xl" style={{ animation: 'float 6s ease-in-out infinite' }}></div>
+            <div className="absolute bottom-[20%] right-[10%] w-48 h-48 bg-blue-500/10 backdrop-blur-xl rounded-full border border-[#DCA837]/20 shadow-2xl" style={{ animation: 'float-reverse 8s ease-in-out infinite' }}></div>
+            <div className="absolute top-[40%] left-[10%] w-24 h-24 bg-[#00C6FF]/10 backdrop-blur-md rounded-full border border-white/5 shadow-xl" style={{ animation: 'float 7s ease-in-out infinite' }}></div>
           </div>
           
           <div className="relative z-10">
-            <Link href="/" className="inline-flex items-center gap-3 text-white mb-12 hover:opacity-80 transition-opacity">
-               <span className="text-2xl font-extrabold tracking-tight">AuraAcademic</span>
+            <Link href="/" className="inline-flex items-center gap-3 text-white mb-12 hover:opacity-90 transition-all hover:scale-[1.02]">
+               <img src="/logoweb.png" alt="AuraAcademic" className="h-11 object-contain brightness-125" />
             </Link>
-            <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 mb-8 shadow-lg">
-              <span className="material-symbols-outlined text-blue-300" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+            <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 mb-8 shadow-lg">
+              <span className="material-symbols-outlined text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
               <span className="text-blue-100 text-xs font-bold tracking-widest uppercase">{t('hero_badge')}</span>
             </div>
             <h1 className="text-5xl font-extrabold text-white leading-[1.15] mb-6 tracking-tight">
@@ -118,19 +121,19 @@ export default function LoginPage() {
           </div>
 
           <div className="relative z-10 grid grid-cols-2 gap-6 mt-12">
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/10 hover:bg-white/20 hover:-translate-y-1 transition-all duration-300 shadow-xl">
-              <div className="w-12 h-12 bg-blue-500/30 rounded-2xl flex items-center justify-center mb-5">
-                <span className="material-symbols-outlined text-blue-200 text-2xl">psychology</span>
+            <div className="bg-white/5 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 hover:bg-white/10 hover:border-[#00C6FF]/30 hover:-translate-y-1 transition-all duration-300 shadow-xl">
+              <div className="w-12 h-12 bg-[#00C6FF]/20 rounded-2xl flex items-center justify-center mb-5">
+                <span className="material-symbols-outlined text-[#00C6FF] text-2xl">psychology</span>
               </div>
-              <h3 className="text-white font-bold mb-2 text-lg">{t('feature_ai_title')}</h3>
-              <p className="text-blue-100/70 text-sm leading-relaxed">{t('feature_ai_desc')}</p>
+              <h3 className="text-white font-extrabold mb-2 text-lg">{t('feature_ai_title')}</h3>
+              <p className="text-blue-100/70 text-sm leading-relaxed font-medium">{t('feature_ai_desc')}</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/10 hover:bg-white/20 hover:-translate-y-1 transition-all duration-300 shadow-xl">
-              <div className="w-12 h-12 bg-purple-500/30 rounded-2xl flex items-center justify-center mb-5">
-                <span className="material-symbols-outlined text-purple-200 text-2xl">shield</span>
+            <div className="bg-white/5 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 hover:bg-white/10 hover:border-[#DCA837]/30 hover:-translate-y-1 transition-all duration-300 shadow-xl">
+              <div className="w-12 h-12 bg-[#DCA837]/20 rounded-2xl flex items-center justify-center mb-5">
+                <span className="material-symbols-outlined text-[#DCA837] text-2xl">shield</span>
               </div>
-              <h3 className="text-white font-bold mb-2 text-lg">{t('feature_sec_title')}</h3>
-              <p className="text-blue-100/70 text-sm leading-relaxed">{t('feature_sec_desc')}</p>
+              <h3 className="text-white font-extrabold mb-2 text-lg">{t('feature_sec_title')}</h3>
+              <p className="text-blue-100/70 text-sm leading-relaxed font-medium">{t('feature_sec_desc')}</p>
             </div>
           </div>
         </div>
@@ -195,24 +198,24 @@ export default function LoginPage() {
               <div className="space-y-2.5">
                 <label className="text-sm font-bold text-slate-700 ml-1">{t('email_label')}</label>
                 <div className="relative group">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-blue-600 transition-colors">person</span>
-                  <input value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 border border-slate-200/80 focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 focus:bg-white transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 shadow-sm" placeholder="example@domain.com" type="email" required />
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-[#0C2E5E] transition-colors">person</span>
+                  <input value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 border border-slate-200/80 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white transition-all outline-none font-bold text-[#0C2E5E] placeholder:text-slate-400 shadow-sm" placeholder="example@domain.com" type="email" required />
                 </div>
               </div>
 
               <div className="space-y-2.5">
                 <div className="flex justify-between items-center px-1">
                   <label className="text-sm font-bold text-slate-700">{t('password_label')}</label>
-                  <Link className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors" href="/forgot-password">{t('forgot_password')}</Link>
+                  <Link className="text-sm font-bold text-[#00C6FF] hover:text-[#0C2E5E] transition-colors" href="/forgot-password">{t('forgot_password')}</Link>
                 </div>
                 <div className="relative group">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-blue-600 transition-colors">lock</span>
-                  <input value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 border border-slate-200/80 focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 focus:bg-white transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 shadow-sm" placeholder="••••••••" type="password" required />
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-[#0C2E5E] transition-colors">lock</span>
+                  <input value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 border border-slate-200/80 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white transition-all outline-none font-bold text-[#0C2E5E] placeholder:text-slate-400 shadow-sm" placeholder="••••••••" type="password" required />
                 </div>
               </div>
 
               <div className="pt-4">
-                <button disabled={loading} type="submit" className="w-full bg-slate-900 text-white font-bold text-lg py-4 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-slate-800 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 disabled:opacity-70 disabled:hover:translate-y-0">
+                <button disabled={loading} type="submit" className="w-full bg-gradient-to-r from-[#0C2E5E] to-[#00C6FF] text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_10px_30px_rgba(0,198,255,0.25)] hover:shadow-[0_15px_40px_rgba(0,198,255,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:hover:translate-y-0">
                   {loading ? (
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -225,7 +228,7 @@ export default function LoginPage() {
             
             <div className="mt-10 text-center">
               <p className="text-slate-500 font-medium">
-                {t('no_account')} <Link className="text-blue-600 font-bold hover:text-blue-800 transition-colors ml-1" href="/register">{t('register')}</Link>
+                {t('no_account')} <Link className="text-[#00C6FF] font-extrabold hover:text-[#0C2E5E] transition-colors ml-1" href="/register">{t('register')}</Link>
               </p>
             </div>
           </div>

@@ -232,13 +232,13 @@ export default function StudentProfile() {
       
       <header className="flex justify-between items-center mb-10">
         <div>
-          <h2 className="text-3xl font-extrabold text-primary tracking-tight">{t('title')}</h2>
-          <p className="text-on-surface-variant text-sm mt-1">{t('subtitle')}</p>
+          <h2 className="text-3xl font-extrabold text-primary dark:text-[#E2E8F0] tracking-tight">{t('title')}</h2>
+          <p className="text-on-surface-variant dark:text-slate-400 text-sm mt-1">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-bold text-primary">{user.fullName}</p>
-            <p className="text-xs text-on-surface-variant">{t('role')}</p>
+            <p className="text-sm font-bold text-primary dark:text-slate-200">{user.fullName}</p>
+            <p className="text-xs text-on-surface-variant dark:text-slate-400">{t('role')}</p>
           </div>
           <div className="w-10 h-10 rounded-xl overflow-hidden bg-primary text-white flex items-center justify-center font-bold">
             {user.avatarUrl ? (
@@ -252,7 +252,7 @@ export default function StudentProfile() {
 
       <div className="space-y-6">
         {/* Hero Card */}
-        <section className="bg-surface-container-lowest rounded-xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+        <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-3xl p-8 flex flex-col md:flex-row shadow-sm items-center gap-8 shadow-sm">
           <div className="relative group cursor-pointer">
             <div className="w-32 h-32 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-bold shadow-xl">
               {user.avatarUrl ? (
@@ -268,29 +268,29 @@ export default function StudentProfile() {
             </label>
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-4xl font-extrabold text-primary mb-2">{user.fullName}</h3>
+            <h3 className="text-4xl font-extrabold text-primary dark:text-[#E2E8F0] mb-2">{user.fullName}</h3>
             <div className="flex flex-wrap justify-center md:justify-start gap-3">
-              {user.studentId && <span className="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-xs font-bold uppercase tracking-wider">{user.studentId}</span>}
-              {user.department && <span className="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold uppercase tracking-wider">{user.department}</span>}
-              {user.title && <span className="px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-xs font-bold uppercase tracking-wider">{user.title}</span>}
+              {user.studentId && <span className="px-3 py-1 bg-blue-50 dark:bg-cyan-950/40 text-blue-700 dark:text-[#00C6FF] border border-blue-100/50 dark:border-cyan-950/50 rounded-full text-xs font-bold uppercase tracking-wider">{user.studentId}</span>}
+              {user.department && <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30 rounded-full text-xs font-bold uppercase tracking-wider">{user.department}</span>}
+              {user.title && <span className="px-3 py-1 bg-slate-50 dark:bg-cyan-950/20 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-cyan-950/40 rounded-full text-xs font-bold uppercase tracking-wider">{user.title}</span>}
             </div>
           </div>
-          <button onClick={() => setIsEditing(!isEditing)} className="px-6 py-3 bg-surface-container-high text-on-surface font-bold rounded-xl">{isEditing ? t('btn_close') : t('btn_edit')}</button>
+          <button onClick={() => setIsEditing(!isEditing)} className="px-6 py-3 bg-surface-container-high dark:bg-cyan-950/50 dark:text-slate-200 text-on-surface dark:text-slate-200 font-bold rounded-xl">{isEditing ? t('btn_close') : t('btn_edit')}</button>
         </section>
 
         {/* Edit Form */}
         {isEditing && (
-          <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-primary/10">
-            <h4 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">{t('update_title')}</h4>
+          <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm border border-primary/10">
+            <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-4 flex items-center gap-2">{t('update_title')}</h4>
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder={t('field_fullname')} required />
-                <input value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder={t('field_student_id')} />
-                <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder={t('field_class')} />
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder={t('field_program')} />
-                <input value={form.phoneNumber} onChange={e => setForm({ ...form, phoneNumber: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder={t('field_phone')} />
-                <input type="date" value={form.birthDate} onChange={e => setForm({ ...form, birthDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" />
-                <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface">
+                <input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_fullname')} required />
+                <input value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_student_id')} />
+                <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_class')} />
+                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_program')} />
+                <input value={form.phoneNumber} onChange={e => setForm({ ...form, phoneNumber: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_phone')} />
+                <input type="date" value={form.birthDate} onChange={e => setForm({ ...form, birthDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" />
+                <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none">
                   <option value="">{t('field_gender_placeholder')}</option>
                   <option value="Nam">{t('gender_male')}</option>
                   <option value="Nữ">{t('gender_female')}</option>
@@ -304,66 +304,66 @@ export default function StudentProfile() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <section className="lg:col-span-2 space-y-6">
-            <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-              <h4 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">{t('detail_title')}</h4>
+            <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
+              <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">{t('detail_title')}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant block">{t('detail_email')}</label><p className="font-medium">{user.email}</p></div>
-                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant block">{t('detail_phone')}</label><p className={user.phoneNumber ? "font-medium" : "italic text-slate-400"}>{user.phoneNumber || t('not_updated')}</p></div>
-                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant block">{t('detail_dob')}</label><p className={user.birthDate ? "font-medium" : "italic text-slate-400"}>{user.birthDate ? new Date(user.birthDate).toLocaleDateString("vi-VN") : t('not_updated')}</p></div>
-                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant block">{t('detail_gender')}</label><p className={user.gender ? "font-medium" : "italic text-slate-400"}>{user.gender || t('not_updated')}</p></div>
+                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 block opacity-80 tracking-widest">{t('detail_email')}</label><p className="font-medium text-slate-700 dark:text-[#E2E8F0]">{user.email}</p></div>
+                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 block opacity-80 tracking-widest">{t('detail_phone')}</label><p className={user.phoneNumber ? "font-medium text-slate-700 dark:text-[#E2E8F0]" : "italic text-slate-400"}>{user.phoneNumber || t('not_updated')}</p></div>
+                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 block opacity-80 tracking-widest">{t('detail_dob')}</label><p className={user.birthDate ? "font-medium text-slate-700 dark:text-[#E2E8F0]" : "italic text-slate-400"}>{user.birthDate ? new Date(user.birthDate).toLocaleDateString("vi-VN") : t('not_updated')}</p></div>
+                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 block opacity-80 tracking-widest">{t('detail_gender')}</label><p className={user.gender ? "font-medium text-slate-700 dark:text-[#E2E8F0]" : "italic text-slate-400"}>{user.gender || t('not_updated')}</p></div>
               </div>
             </div>
 
-            <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
-              <h4 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">{t('password_title')}</h4>
+            <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
+              <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">{t('password_title')}</h4>
               <form onSubmit={handleChangePassword} className="space-y-4">
-                <input type="password" value={pwForm.currentPassword} onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder={t('pw_current')} required />
+                <input type="password" value={pwForm.currentPassword} onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('pw_current')} required />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input type="password" value={pwForm.newPassword} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder={t('pw_new')} required />
-                  <input type="password" value={pwForm.confirmPassword} onChange={e => setPwForm({ ...pwForm, confirmPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface" placeholder={t('pw_confirm')} required />
+                  <input type="password" value={pwForm.newPassword} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('pw_new')} required />
+                  <input type="password" value={pwForm.confirmPassword} onChange={e => setPwForm({ ...pwForm, confirmPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('pw_confirm')} required />
                 </div>
-                <button type="submit" className="w-full py-3 bg-surface-container-highest text-on-surface font-bold rounded-xl">{changingPw ? t('btn_pw_processing') : t('btn_pw_update')}</button>
+                <button type="submit" className="w-full py-3 bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 text-on-surface dark:text-slate-200 font-bold rounded-xl">{changingPw ? t('btn_pw_processing') : t('btn_pw_update')}</button>
               </form>
             </div>
           </section>
 
           <section className="space-y-6">
-            <div className="bg-surface-container-low rounded-xl p-6 shadow-sm border border-outline-variant/10">
-              <h4 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">{t('summary_title')}</h4>
+            <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+              <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">{t('summary_title')}</h4>
               <div className="space-y-4">
-                <div className="bg-surface-container-lowest p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant">{t('col_exam')}</span><span className="text-xl font-black text-primary">{totalExams}</span></div>
-                <div className="bg-surface-container-lowest p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant">{t('summary_avg')}</span><span className="text-xl font-black text-primary">{avgScore}</span></div>
-                <div className="bg-surface-container-lowest p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant">{t('summary_rank')}</span><span className="text-xl font-black text-primary">{currentRank}</span></div>
+                <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant dark:text-slate-400">{t('col_exam')}</span><span className="text-xl font-black text-primary dark:text-[#00C6FF]">{totalExams}</span></div>
+                <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant dark:text-slate-400">{t('summary_avg')}</span><span className="text-xl font-black text-primary dark:text-[#00C6FF]">{avgScore}</span></div>
+                <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant dark:text-slate-400">{t('summary_rank')}</span><span className="text-xl font-black text-primary dark:text-[#00C6FF]">{currentRank}</span></div>
               </div>
               <div className="mt-6 p-4 rounded-xl bg-tertiary-container/10 border-l-4 border-on-tertiary-container">
-                <p className="text-xs text-on-surface leading-relaxed">{getAiInsight()}</p>
+                <p className="text-xs text-on-surface dark:text-slate-200 leading-relaxed">{getAiInsight()}</p>
               </div>
             </div>
           </section>
         </div>
 
         {/* Results Table */}
-        <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-surface-container"><h4 className="text-lg font-bold text-primary">{t('results_title')}</h4></div>
+        <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-surface-container"><h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0]">{t('results_title')}</h4></div>
           {results.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead><tr className="bg-surface-container-low/10 text-[10px] font-bold uppercase"><th className="px-6 py-4">{t('col_exam')}</th><th className="px-6 py-4">{t('col_date')}</th><th className="px-6 py-4">{t('col_score')}</th><th className="px-6 py-4">{t('col_status')}</th></tr></thead>
-                <tbody className="divide-y divide-surface-container">
+                <thead><tr className="bg-slate-50 dark:bg-[#051329] dark:text-slate-300 text-[10px] font-bold uppercase"><th className="px-6 py-4">{t('col_exam')}</th><th className="px-6 py-4">{t('col_date')}</th><th className="px-6 py-4">{t('col_score')}</th><th className="px-6 py-4">{t('col_status')}</th></tr></thead>
+                <tbody className="divide-y divide-surface-container dark:divide-cyan-950/40">
                   {results.slice(0, 5).map((res, idx) => (
-                    <tr key={idx} className="hover:bg-surface-container-low/50">
+                    <tr key={idx} className="hover:bg-slate-50 dark:bg-[#051329] dark:text-slate-400">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
                             <span className="material-symbols-outlined text-[20px]">assignment</span>
                           </div>
                           <div>
-                            <p className="font-bold text-primary">{res.examTitle || `${t('col_exam')} #${res.examId}`}</p>
-                            <p className="text-[10px] text-on-surface-variant font-medium">{t('col_score')} {res.versionCode}</p>
+                            <p className="font-bold text-slate-800 dark:text-[#E2E8F0]">{res.examTitle || `${t('col_exam')} #${res.examId}`}</p>
+                            <p className="text-[10px] text-on-surface-variant dark:text-slate-400 font-medium">{t('col_score')} {res.versionCode}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-on-surface-variant">{res.submittedAt ? new Date(res.submittedAt).toLocaleDateString("vi-VN") : "--"}</td>
+                      <td className="px-6 py-4 text-on-surface-variant dark:text-slate-400">{res.submittedAt ? new Date(res.submittedAt).toLocaleDateString("vi-VN") : "--"}</td>
                       <td className="px-6 py-4 font-black">{res.score?.toFixed(1)}</td>
                       <td className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${res.score >= 5 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{res.score >= 5 ? t('status_pass') : t('status_fail')}</span></td>
                     </tr>
@@ -372,7 +372,7 @@ export default function StudentProfile() {
               </table>
             </div>
           ) : (
-            <div className="p-10 text-center text-on-surface-variant italic">{t('no_data')}</div>
+            <div className="p-10 text-center text-on-surface-variant dark:text-slate-400 italic">{t('no_data')}</div>
           )}
         </section>
       </div>

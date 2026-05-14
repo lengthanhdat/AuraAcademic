@@ -23,10 +23,10 @@ interface ToggleProps {
 const Toggle = ({ label, desc, configKey, settings, updateVal }: ToggleProps) => {
   const on = settings[configKey] === true || settings[configKey] === "true";
   return (
-    <div className="flex items-center justify-between py-4 border-b border-slate-700/30 last:border-0">
+    <div className="flex items-center justify-between py-4 border-b border-slate-100 last:border-0">
       <div>
         <p className="text-sm font-semibold text-white">{label}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{desc}</p>
       </div>
       <button onClick={() => updateVal(configKey, !on)} className={`relative w-12 h-6 rounded-full transition-all ${on ? "bg-violet-600" : "bg-slate-700"}`}>
         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${on ? "left-7" : "left-1"}`} />
@@ -45,9 +45,9 @@ interface FieldProps {
 
 const Field = ({ label, configKey, type = "text", settings, updateVal }: FieldProps) => (
   <div className="space-y-1.5">
-    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</label>
+    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</label>
     <input type={type} value={settings[configKey] || ""} onChange={e => updateVal(configKey, e.target.value)}
-      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
+      className="w-full bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium placeholder:text-slate-500 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
     />
   </div>
 );
@@ -91,10 +91,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-[#0f172a] min-h-screen">
+    <div className="p-6 space-y-6 bg-transparent min-h-screen">
       <div>
-        <h1 className="text-2xl font-black text-white">Cấu hình hệ thống</h1>
-        <p className="text-slate-500 text-sm mt-1">Quản lý toàn bộ cài đặt của nền tảng (Đồng bộ Realtime)</p>
+        <h1 className="text-2xl font-black text-[#0C2E5E] dark:text-[#E2E8F0]">Cấu hình hệ thống</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Quản lý toàn bộ cài đặt của nền tảng (Đồng bộ Realtime)</p>
       </div>
 
       {loading ? (
@@ -107,7 +107,7 @@ export default function SettingsPage() {
           <div className="space-y-1">
             {SECTIONS.map(s => (
               <button key={s.id} onClick={() => setActive(s.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${active === s.id ? "bg-violet-600 text-white shadow-lg shadow-violet-500/20" : "text-slate-400 hover:text-white hover:bg-slate-800"}`}>
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${active === s.id ? "bg-violet-600 text-white shadow-lg shadow-violet-500/20" : "text-slate-500 hover:text-white hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200"}`}>
                 <span className="material-symbols-outlined text-lg">{s.icon}</span>
                 {s.label}
               </button>
@@ -115,9 +115,9 @@ export default function SettingsPage() {
           </div>
 
           {/* Content */}
-          <div className="lg:col-span-3 bg-[#1e293b] border border-slate-700/50 rounded-2xl overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-700/50">
-              <h3 className="font-bold text-white">{SECTIONS.find(s=>s.id===active)?.label}</h3>
+          <div className="lg:col-span-3 bg-white dark:bg-[#0A1F3E]/80 backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-cyan-950/40 border border-slate-200/50 rounded-2xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-200/50">
+              <h3 className="font-bold text-[#0C2E5E] dark:text-[#E2E8F0]">{SECTIONS.find(s=>s.id===active)?.label}</h3>
             </div>
             <div className="p-6 space-y-6 flex-1">
               {active === "general" && (
@@ -167,7 +167,7 @@ export default function SettingsPage() {
                   <Toggle label="Chế độ bảo trì" desc="Tạm thời chặn tất cả truy cập từ người dùng (Chỉ Admin vào được)" configKey="maintenance_mode" settings={settings} updateVal={updateVal} />
                   <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
                     <p className="text-sm font-bold text-red-400 mb-1">Vùng nguy hiểm</p>
-                    <p className="text-xs text-slate-500 mb-3">Các hành động này không thể hoàn tác</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Các hành động này không thể hoàn tác</p>
                     <div className="flex gap-2">
                       <button onClick={() => alert("Tính năng chưa khả dụng")} className="px-3 py-2 bg-red-600/20 border border-red-600/30 text-red-400 rounded-lg text-xs font-bold hover:bg-red-600/30 transition-all">
                         Xoá cache hệ thống
@@ -177,12 +177,12 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
-            <div className="px-6 py-4 bg-slate-800/30 border-t border-slate-700/50 flex items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">
+            <div className="px-6 py-4 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/30 border-t border-slate-200/50 flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {dirtyKeys.size > 0 ? `${dirtyKeys.size} thay đổi chưa lưu` : "Chưa có thay đổi"}
               </p>
               <div className="flex gap-3">
-                <button onClick={() => { setDirtyKeys(new Set()); fetchSettings().then(d => d && setSettings(d)); }} className="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded-xl font-semibold text-sm hover:bg-slate-700 transition-all">
+                <button onClick={() => { setDirtyKeys(new Set()); fetchSettings().then(d => d && setSettings(d)); }} className="px-4 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 text-slate-600 dark:text-slate-300 font-semibold rounded-xl font-semibold text-sm hover:bg-slate-700 transition-all">
                   Huỷ
                 </button>
                 <button onClick={save} disabled={dirtyKeys.size === 0}

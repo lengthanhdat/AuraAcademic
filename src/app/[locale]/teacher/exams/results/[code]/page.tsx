@@ -88,7 +88,7 @@ export default function ExamResults() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
+        <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
             <span className="material-symbols-outlined text-3xl">groups</span>
           </div>
@@ -98,7 +98,7 @@ export default function ExamResults() {
           </div>
         </div>
         
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
+        <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
             <span className="material-symbols-outlined text-3xl">functions</span>
           </div>
@@ -108,7 +108,7 @@ export default function ExamResults() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
+        <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center text-green-600">
             <span className="material-symbols-outlined text-3xl">check_circle</span>
           </div>
@@ -121,7 +121,7 @@ export default function ExamResults() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
+        <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
             <span className="material-symbols-outlined text-3xl">workspace_premium</span>
           </div>
@@ -133,8 +133,8 @@ export default function ExamResults() {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 dark:border-cyan-950/30 flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-800">Danh sách học sinh nộp bài</h3>
           {results.length > 0 && (
             <button
@@ -149,7 +149,7 @@ export default function ExamResults() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50">
+              <tr className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40">
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Hạng</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Học sinh</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Mã đề thi</th>
@@ -172,7 +172,7 @@ export default function ExamResults() {
                 </tr>
               ) : (
                 results.map((res, index) => (
-                  <tr key={res.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={res.id} className="hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 transition-colors">
                     <td className="px-6 py-4">
                       <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-yellow-100 text-yellow-700' : index === 1 ? 'bg-slate-200 text-slate-700' : index === 2 ? 'bg-orange-100 text-orange-700' : 'text-slate-400'}`}>
                         {index + 1}

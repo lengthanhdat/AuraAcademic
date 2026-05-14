@@ -73,8 +73,8 @@ export default function StudentResults() {
     <main className="flex-1 p-8 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <section>
-        <h1 className="text-3xl font-extrabold text-on-surface tracking-tight mb-1">{t('title')}</h1>
-        <p className="text-on-surface-variant">{t('subtitle')}</p>
+        <h1 className="text-3xl font-extrabold text-on-surface dark:text-slate-200 tracking-tight mb-1">{t('title')}</h1>
+        <p className="text-on-surface-variant dark:text-slate-400">{t('subtitle')}</p>
       </section>
 
       {/* Stats Cards */}
@@ -85,26 +85,26 @@ export default function StudentResults() {
           { label: t("stat_pass"), value: `${passRate}%`, icon: "check_circle", color: "text-emerald-500", bg: "bg-emerald-50" },
           { label: t("stat_best"), value: bestScore.toFixed(1), icon: "workspace_premium", color: "text-amber-500", bg: "bg-amber-50" },
         ].map(({ label, value, icon, color, bg }) => (
-          <div key={label} className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm flex items-center gap-4">
+          <div key={label} className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 shadow-sm flex items-center gap-4">
             <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}>
               <span className={`material-symbols-outlined ${color}`}>{icon}</span>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">{label}</p>
-              <p className="text-xl font-black text-on-surface">{loading ? "..." : value}</p>
+              <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider">{label}</p>
+              <p className="text-xl font-black text-on-surface dark:text-[#00C6FF]">{loading ? "..." : value}</p>
             </div>
           </div>
         ))}
       </section>
 
       {/* Filters & Search */}
-      <section className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+      <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 text-lg">search</span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:border-primary transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] text-sm focus:outline-none focus:border-primary transition-colors"
             placeholder={t('search_placeholder')}
           />
         </div>
@@ -113,7 +113,11 @@ export default function StudentResults() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${filter === f ? "bg-primary text-white shadow-sm" : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"}`}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+                filter === f
+                  ? "bg-[#0C2E5E] dark:bg-[#00C6FF] text-white dark:text-[#051329] border-[#0C2E5E] dark:border-[#00C6FF] shadow-sm"
+                  : "bg-slate-100 dark:bg-[#0A1F3E] text-slate-600 dark:text-slate-300 border-slate-200/60 dark:border-cyan-950/50 hover:bg-slate-200 dark:hover:bg-cyan-950/50"
+              }`}
             >
               {f === "all" ? t("filter_all") : f === "pass" ? t("filter_pass") : t("filter_fail")}
             </button>
@@ -121,7 +125,7 @@ export default function StudentResults() {
           <select
             value={sortBy}
             onChange={e => setSortBy(e.target.value as "date" | "score")}
-            className="px-3 py-2 rounded-xl border border-outline-variant bg-surface text-xs font-bold focus:outline-none focus:border-primary transition-colors"
+            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] text-xs font-bold focus:outline-none focus:border-primary transition-colors"
           >
             <option value="date">{t('sort_date')}</option>
             <option value="score">{t('sort_score')}</option>
@@ -130,33 +134,33 @@ export default function StudentResults() {
       </section>
 
       {/* Results Table */}
-      <section className="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface-container flex items-center justify-between">
-          <h2 className="font-bold text-on-surface flex items-center gap-2">
+      <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-cyan-950/50 flex items-center justify-between">
+          <h2 className="font-bold text-on-surface dark:text-slate-200 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-xl">format_list_bulleted</span>
             Danh sách kết quả
           </h2>
-          <span className="text-xs text-on-surface-variant font-medium">{filtered.length} {t('results_count')}</span>
+          <span className="text-xs text-on-surface-variant dark:text-slate-400 font-medium">{filtered.length} {t('results_count')}</span>
         </div>
 
         {loading ? (
           <div className="p-16 text-center">
             <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-on-surface-variant text-sm">{t('loading')}</p>
+            <p className="text-on-surface-variant dark:text-slate-400 text-sm">{t('loading')}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-16 text-center">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 block mb-4">assignment_turned_in</span>
-            <p className="text-on-surface-variant font-medium">{t('empty_title')}</p>
-            <p className="text-on-surface-variant/60 text-sm mt-1">{t('empty_hint')}</p>
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant dark:text-slate-400/30 block mb-4">assignment_turned_in</span>
+            <p className="text-on-surface-variant dark:text-slate-400 font-medium">{t('empty_title')}</p>
+            <p className="text-on-surface-variant dark:text-slate-400/60 text-sm mt-1">{t('empty_hint')}</p>
           </div>
         ) : (
-          <div className="divide-y divide-surface-container">
+          <div className="divide-y divide-slate-100 dark:divide-cyan-950/40">
             {filtered.map(r => {
               const rank = getRank(r.score);
               const isExpanded = expandedId === r.id;
               return (
-                <div key={r.id} className="hover:bg-surface-container-low/50 transition-colors">
+                <div key={r.id} className="hover:bg-slate-50 dark:hover:bg-cyan-950/20 transition-colors">
                   <button
                     className="w-full px-6 py-5 flex items-center gap-4 text-left"
                     onClick={() => setExpandedId(isExpanded ? null : r.id)}
@@ -165,32 +169,32 @@ export default function StudentResults() {
                       <span className="material-symbols-outlined text-primary text-lg">assignment</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-on-surface truncate">{r.examTitle || `${t('room_prefix')} ${r.examId}`}</p>
-                      <p className="text-xs text-on-surface-variant">
+                      <p className="font-bold text-on-surface dark:text-slate-200 truncate">{r.examTitle || `${t('room_prefix')} ${r.examId}`}</p>
+                      <p className="text-xs text-on-surface-variant dark:text-slate-400">
                         {t('version_prefix')} {r.versionCode} &nbsp;·&nbsp; {new Date(r.submittedAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase hidden sm:block ${rank.cls}`}>{rank.label}</span>
                     <div className="text-right flex-shrink-0">
-                      <span className="text-2xl font-black text-primary">{r.score.toFixed(1)}</span>
-                      <span className="text-on-surface-variant text-sm">/10</span>
+                      <span className="text-2xl font-black text-[#0C2E5E] dark:text-[#00C6FF]">{r.score.toFixed(1)}</span>
+                      <span className="text-on-surface-variant dark:text-slate-400 text-sm">/10</span>
                     </div>
-                    <span className={`material-symbols-outlined text-on-surface-variant transition-transform ${isExpanded ? "rotate-180" : ""}`}>expand_more</span>
+                    <span className={`material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}>expand_more</span>
                   </button>
 
                   {isExpanded && (
                     <div className="px-6 pb-5 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="bg-surface-container p-4 rounded-xl">
-                        <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">{t('detail_score')}</p>
-                        <p className="text-xl font-black text-primary">{r.score.toFixed(1)} / 10</p>
+                      <div className="bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/40">
+                        <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-1">{t('detail_score')}</p>
+                        <p className="text-xl font-black text-[#0C2E5E] dark:text-[#00C6FF]">{r.score.toFixed(1)} / 10</p>
                       </div>
-                      <div className="bg-surface-container p-4 rounded-xl">
-                        <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">{t('detail_rank')}</p>
+                      <div className="bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/40">
+                        <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-1">{t('detail_rank')}</p>
                         <span className={`px-2 py-1 rounded-lg text-xs font-black ${rank.cls}`}>{rank.label}</span>
                       </div>
-                      <div className="bg-surface-container p-4 rounded-xl">
-                        <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">{t('detail_time')}</p>
-                        <p className="text-sm font-bold text-on-surface">{new Date(r.submittedAt).toLocaleString("vi-VN")}</p>
+                      <div className="bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/40">
+                        <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-1">{t('detail_time')}</p>
+                        <p className="text-sm font-bold text-on-surface dark:text-slate-200">{new Date(r.submittedAt).toLocaleString("vi-VN")}</p>
                       </div>
                     </div>
                   )}

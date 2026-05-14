@@ -53,3 +53,20 @@ ai-service/logs/
 .idea/
 *.swp
 *.swo
+
+# AG Kit & Code Review Graph (AI expansion)
+.code-review-graph/
+.agent/logs/
+.agent/memory/
+*.task.md
+
+# Next.js Build Artifacts, Traces and Leakage Manifests
+app-build-manifest.json
+build-manifest.json
+react-loadable-manifest.json
+trace/
+cache/
+tsc_errors.txt
+*.log
+test.jsx
+

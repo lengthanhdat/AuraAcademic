@@ -500,7 +500,7 @@ function ExamBuilderContent() {
             const imgIdx = parseInt(match[1]);
             const src = extractedImages[imgIdx];
             return src
-              ? <img key={i} src={`data:image/jpeg;base64,${src}`} alt={`Hình ${imgIdx}`} className="max-w-[450px] max-h-[300px] object-contain rounded-lg my-3 border border-slate-200 shadow-sm" />
+              ? <img key={i} src={`data:image/jpeg;base64,${src}`} alt={`Hình ${imgIdx}`} className="max-w-[450px] max-h-[300px] object-contain rounded-lg my-3 border border-slate-200 dark:border-cyan-950/40 shadow-sm" />
               : <span key={i} className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-mono">[IMG_{imgIdx} — chưa có ảnh]</span>;
           }
           return part ? (
@@ -509,8 +509,8 @@ function ExamBuilderContent() {
               rehypePlugins={[rehypeKatex]}
               components={{
                 table: ({ node, ...props }) => <div className="overflow-x-auto my-2"><table className="text-sm border-collapse w-full" {...props} /></div>,
-                th: ({ node, ...props }) => <th className="border border-slate-300 bg-slate-100 px-3 py-1.5 text-left font-bold" {...props} />,
-                td: ({ node, ...props }) => <td className="border border-slate-200 px-3 py-1.5" {...props} />,
+                th: ({ node, ...props }) => <th className="border border-slate-300 bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 px-3 py-1.5 text-left font-bold" {...props} />,
+                td: ({ node, ...props }) => <td className="border border-slate-200 dark:border-cyan-950/40 px-3 py-1.5" {...props} />,
                 p: ({ node, ...props }) => <span {...props} />,
               }}
             >{part}</ReactMarkdown>
@@ -539,7 +539,7 @@ function ExamBuilderContent() {
   };
 
   if (step === "generating") return (
-    <main className={`flex-1 flex items-center justify-center p-6 relative overflow-hidden ${generatingMode === "prompt" ? "bg-[#06030f]" : "bg-[#F8FAFC]"}`}>
+    <main className={`flex-1 flex items-center justify-center p-6 relative overflow-hidden ${generatingMode === "prompt" ? "bg-[#06030f]" : "bg-[#F8FAFC] dark:bg-[#051329]"}`}>
 
       {/* ── PROMPT MODE: Neural Cinematic Screen ── */}
       {generatingMode === "prompt" && (
@@ -630,7 +630,7 @@ function ExamBuilderContent() {
       {/* ── FILE MODE: Original clean loading screen ── */}
       {generatingMode === "file" && (
         <div className="w-full max-w-lg">
-          <div className="bg-white rounded-[40px] p-12 shadow-[0_32px_64px_-16px_rgba(0,53,95,0.1)] border border-slate-100 relative overflow-hidden">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-[40px] p-12 shadow-[0_32px_64px_-16px_rgba(0,53,95,0.1)] border border-slate-100 dark:border-cyan-950/30 relative overflow-hidden">
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60" />
             <div className="relative z-10 flex flex-col items-center">
               <div className="relative w-40 h-40 mb-10">
@@ -650,13 +650,13 @@ function ExamBuilderContent() {
               </div>
               <div className="text-center space-y-3">
                 <h2 className="text-2xl font-black text-[#00355f] tracking-tight">{t('generating.title')}</h2>
-                <div className="flex items-center justify-center gap-2 text-slate-500 font-medium h-6">
+                <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 font-medium h-6">
                   {[0, 0.2, 0.4].map((d, i) => <span key={i} className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />)}
                   <p className="text-sm ml-1 italic">{genLog}</p>
                 </div>
               </div>
               <div className="w-full mt-10 space-y-2">
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-[#00355f] to-[#0f4c81] transition-all duration-700 ease-out rounded-full" style={{ width: `${genProgress}%` }} />
                 </div>
                 <div className="flex justify-between items-center px-1">
@@ -677,7 +677,7 @@ function ExamBuilderContent() {
   );
 
   return (
-    <main className="flex-1 flex overflow-hidden bg-[#F8FAFC]">
+    <main className="flex-1 flex overflow-hidden bg-[#F8FAFC] dark:bg-[#051329]">
       {/* LEFT COLUMN: Content */}
       <div className="flex-1 overflow-y-auto p-8 space-y-8">
         {/* Breadcrumbs & Header */}
@@ -690,10 +690,10 @@ function ExamBuilderContent() {
             </div>
             <h1 className="text-3xl font-black text-[#00355f] tracking-tight">{t('header.title')}</h1>
 
-            <div className="flex gap-2 mt-4 bg-slate-100 p-1 rounded-xl w-fit">
+            <div className="flex gap-2 mt-4 bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 p-1 rounded-xl w-fit">
               <button
                 onClick={() => { setCreationMode("ai"); setStep("upload"); setFile(null); }}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "ai" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "ai" ? "bg-white dark:bg-[#0A1F3E] text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">auto_awesome</span>
                 Tạo bằng AI
@@ -704,7 +704,7 @@ function ExamBuilderContent() {
                   setStep("upload");
                   setFile(null);
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "import" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "import" ? "bg-white dark:bg-[#0A1F3E] text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">file_open</span>
                 Nhập từ file
@@ -714,7 +714,7 @@ function ExamBuilderContent() {
                   setCreationMode("manual");
                   if (questions.length > 0 && step === "upload") setStep("review");
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "manual" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "manual" ? "bg-white dark:bg-[#0A1F3E] text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">edit_square</span>
                 Tạo thủ công
@@ -732,12 +732,12 @@ function ExamBuilderContent() {
 
         {/* Unified AI Area */}
         {creationMode === "ai" && step === "upload" && (
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl border border-slate-100 dark:border-cyan-950/30 shadow-sm overflow-hidden">
             {/* Sub-mode toggle */}
-            <div className="flex border-b border-slate-100">
+            <div className="flex border-b border-slate-100 dark:border-cyan-950/30">
               <button
                 onClick={() => { setAiSubMode("prompt"); setFile(null); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "prompt" ? "bg-violet-50 text-violet-700 border-b-2 border-violet-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "prompt" ? "bg-violet-50 text-violet-700 border-b-2 border-violet-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40"
                   }`}
               >
                 <span className="material-symbols-outlined text-[18px]">psychology</span>
@@ -745,7 +745,7 @@ function ExamBuilderContent() {
               </button>
               <button
                 onClick={() => { setAiSubMode("file"); setTopic(""); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "file" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "file" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40"
                   }`}
               >
                 <span className="material-symbols-outlined text-[18px]">upload_file</span>
@@ -757,13 +757,13 @@ function ExamBuilderContent() {
             {aiSubMode === "file" && (
               <div
                 onClick={() => fileRef.current?.click()}
-                className={`relative border-2 border-dashed m-6 rounded-2xl p-10 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/10"
+                className={`relative border-2 border-dashed m-6 rounded-2xl p-10 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 dark:border-cyan-950/40 hover:border-blue-400 hover:bg-blue-50/10"
                   }`}
               >
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 text-slate-400 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                   <span className="material-symbols-outlined text-3xl">cloud_upload</span>
                 </div>
-                <h3 className="text-base font-bold text-slate-700">
+                <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">
                   {file ? file.name : t('upload.title_ai')}
                 </h3>
                 <p className="text-sm text-slate-400 mt-1">{t('upload.hint')}</p>
@@ -779,7 +779,7 @@ function ExamBuilderContent() {
                         value={questionCount}
                         onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
                         placeholder={t('upload.placeholder_count')}
-                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-center font-bold text-blue-900 outline-none"
+                        className="w-full px-4 py-2 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-center font-bold text-blue-900 dark:text-[#00C6FF] outline-none"
                         onClick={e => e.stopPropagation()}
                       />
                     </div>
@@ -809,7 +809,7 @@ function ExamBuilderContent() {
                     "Hóa học hữu cơ lớp 11"
                   ].map(chip => (
                     <button key={chip} onClick={() => setTopic(chip)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${topic === chip ? "bg-violet-600 text-white border-violet-600" : "bg-slate-50 text-slate-500 border-slate-200 hover:border-violet-300 hover:text-violet-600"
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${topic === chip ? "bg-violet-600 text-white border-violet-600" : "bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-cyan-950/40 hover:border-violet-300 hover:text-violet-600"
                         }`}>
                       {chip}
                     </button>
@@ -824,7 +824,7 @@ function ExamBuilderContent() {
                     onChange={e => setTopic(e.target.value)}
                     rows={3}
                     placeholder="Ví dụ: Tạo 15 câu trắc nghiệm môn Toán lớp 12 chương tích phân bất định, tập trung vào kỹ thuật đổi biến..."
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-violet-400 focus:bg-white transition-all text-sm text-slate-700 resize-none leading-relaxed"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 dark:border-cyan-950/40 rounded-2xl outline-none focus:border-violet-400 focus:bg-white dark:bg-[#0A1F3E] transition-all text-sm text-slate-700 dark:text-slate-300 resize-none leading-relaxed"
                   />
                 </div>
 
@@ -833,7 +833,7 @@ function ExamBuilderContent() {
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Độ khó</label>
                     <select value={difficulty} onChange={e => setDifficulty(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-violet-400">
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-violet-400">
                       <option value="EASY">🟢 Dễ</option>
                       <option value="MEDIUM">🟡 Trung bình</option>
                       <option value="HARD">🔴 Khó</option>
@@ -843,7 +843,7 @@ function ExamBuilderContent() {
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Ngôn ngữ</label>
                     <select value={language} onChange={e => setLanguage(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-violet-400">
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-violet-400">
                       <option value="vi">🆻🇳 Tiếng Việt</option>
                       <option value="en">🇺🇸 English</option>
                     </select>
@@ -852,7 +852,7 @@ function ExamBuilderContent() {
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Số câu</label>
                     <input type="number" value={questionCount}
                       onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 text-center outline-none focus:border-violet-400"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 text-center outline-none focus:border-violet-400"
                       placeholder="10" min={1} max={100} />
                   </div>
                 </div>
@@ -872,45 +872,45 @@ function ExamBuilderContent() {
 
         {/* ── Chế độ Nhập từ file truyền thống ── */}
         {creationMode === "import" && step === "upload" && (
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl border border-slate-100 dark:border-cyan-950/30 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                   <span className="material-symbols-outlined">upload_file</span>
                 </div>
                 <div>
-                  <h3 className="font-black text-slate-800 text-base">Tải lên tài liệu đề thi</h3>
-                  <p className="text-xs text-slate-500 font-medium">Hệ thống tự động tách câu hỏi và đáp án trực tiếp từ tệp</p>
+                  <h3 className="font-black text-slate-800 dark:text-[#E2E8F0] text-base">Tải lên tài liệu đề thi</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Hệ thống tự động tách câu hỏi và đáp án trực tiếp từ tệp</p>
                 </div>
               </div>
             </div>
 
             <div
               onClick={() => fileRef.current?.click()}
-              className={`relative border-2 border-dashed m-8 rounded-2xl p-12 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/10"
+              className={`relative border-2 border-dashed m-8 rounded-2xl p-12 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 dark:border-cyan-950/40 hover:border-blue-400 hover:bg-blue-50/10"
                 }`}
             >
-              <div className="w-20 h-20 rounded-3xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-sm">
+              <div className="w-20 h-20 rounded-3xl bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 text-slate-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <span className="material-symbols-outlined text-4xl">cloud_upload</span>
               </div>
-              <h3 className="text-lg font-black text-slate-700">
+              <h3 className="text-lg font-black text-slate-700 dark:text-slate-300">
                 {file ? file.name : t('upload.title')}
               </h3>
               <p className="text-sm text-slate-400 mt-2 font-medium max-w-md mx-auto">{t('upload.hint')}</p>
               
               <div className="mt-4 flex items-center justify-center gap-4">
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500">
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400">
                   <span className="w-2 h-2 rounded-full bg-red-400"></span> PDF
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500">
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400">
                   <span className="w-2 h-2 rounded-full bg-blue-400"></span> DOCX
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500">
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400">
                   <span className="w-2 h-2 rounded-full bg-slate-400"></span> TXT
                 </div>
               </div>
 
-              <button className="mt-6 px-6 py-2.5 bg-white text-blue-700 border border-blue-200 shadow-sm font-bold text-sm rounded-xl hover:bg-blue-50 transition-all">
+              <button className="mt-6 px-6 py-2.5 bg-white dark:bg-[#0A1F3E] text-blue-700 border border-blue-200 shadow-sm font-bold text-sm rounded-xl hover:bg-blue-50 transition-all">
                 {t('upload.btn_choose')}
               </button>
               
@@ -933,12 +933,12 @@ function ExamBuilderContent() {
 
         {/* Empty State cho chế độ Thủ công */}
         {creationMode === "manual" && questions.length === 0 && (
-          <div className="border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center bg-white flex flex-col items-center justify-center">
+          <div className="border-2 border-dashed border-slate-200 dark:border-cyan-950/40 rounded-3xl p-16 text-center bg-white dark:bg-[#0A1F3E] flex flex-col items-center justify-center">
             <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-4xl">post_add</span>
             </div>
-            <h3 className="text-xl font-bold text-slate-700 mb-2">{t('empty.title')}</h3>
-            <p className="text-slate-500 max-w-md mx-auto mb-6">{t('empty.desc')}</p>
+            <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2">{t('empty.title')}</h3>
+            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">{t('empty.desc')}</p>
             <button
               onClick={() => {
                 addManualQuestion();
@@ -955,10 +955,10 @@ function ExamBuilderContent() {
         {/* Question List Header */}
         {questions.length > 0 && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-cyan-950/40 pb-4">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-slate-400">list_alt</span>
-                <h2 className="text-xl font-black text-slate-800">{t('list.title')}</h2>
+                <h2 className="text-xl font-black text-slate-800 dark:text-[#E2E8F0]">{t('list.title')}</h2>
               </div>
               <button
                 onClick={addManualQuestion}
@@ -975,7 +975,7 @@ function ExamBuilderContent() {
             {/* Questions List */}
             <div className="space-y-4">
               {questions.map((q, idx) => (
-                <div key={q.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow group relative">
+                <div key={q.id} className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-cyan-950/30 hover:shadow-md transition-shadow group relative">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4">
                     <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider">
@@ -1005,13 +1005,13 @@ function ExamBuilderContent() {
                   {/* Question Text — editable or rendered */}
                   {editingQIdx === idx ? (
                     <textarea
-                      className="w-full text-base font-semibold text-slate-800 mb-4 leading-relaxed bg-slate-50 border border-blue-200 rounded-xl p-3 outline-none resize-y min-h-[80px]"
+                      className="w-full text-base font-semibold text-slate-800 dark:text-[#E2E8F0] mb-4 leading-relaxed bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-blue-200 rounded-xl p-3 outline-none resize-y min-h-[80px]"
                       value={q.text || ""}
                       onChange={e => updateQuestionText(idx, e.target.value)}
                       autoFocus
                     />
                   ) : (
-                    <div className="text-base font-semibold text-slate-800 mb-5 leading-relaxed prose prose-sm max-w-none">
+                    <div className="text-base font-semibold text-slate-800 dark:text-[#E2E8F0] mb-5 leading-relaxed prose prose-sm max-w-none">
                       {renderContent(q.text)}
                     </div>
                   )}
@@ -1022,7 +1022,7 @@ function ExamBuilderContent() {
                       <img
                         src={q.imageUrl.startsWith("data:") ? q.imageUrl : `data:image/jpeg;base64,${q.imageUrl}`}
                         alt="Hình ảnh câu hỏi"
-                        className="max-w-[450px] max-h-[300px] rounded-lg border border-slate-200 shadow-sm object-contain"
+                        className="max-w-[450px] max-h-[300px] rounded-lg border border-slate-200 dark:border-cyan-950/40 shadow-sm object-contain"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     </div>
@@ -1033,27 +1033,27 @@ function ExamBuilderContent() {
                     {q.options.map((opt, oIdx) => (
                       <div
                         key={opt.id}
-                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${opt.isCorrect ? "bg-blue-50 border-blue-400" : "bg-slate-50 border-transparent hover:border-slate-200"
+                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${opt.isCorrect ? "bg-blue-50 border-blue-400" : "bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border-transparent hover:border-slate-200 dark:border-cyan-950/40"
                           }`}
                       >
                         {/* Radio — click to set correct */}
                         <button
                           onClick={() => setCorrectOption(idx, oIdx)}
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${opt.isCorrect ? "bg-blue-900 border-blue-900" : "bg-white border-slate-300 hover:border-blue-400"
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${opt.isCorrect ? "bg-blue-900 border-blue-900" : "bg-white dark:bg-[#0A1F3E] border-slate-300 hover:border-blue-400"
                             }`}
                         >
-                          {opt.isCorrect && <div className="w-2 h-2 rounded-full bg-white" />}
+                          {opt.isCorrect && <div className="w-2 h-2 rounded-full bg-white dark:bg-[#0A1F3E]" />}
                         </button>
 
                         {/* Option text — editable inline */}
                         {editingQIdx === idx ? (
                           <input
-                            className="flex-1 text-sm bg-transparent border-b border-blue-200 outline-none py-0.5 font-medium text-slate-700"
+                            className="flex-1 text-sm bg-transparent border-b border-blue-200 outline-none py-0.5 font-medium text-slate-700 dark:text-slate-300"
                             value={opt.text}
                             onChange={e => updateOptionText(idx, oIdx, e.target.value)}
                           />
                         ) : (
-                          <div className={`text-sm font-medium flex-1 ${opt.isCorrect ? "text-blue-900" : "text-slate-600"}`}>
+                          <div className={`text-sm font-medium flex-1 ${opt.isCorrect ? "text-blue-900 dark:text-[#00C6FF]" : "text-slate-600"}`}>
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm, remarkMath]}
                               rehypePlugins={[rehypeKatex]}
@@ -1074,9 +1074,9 @@ function ExamBuilderContent() {
       </div>
 
       {/* RIGHT COLUMN: Sidebar */}
-      <div className="w-80 bg-white border-l border-slate-200 p-8 overflow-y-auto space-y-8 shrink-0 shadow-2xl shadow-slate-200/50">
+      <div className="w-80 bg-white dark:bg-[#0A1F3E] border-l border-slate-200 dark:border-cyan-950/40 dark:border-cyan-950/40 p-8 overflow-y-auto space-y-8 shrink-0 shadow-2xl shadow-slate-200/50">
         <div>
-          <h2 className="text-xl font-black text-slate-800 mb-6">{t('sidebar.title')}</h2>
+          <h2 className="text-xl font-black text-slate-800 dark:text-[#E2E8F0] mb-6">{t('sidebar.title')}</h2>
 
           <div className="space-y-6">
             <div>
@@ -1085,7 +1085,7 @@ function ExamBuilderContent() {
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder={t('sidebar.placeholder_title')}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-semibold text-slate-700"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-semibold text-slate-700 dark:text-slate-300"
               />
             </div>
 
@@ -1097,7 +1097,7 @@ function ExamBuilderContent() {
                   value={duration}
                   onChange={e => setDuration(e.target.value === "" ? "" : Number(e.target.value))}
                   placeholder={t('sidebar.placeholder_duration')}
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700"
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">MINS</span>
               </div>
@@ -1110,7 +1110,7 @@ function ExamBuilderContent() {
                 value={versionCount}
                 onChange={e => setVersionCount(e.target.value === "" ? "" : Number(e.target.value))}
                 placeholder={t('sidebar.placeholder_versions')}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300"
               />
             </div>
 
@@ -1120,7 +1120,7 @@ function ExamBuilderContent() {
                 type="datetime-local"
                 value={scheduledStartTime}
                 onChange={e => setScheduledStartTime(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300"
               />
             </div>
             
@@ -1129,7 +1129,7 @@ function ExamBuilderContent() {
               <select 
                 value={difficulty} 
                 onChange={e => setDifficulty(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-slate-700 appearance-none cursor-pointer"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
                 style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
               >
                 <option value="EASY">🟢 Dễ</option>
@@ -1140,26 +1140,26 @@ function ExamBuilderContent() {
             </div>
 
             <div className="space-y-4 pt-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-100 transition-all">
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-2xl border border-transparent hover:border-slate-100 dark:border-cyan-950/30 transition-all">
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-slate-500 text-[20px]">shuffle</span>
-                  <span className="text-sm font-bold text-slate-700">{t('sidebar.shuffle')}</span>
+                  <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">shuffle</span>
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{t('sidebar.shuffle')}</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input checked={shuffle} onChange={e => setShuffle(e.target.checked)} className="sr-only peer" type="checkbox" />
-                  <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                  <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-[#0A1F3E] after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                 </label>
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-100 transition-all">
+              <div className="p-4 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-2xl border border-transparent hover:border-slate-100 dark:border-cyan-950/30 transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-slate-500 text-[20px]">visibility</span>
-                    <span className="text-sm font-bold text-slate-700">AI Proctoring</span>
+                    <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">visibility</span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">AI Proctoring</span>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input checked={aiProctoring} onChange={e => setAiProctoring(e.target.checked)} className="sr-only peer" type="checkbox" />
-                    <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                    <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-[#0A1F3E] after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
                   </label>
                 </div>
                 <p className="text-[10px] text-slate-400 leading-relaxed font-medium">{t('sidebar.ai_proctoring_desc')}</p>
@@ -1168,16 +1168,16 @@ function ExamBuilderContent() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-slate-100">
+        <div className="pt-8 border-t border-slate-100 dark:border-cyan-950/30">
           <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">{t('sidebar.summary')}</h4>
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-500 font-medium">{t('sidebar.total_questions')}</span>
-              <span className="font-bold text-blue-900">{questions.length} câu</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{t('sidebar.total_questions')}</span>
+              <span className="font-bold text-blue-900 dark:text-[#00C6FF]">{questions.length} câu</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-slate-500 font-medium">{t('sidebar.difficulty')}</span>
-              <span className="font-bold text-blue-900">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{t('sidebar.difficulty')}</span>
+              <span className="font-bold text-blue-900 dark:text-[#00C6FF]">
                 {difficulty === "EASY" ? "Dễ" : 
                  difficulty === "MEDIUM" ? "Trung bình" : 
                  difficulty === "HARD" ? "Khó" : "Chuyên gia"}
@@ -1197,7 +1197,7 @@ function ExamBuilderContent() {
           <button
             onClick={() => handleSave("DRAFT")}
             disabled={isSaving || !questions.length}
-            className="w-full py-4 bg-white border-2 border-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all disabled:opacity-50"
+            className="w-full py-4 bg-white dark:bg-[#0A1F3E] border-2 border-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 transition-all disabled:opacity-50"
           >
             Lưu bản nháp
           </button>

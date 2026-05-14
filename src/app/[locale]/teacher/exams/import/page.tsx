@@ -253,7 +253,7 @@ export default function ImportFromFile() {
           </div>
 
           {selectedFile && (
-            <div className="flex items-center gap-4 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <div className="flex items-center gap-4 bg-white dark:bg-[#0A1F3E] rounded-2xl p-5 shadow-sm border border-slate-200">
               <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
                 <span className="material-symbols-outlined text-blue-600">description</span>
               </div>
@@ -300,7 +300,7 @@ export default function ImportFromFile() {
       {step === "preview" && (
         <div className="space-y-4">
           {/* Toolbar */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between flex-wrap gap-4">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between flex-wrap gap-4">
             <div>
               <p className="font-black text-slate-800 text-lg">Kết quả trích xuất: <span className="text-blue-600">{totalCount} câu hỏi</span></p>
               <p className="text-slate-400 text-sm">Đã chọn: <span className="text-green-600 font-bold">{selectedCount}</span> / {totalCount}</p>
@@ -321,7 +321,7 @@ export default function ImportFromFile() {
           {/* Question List */}
           <div className="space-y-4">
             {questions.map((q, idx) => (
-              <div key={q.id} className={`bg-white rounded-2xl shadow-sm border-2 transition-all ${selected.has(q.id) ? "border-blue-400" : "border-slate-200 opacity-60"}`}>
+              <div key={q.id} className={`bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-sm border-2 transition-all ${selected.has(q.id) ? "border-blue-400" : "border-slate-200 opacity-60"}`}>
                 <div className="p-5">
                   {/* Question header */}
                   <div className="flex items-start gap-4">
@@ -357,7 +357,7 @@ export default function ImportFromFile() {
                             rehypePlugins={[rehypeKatex]}
                             components={{
                               table: ({node, ...props}) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-slate-200 border border-slate-200 rounded-lg" {...props} /></div>,
-                              thead: ({node, ...props}) => <thead className="bg-slate-50" {...props} />,
+                              thead: ({node, ...props}) => <thead className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40" {...props} />,
                               th: ({node, ...props}) => <th className="px-4 py-2 text-left text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200" {...props} />,
                               td: ({node, ...props}) => <td className="px-4 py-2 text-sm text-slate-700 border-b border-slate-200 whitespace-nowrap" {...props} />,
                               p: ({node, ...props}) => <p className="whitespace-pre-wrap mb-2" {...props} />
@@ -383,7 +383,7 @@ export default function ImportFromFile() {
                       <div
                         key={opt.id}
                         onClick={() => setCorrectAnswer(q.id, opt.id)}
-                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all ${opt.isCorrect ? "border-green-500 bg-green-50" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all ${opt.isCorrect ? "border-green-500 bg-green-50" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40"}`}
                       >
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black ${opt.isCorrect ? "bg-green-500 text-white" : "bg-slate-200 text-slate-600"}`}>
                           {opt.label}
@@ -427,7 +427,7 @@ export default function ImportFromFile() {
           </div>
 
           {/* Bottom bar */}
-          <div className="sticky bottom-4 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 flex items-center justify-between">
+          <div className="sticky bottom-4 bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-xl border border-slate-200 p-4 flex items-center justify-between">
             <p className="font-bold text-slate-600 text-sm">Đã chọn <span className="text-blue-600">{selectedCount}</span> câu hỏi</p>
             <div className="flex gap-3">
               <button onClick={() => { setStep("upload"); setQuestions([]); setSelected(new Set()); }} className="px-4 py-2 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all">Quay Lại</button>
@@ -446,7 +446,7 @@ export default function ImportFromFile() {
       {/* ── STEP 3: CREATE EXAM ────────────────────────────────────── */}
       {step === "create" && (
         <div className="max-w-xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
             <div>
               <h2 className="text-2xl font-black text-slate-800">Tạo Đề Thi</h2>
               <p className="text-slate-400 text-sm mt-1">Đã chọn <span className="font-bold text-blue-600">{selectedCount}</span> câu hỏi từ file. Điền thông tin để hoàn tất.</p>
@@ -495,7 +495,7 @@ export default function ImportFromFile() {
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setStep("preview")} className="flex-1 py-3 border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all">
+              <button onClick={() => setStep("preview")} className="flex-1 py-3 border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 transition-all">
                 Quay Lại
               </button>
               <button

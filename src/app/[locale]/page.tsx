@@ -14,9 +14,7 @@ type FeatureCard = {
 
 function LogoIcon({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-      <path d="M 128.005 191.173 C 128.448 156.208 156.93 128 192 128 L 192 64 L 128 64 C 128 99.346 99.346 128 64 128 L 64 192 L 128 192 Z M 192 256 L 64 256 C 28.654 256 0 227.346 0 192 L 0 64 L 64 64 L 64 0 L 192 0 C 227.346 0 256 28.654 256 64 L 256 192 L 192 192 Z" />
-    </svg>
+    <img src="/logoweb.png" alt="AuraAcademic Logo" className={`${className} object-contain filter brightness-110`} />
   );
 }
 
@@ -52,11 +50,11 @@ function PillButton({ children, href = "/login" }: { children: ReactNode; href?:
   return (
     <a
       href={href}
-      className="inline-flex items-center gap-3 bg-black text-white text-base md:text-lg font-medium pl-8 pr-2 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200"
+      className="inline-flex items-center gap-3 bg-gradient-to-r from-[#0C2E5E] via-[#0E3E7A] to-[#00C6FF] text-white text-base md:text-lg font-bold pl-8 pr-2 py-2.5 rounded-full hover:shadow-[0_10px_30px_rgba(0,198,255,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 group"
     >
-      {children}
-      <span className="bg-white rounded-full p-2 transition-colors duration-200">
-        <ArrowRight className="w-5 h-5 text-black" />
+      <span className="tracking-tight">{children}</span>
+      <span className="bg-white/95 text-[#0C2E5E] rounded-full p-2 group-hover:scale-110 transition-transform duration-300">
+        <ArrowRight className="w-5 h-5" />
       </span>
     </a>
   );
@@ -66,22 +64,21 @@ function Navbar() {
   const links = ["Giám sát AI", "Tạo đề", "Phòng thi", "Tài liệu", "Hỗ trợ"];
 
   return (
-    <nav className="absolute top-0 left-0 right-0 z-20 px-6 py-5">
-      <div className="max-w-[88rem] mx-auto flex items-center justify-between">
-        <a href="#" className="flex items-center gap-3 text-black">
-          <LogoIcon className="w-7 h-7" />
-          <span className="text-2xl font-medium tracking-tight">AuraAcademic</span>
+    <nav className="fixed top-6 left-4 right-4 z-50">
+      <div className="max-w-7xl mx-auto bg-white/60 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(12,46,94,0.08)] rounded-full px-6 sm:px-8 py-3 flex items-center justify-between transition-all duration-300 hover:shadow-[0_12px_40px_rgba(12,46,94,0.12)]">
+        <a href="#" className="flex items-center gap-1 group">
+          <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-9 sm:h-11 object-contain group-hover:scale-105 transition-transform duration-300" />
         </a>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-9">
           {links.map((link) => (
-            <a key={link} href="#" className="text-base text-gray-700 hover:text-black font-medium transition-colors duration-200">
+            <a key={link} href="#" className="text-sm text-[#0C2E5E]/80 hover:text-[#00C6FF] font-bold tracking-tight uppercase transition-colors duration-200">
               {link}
             </a>
           ))}
         </div>
 
-        <a href="/login" className="bg-black text-white text-base font-medium px-7 py-2.5 rounded-full hover:bg-gray-800 transition-colors duration-200">
+        <a href="/login" className="bg-gradient-to-r from-[#0C2E5E] to-[#00C6FF] text-white text-sm sm:text-base font-bold px-6 py-2.5 rounded-full hover:shadow-lg hover:shadow-[#00C6FF]/25 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300">
           Đăng nhập
         </a>
       </div>
@@ -116,21 +113,27 @@ function HeroMarquee() {
 
 function HeroVisual() {
   return (
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_22%,rgba(0,53,95,0.16),transparent_34%),linear-gradient(135deg,#eef5fb_0%,#f8f8f8_45%,#dfeaf4_100%)] overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,53,95,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,53,95,0.045)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
-      <div className="absolute right-[8%] top-[18%] hidden lg:block w-[34rem] h-[34rem] rounded-full border border-black/10 animate-[spin_60s_linear_infinite]" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_20%,rgba(0,198,255,0.22),transparent_38%),radial-gradient(circle_at_50%_80%,rgba(220,168,55,0.08),transparent_45%),linear-gradient(135deg,#f0f8ff_0%,#ffffff_40%,#e6eff8_100%)] overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(12,46,94,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,46,94,0.04)_1px,transparent_1px)] bg-[size:4.5rem_4.5rem]" />
+      
+      {/* Brand Glowing Orbs in Bg */}
+      <div className="absolute -right-20 top-20 w-96 h-96 bg-[#00C6FF]/10 rounded-full blur-[100px] mix-blend-multiply animate-pulse" />
+      <div className="absolute right-1/4 top-1/3 w-80 h-80 bg-[#DCA837]/10 rounded-full blur-[120px] mix-blend-multiply animation-delay-2000" />
+
+      <div className="absolute right-[6%] top-[15%] hidden lg:block w-[38rem] h-[38rem] rounded-full border border-[#00C6FF]/10 animate-[spin_90s_linear_infinite] opacity-80" />
+      <div className="absolute right-[10%] top-[19%] hidden lg:block w-[30rem] h-[30rem] rounded-full border border-dashed border-[#DCA837]/20 animate-[spin_60s_linear_infinite_reverse] opacity-60" />
       
       <style>{`
         @keyframes float3d {
-          0%, 100% { transform: rotateX(15deg) rotateY(-20deg) translateZ(0) translateY(0); }
-          50% { transform: rotateX(15deg) rotateY(-20deg) translateZ(30px) translateY(-20px); }
+          0%, 100% { transform: rotateX(18deg) rotateY(-22deg) translateZ(0) translateY(0); }
+          50% { transform: rotateX(20deg) rotateY(-18deg) translateZ(40px) translateY(-25px); }
         }
         @keyframes floatImg {
-          0%, 100% { transform: translateZ(80px) translateY(0); }
-          50% { transform: translateZ(80px) translateY(-15px); }
+          0%, 100% { transform: translateZ(110px) translateY(0) rotate(0deg); }
+          50% { transform: translateZ(110px) translateY(-20px) rotate(3deg); }
         }
         .perspective-container {
-          perspective: 1200px;
+          perspective: 1400px;
           transform-style: preserve-3d;
         }
         .hero-3d-grid {
@@ -139,33 +142,39 @@ function HeroVisual() {
         }
         .card-3d {
           transform-style: preserve-3d;
-          transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+          border: 1px solid rgba(255, 255, 255, 0.8);
         }
         .card-3d:hover {
-          transform: translateZ(50px) scale(1.05);
-          box-shadow: -20px 20px 50px rgba(0,0,0,0.15);
+          transform: translateZ(60px) scale(1.06);
+          box-shadow: -30px 30px 60px rgba(12,46,94,0.18);
+          border-color: rgba(0, 198, 255, 0.4);
         }
         .card-content-3d {
-          transform: translateZ(30px);
+          transform: translateZ(35px);
         }
       `}</style>
       
-      <div className="absolute right-[11%] top-[20%] hidden lg:block perspective-container w-[32rem]">
-        <div className="grid grid-cols-2 gap-6 hero-3d-grid relative">
+      <div className="absolute right-[10%] top-[20%] hidden lg:block perspective-container w-[34rem]">
+        <div className="grid grid-cols-2 gap-7 hero-3d-grid relative">
           {heroFeatures.map(({ title, Icon, body }, idx) => (
-            <div key={title} className="card-3d rounded-[2rem] bg-white/80 backdrop-blur-xl border border-white p-7 shadow-2xl shadow-slate-400/20"
-                 style={{ animationDelay: `${idx * 0.15}s` }}>
+            <div key={title} className="card-3d rounded-[2.5rem] bg-white/85 backdrop-blur-2xl p-8 shadow-[0_25px_60px_-15px_rgba(12,46,94,0.12)] transition-all"
+                 style={{ animationDelay: `${idx * 0.2}s` }}>
               <div className="card-content-3d">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mb-6 shadow-inner">
-                  <Icon className="w-7 h-7 text-slate-800" />
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white to-[#eef6ff] flex items-center justify-center mb-6 shadow-[inset_0_2px_6px_rgba(0,0,0,0.03)] border border-white">
+                  <Icon className="w-8 h-8 text-[#0C2E5E] group-hover:text-[#00C6FF] transition-colors" />
                 </div>
-                <p className="text-xl font-bold text-slate-900 tracking-tight">{title}</p>
-                <p className="text-sm text-slate-600 mt-2 leading-relaxed">{body}</p>
+                <p className="text-2xl font-extrabold text-[#0C2E5E] tracking-tight">{title}</p>
+                <p className="text-sm text-slate-600 mt-3 font-medium leading-relaxed">{body}</p>
               </div>
             </div>
           ))}
-          <div className="absolute -right-12 -bottom-12 opacity-95" style={{ animation: 'floatImg 6s ease-in-out infinite', transformStyle: 'preserve-3d' }}>
-            <img src="/logoweb.png" alt="" className="w-36 h-36 object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.25)]" />
+          {/* Centered logo with warm radiant glow */}
+          <div className="absolute -right-14 -bottom-14 opacity-95 pointer-events-none" style={{ animation: 'floatImg 7s ease-in-out infinite', transformStyle: 'preserve-3d' }}>
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#DCA837]/40 rounded-full blur-[40px] -z-10 animate-pulse"></div>
+              <img src="/logoweb.png" alt="Glowing Icon" className="w-44 h-44 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)]" />
+            </div>
           </div>
         </div>
       </div>
@@ -175,20 +184,26 @@ function HeroVisual() {
 
 function HeroSection() {
   return (
-    <section className="flex-1 px-6 pt-20 pb-6 flex items-end">
-      <div className="relative w-full rounded-2xl overflow-hidden" style={{ height: "calc(100vh - 96px)" }}>
+    <section className="flex-1 px-4 sm:px-6 pt-32 pb-6 flex items-end relative">
+      <div className="relative w-full rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(12,46,94,0.15)] border border-white/30" style={{ height: "calc(100vh - 130px)" }}>
         <HeroVisual />
-        <div className="relative z-10 flex flex-col items-start justify-start h-full p-8 md:p-12 pt-32 md:pt-36">
-          <h1 className="text-black text-5xl md:text-6xl font-medium leading-tight max-w-xl mb-4" style={{ letterSpacing: "-0.04em" }}>
-            Thi trực tuyến<br />thông minh
+        <div className="relative z-10 flex flex-col items-start justify-center h-full p-8 md:p-16 md:pt-24 max-w-3xl">
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-[#00C6FF]/30 shadow-sm mb-6">
+            <span className="w-2 h-2 bg-[#00C6FF] rounded-full animate-ping"></span>
+            <span className="text-xs font-bold text-[#0C2E5E] tracking-wider uppercase">Hệ thống Giáo dục AI Thế hệ Mới</span>
+          </div>
+          <h1 className="text-[#0C2E5E] text-5xl md:text-7xl font-black leading-[1.1] mb-6 tracking-tight">
+            Thi trực tuyến<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0C2E5E] via-[#00C6FF] to-[#DCA837]">Thông minh đột phá</span>
           </h1>
           <p
-            className="text-black/70 text-base md:text-lg max-w-md mb-8 leading-relaxed"
-            style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}
+            className="text-[#0C2E5E]/70 text-lg md:text-xl max-w-lg mb-10 leading-relaxed font-medium"
           >
-            Nền tảng tạo đề, tổ chức phòng thi và giám sát AI giúp kỳ thi trực tuyến minh bạch, an toàn và dễ vận hành.
+            Nền tảng tạo đề, tổ chức phòng thi và tích hợp trí tuệ nhân tạo giám sát bảo mật tối đa, kiến tạo sự công bằng hoàn hảo.
           </p>
-          <PillButton>Vào hệ thống</PillButton>
+          <div className="flex flex-wrap gap-4">
+             <PillButton href="/login">Khám phá ngay</PillButton>
+          </div>
           <HeroMarquee />
         </div>
       </div>
@@ -198,81 +213,88 @@ function HeroSection() {
 
 function InfoSection() {
   return (
-    <section className="bg-[#F5F5F5] px-6 py-24 relative overflow-hidden">
-      <div className="max-w-[88rem] mx-auto relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 items-start">
+    <section className="bg-[#F8FAFC] px-6 py-32 relative overflow-hidden">
+      {/* Dynamic mesh elements background */}
+      <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-[#00C6FF]/5 rounded-full blur-[120px] -z-10"></div>
+      <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-[#DCA837]/5 rounded-full blur-[100px] -z-10"></div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-20 items-end">
           <div>
-            <h2 className="text-black text-4xl md:text-5xl lg:text-6xl font-medium leading-tight mb-8" style={{ letterSpacing: "-0.03em" }}>
-              Gặp gỡ<br/>AuraAcademic.
+            <h2 className="text-[#0C2E5E] text-4xl md:text-6xl font-black leading-tight mb-8 tracking-tight">
+              Kiến tạo hệ sinh thái<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E]">AuraAcademic.</span>
             </h2>
-            <PillButton>Khám phá hệ sinh thái</PillButton>
+            <PillButton href="/register">Gia nhập ngay</PillButton>
           </div>
-          <p className="text-black/70 text-2xl md:text-3xl leading-relaxed font-light">
-            Nền tảng kết nối giáo viên, học sinh và quản trị viên trong một quy trình thi số liền mạch: từ ngân hàng câu hỏi đến báo cáo vi phạm AI.
+          <p className="text-slate-600 text-xl md:text-2xl leading-relaxed font-medium border-l-4 border-[#00C6FF] pl-8 py-2">
+            Sự giao thoa đỉnh cao giữa tri thức truyền thống và công nghệ giám sát AI tự động, tối ưu hóa quy trình từ tạo ngân hàng câu hỏi đến thống kê vi phạm.
           </p>
         </div>
 
         <style>{`
           .tilt-card {
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.6s, border-color 0.4s;
             transform-style: preserve-3d;
+            border: 1px solid rgba(255, 255, 255, 1);
           }
           .tilt-card:hover {
-            transform: translateY(-10px) rotateX(4deg) rotateY(-4deg);
-            box-shadow: 25px 25px 50px rgba(0,0,0,0.1);
+            transform: translateY(-12px) rotateX(3deg) rotateY(-3deg);
+            box-shadow: 0 30px 70px rgba(12,46,94,0.12);
             z-index: 10;
           }
           .tilt-content {
-            transform: translateZ(35px);
+            transform: translateZ(40px);
           }
         `}</style>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 perspective-container">
-          <article className="lg:col-span-2 tilt-card rounded-[2rem] overflow-hidden bg-[radial-gradient(circle_at_78%_22%,rgba(255,255,255,0.95),transparent_20%),linear-gradient(135deg,#dbeafe_0%,#f8fafc_48%,#b6d4f1_100%)] border border-white shadow-xl shadow-blue-900/5">
-            <div className="p-10 min-h-[24rem] flex flex-col justify-between tilt-content h-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 perspective-container">
+          <article className="lg:col-span-2 tilt-card rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-white via-[#f8fbff] to-[#e0f2fe] shadow-[0_15px_40px_rgba(12,46,94,0.05)] hover:border-[#00C6FF]/30 transition-all">
+            <div className="p-12 min-h-[26rem] flex flex-col justify-between tilt-content h-full relative">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-[#00C6FF]/10 rounded-full blur-3xl -z-10"></div>
               <div>
-                <div className="w-16 h-16 bg-white/60 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8 shadow-sm">
-                  <FileText className="w-8 h-8 text-blue-600" />
+                <div className="w-16 h-16 bg-[#0C2E5E] rounded-2xl flex items-center justify-center mb-10 shadow-lg shadow-[#0C2E5E]/20">
+                  <FileText className="w-8 h-8 text-[#00C6FF]" />
                 </div>
-                <h3 className="text-slate-900 text-3xl font-bold leading-snug mb-4" style={{ letterSpacing: "-0.02em" }}>
-                  Đề thi được tạo nhanh bằng AI
+                <h3 className="text-[#0C2E5E] text-4xl font-extrabold leading-tight mb-6 tracking-tight">
+                  Biên Soạn Đề Thi<br />Tự Động Siêu Tốc
                 </h3>
-                <p className="text-slate-600 text-lg max-w-sm">
-                  Tải tài liệu, trích xuất câu hỏi hoặc dùng AI để biên soạn bộ đề có cấu trúc rõ ràng trong vài giây.
+                <p className="text-slate-600 text-lg font-medium leading-relaxed max-w-sm">
+                  Trích xuất thông minh tài liệu từ DOCX, PDF hoặc ra lệnh cho AI sinh đề cấu trúc phân hóa chỉ trong một lần chạm.
                 </p>
               </div>
             </div>
           </article>
 
-          <article className="tilt-card bg-slate-900 rounded-[2rem] p-10 min-h-[24rem] flex flex-col justify-between shadow-xl shadow-slate-900/20 border border-slate-800 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <article className="tilt-card bg-[#0C2E5E] rounded-[2.5rem] p-10 min-h-[26rem] flex flex-col justify-between shadow-xl border-[#0C2E5E]/80 relative overflow-hidden group hover:border-[#DCA837]/40 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00C6FF]/20 to-[#DCA837]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="tilt-content relative z-10 h-full flex flex-col justify-between">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md">
-                <ShieldCheck className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/20">
+                <ShieldCheck className="w-8 h-8 text-[#00C6FF]" />
               </div>
               <div>
-                <h3 className="text-white text-3xl font-bold leading-snug mb-4" style={{ letterSpacing: "-0.02em" }}>
-                  Phòng thi<br />kiểm soát.
+                <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
+                  Phòng Thi<br />Khép Kín.
                 </h3>
-                <p className="text-white/60 text-lg">
-                  Theo dõi trạng thái học sinh và lượt nộp bài realtime.
+                <p className="text-white/70 text-base font-medium leading-relaxed">
+                  Môi trường bảo mật tuyệt đối, ghi nhận sự cố mất kết nối và theo dõi màn hình thí sinh thời gian thực.
                 </p>
               </div>
             </div>
           </article>
 
-          <article className="tilt-card bg-slate-900 rounded-[2rem] p-10 min-h-[24rem] flex flex-col justify-between shadow-xl shadow-slate-900/20 border border-slate-800 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <article className="tilt-card bg-gradient-to-b from-[#0A192F] to-[#0C2E5E] rounded-[2.5rem] p-10 min-h-[26rem] flex flex-col justify-between shadow-xl relative overflow-hidden group hover:border-[#00C6FF]/40 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00C6FF]/30 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="tilt-content relative z-10 h-full flex flex-col justify-between">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md">
-                <Camera className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/20">
+                <Camera className="w-8 h-8 text-[#DCA837]" />
               </div>
               <div>
-                <h3 className="text-white text-3xl font-bold leading-snug mb-4" style={{ letterSpacing: "-0.02em" }}>
-                  Giám sát<br />tự động
+                <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
+                  Proctoring AI<br />Đỉnh Cao
                 </h3>
-                <p className="text-white/60 text-lg">
-                  AI phát hiện hành vi bất thường tự động 100%.
+                <p className="text-white/70 text-base font-medium leading-relaxed">
+                  Nhận diện đa nhân diện, phát hiện đổi người, rời khỏi camera hoặc có tạp âm lạ chính xác tuyệt đối.
                 </p>
               </div>
             </div>
@@ -317,70 +339,74 @@ function BackedBySection() {
 
 function UseCasesSection() {
   return (
-    <section className="bg-[#F5F5F5] px-6 py-24">
-      <div className="max-w-[88rem] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        <div className="md:pr-12 md:pt-2">
-          <p className="text-black/60 text-sm mb-2 font-bold tracking-widest uppercase">Vận hành thực tế</p>
-          <h2 className="text-5xl md:text-6xl font-medium leading-none mb-6" style={{ letterSpacing: "-0.04em" }}>
-            Luồng sử dụng
+    <section className="bg-[#F8FAFC] px-6 py-32">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="lg:pr-12">
+          <p className="text-[#00C6FF] text-sm mb-4 font-black tracking-[0.2em] uppercase">Vận hành chuyên nghiệp</p>
+          <h2 className="text-[#0C2E5E] text-5xl md:text-7xl font-black leading-[1.05] mb-8 tracking-tight">
+            Quy trình khép kín
           </h2>
-          <p className="text-black/60 text-lg leading-relaxed max-w-sm mb-8">
-            Từ tạo đề, phát mã phòng, giám sát bài làm đến xuất kết quả, AuraAcademic giúp các kỳ thi trực tuyến gọn hơn mà vẫn giữ tiêu chuẩn kiểm soát.
+          <p className="text-slate-600 text-lg leading-relaxed mb-10 font-medium">
+            Tích hợp xuyên suốt từ bước chuẩn bị đề bài, quản lý tài liệu đến phát mã phòng và tổng hợp báo cáo phổ điểm cuối kỳ thi.
           </p>
-          <a href="/login" className="group inline-flex items-center gap-3 text-black text-lg font-medium">
-            <span className="w-12 h-12 rounded-full bg-black flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-black/20">
-              <ArrowRight className="w-5 h-5 text-white" />
+          <a href="/login" className="group inline-flex items-center gap-4 text-[#0C2E5E] text-xl font-extrabold">
+            <span className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-xl shadow-[#00C6FF]/30">
+              <ArrowRight className="w-6 h-6 text-white" />
             </span>
-            Trải nghiệm ngay
+            Trải nghiệm ứng dụng ngay
           </a>
         </div>
 
-        <div className="relative w-full aspect-square md:aspect-auto md:h-[650px] perspective-container">
+        <div className="relative w-full aspect-[4/3] lg:h-[700px] perspective-container mt-12 lg:mt-0">
           <style>{`
             .showcase-3d {
-              transform: rotateY(-15deg) rotateX(10deg);
+              transform: rotateY(-18deg) rotateX(12deg);
               transform-style: preserve-3d;
               animation: floatShowcase 12s ease-in-out infinite;
             }
             @keyframes floatShowcase {
-              0%, 100% { transform: rotateY(-15deg) rotateX(10deg) translateY(0); box-shadow: 30px 40px 60px rgba(0,0,0,0.1); }
-              50% { transform: rotateY(-10deg) rotateX(5deg) translateY(-25px); box-shadow: 20px 50px 80px rgba(0,50,150,0.15); }
+              0%, 100% { transform: rotateY(-18deg) rotateX(12deg) translateY(0); box-shadow: 40px 60px 100px rgba(12,46,94,0.15); }
+              50% { transform: rotateY(-12deg) rotateX(6deg) translateY(-30px); box-shadow: 25px 75px 120px rgba(0,198,255,0.25); }
             }
             .glass-panel-3d {
-              transform: translateZ(60px);
+              transform: translateZ(70px);
               transform-style: preserve-3d;
+              border: 1px solid rgba(255, 255, 255, 0.7);
             }
             .floating-stats-3d {
-              transform: translateZ(90px);
+              transform: translateZ(100px);
             }
             .stat-card-3d {
-              transition: transform 0.4s;
+              transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+              border: 1px solid rgba(255, 255, 255, 0.8);
             }
             .stat-card-3d:hover {
-              transform: translateZ(20px) translateY(-5px);
+              transform: translateZ(25px) translateY(-8px);
+              box-shadow: 0 25px 50px rgba(12,46,94,0.15);
+              border-color: rgba(0, 198, 255, 0.3);
             }
           `}</style>
           
-          <div className="w-full h-full rounded-[3rem] overflow-hidden showcase-3d relative bg-[radial-gradient(circle_at_65%_16%,rgba(255,255,255,0.95),transparent_22%),linear-gradient(145deg,#e8f2fb_0%,#f7f7f7_44%,#c8d9e8_100%)] border border-white/60">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,50,150,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,50,150,0.03)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem]" />
+          <div className="w-full h-full rounded-[3.5rem] overflow-hidden showcase-3d relative bg-[radial-gradient(circle_at_60%_10%,rgba(255,255,255,0.95),transparent_25%),linear-gradient(145deg,#eaf6ff_0%,#ffffff_45%,#cbe5f9_100%)] border border-white/70">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,198,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,198,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
             
-            <div className="absolute inset-8 lg:inset-10 glass-panel-3d bg-white/50 backdrop-blur-lg rounded-[2rem] border border-white shadow-2xl flex flex-col justify-between p-8 md:p-12">
+            <div className="absolute inset-8 lg:inset-12 glass-panel-3d bg-white/60 backdrop-blur-xl rounded-[3rem] shadow-[0_30px_80px_rgba(12,46,94,0.1)] flex flex-col justify-between p-10 md:p-14">
                <div>
-                 <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-xl shadow-blue-600/30">
+                 <div className="w-16 h-16 bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] rounded-3xl flex items-center justify-center mb-10 shadow-xl shadow-[#00C6FF]/30">
                    <ShieldCheck className="w-8 h-8 text-white" />
                  </div>
-                 <h3 className="text-4xl md:text-5xl font-bold leading-tight mb-4 tracking-tight text-slate-900">
-                   Phòng thi<br/>trực tiếp
+                 <h3 className="text-4xl md:text-6xl font-black leading-tight mb-6 tracking-tight text-[#0C2E5E]">
+                   Trung Tâm<br/>Theo Dõi
                  </h3>
-                 <p className="text-slate-600 text-lg max-w-sm font-medium leading-relaxed">
-                   Giáo viên mở phòng, học sinh vào chờ, hệ thống tự động bắt đầu và theo dõi sĩ số tức thời.
+                 <p className="text-slate-600 text-lg font-medium leading-relaxed max-w-md">
+                   Bảng điều khiển giám sát trung tâm giúp quản trị viên phát hiện sự cố và duy trì tính chính trực của bài thi.
                  </p>
                </div>
                
-               <div className="grid grid-cols-3 gap-4 floating-stats-3d">
+               <div className="grid grid-cols-3 gap-5 floating-stats-3d">
                  {["Chờ thi", "Đang làm", "Đã nộp"].map((label, index) => (
-                   <div key={label} className="stat-card-3d rounded-2xl bg-white shadow-xl shadow-slate-200/60 p-5 md:p-6 border border-slate-100/50 flex flex-col items-center text-center">
-                     <p className="text-3xl md:text-4xl font-black text-blue-600 mb-1">{[24, 18, 42][index]}</p>
+                   <div key={label} className="stat-card-3d rounded-2xl bg-white shadow-[0_20px_50px_-10px_rgba(12,46,94,0.08)] p-6 border border-slate-100 flex flex-col items-center text-center">
+                     <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] mb-2">{[24, 18, 42][index]}</p>
                      <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider">{label}</p>
                    </div>
                  ))}
@@ -395,8 +421,8 @@ function UseCasesSection() {
 
 export default function Home() {
   return (
-    <main className="flex flex-col bg-[#F5F5F5]">
-      <div className="h-screen flex flex-col overflow-hidden bg-[#F5F5F5]">
+    <main className="flex flex-col bg-[#F8FAFC]">
+      <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
         <Navbar />
         <HeroSection />
       </div>

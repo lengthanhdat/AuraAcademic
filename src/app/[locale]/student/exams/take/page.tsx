@@ -354,7 +354,7 @@ export default function TakeExam() {
   if (!examStarted) {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4">
-        <div className="bg-white rounded-3xl p-10 shadow-2xl border border-slate-100 max-w-lg w-full">
+        <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl p-10 shadow-2xl border border-slate-100 dark:border-cyan-950/30 max-w-lg w-full">
           {/* Header */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center">
@@ -402,11 +402,11 @@ export default function TakeExam() {
 
           {/* Exam Info */}
           <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-slate-50 rounded-xl p-4">
+            <div className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-xl p-4">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t('info_duration_label')}</p>
               <p className="text-2xl font-black text-slate-800">{examVersion.duration || 60} {t('info_duration_unit')}</p>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4">
+            <div className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-xl p-4">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{t('info_questions_label')}</p>
               <p className="text-2xl font-black text-slate-800">{examVersion.questions?.length || 0} {t('info_questions_unit')}</p>
             </div>
@@ -439,7 +439,7 @@ export default function TakeExam() {
       {/* Modal Xác Nhận Nộp Bài Mới */}
       {showSubmitModal && (
         <div className="fixed inset-0 bg-slate-900/40 z-[999] flex items-center justify-center backdrop-blur-md animate-in fade-in duration-300 px-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 transform transition-all animate-in zoom-in-95 duration-300">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-cyan-950/30 transform transition-all animate-in zoom-in-95 duration-300">
             {/* Header Modal */}
             <div className={`py-6 px-8 text-center relative ${unansweredCount > 0 ? 'bg-amber-50' : 'bg-blue-50'}`}>
               <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 shadow-sm rotate-3 ${unansweredCount > 0 ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
@@ -455,11 +455,11 @@ export default function TakeExam() {
             {/* Body Modal */}
             <div className="p-8">
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                <div className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-2xl p-4 text-center border border-slate-100 dark:border-cyan-950/30">
                   <p className="text-2xl font-black text-emerald-600">{answeredCount}</p>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đã hoàn thành</p>
                 </div>
-                <div className={`${unansweredCount > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'} rounded-2xl p-4 text-center border`}>
+                <div className={`${unansweredCount > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border-slate-100 dark:border-cyan-950/30'} rounded-2xl p-4 text-center border`}>
                   <p className={`text-2xl font-black ${unansweredCount > 0 ? 'text-red-500' : 'text-slate-600'}`}>{unansweredCount}</p>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Chưa trả lời</p>
                 </div>
@@ -494,7 +494,7 @@ export default function TakeExam() {
                 <button
                   onClick={() => setShowSubmitModal(false)}
                   disabled={isSubmitting}
-                  className="w-full py-3.5 bg-white text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all border border-slate-200 text-sm"
+                  className="w-full py-3.5 bg-white dark:bg-[#0A1F3E] text-slate-600 font-bold rounded-xl hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 transition-all border border-slate-200 text-sm"
                 >
                   Quay lại làm tiếp
                 </button>
@@ -507,7 +507,7 @@ export default function TakeExam() {
       {/* Modal cảnh báo vi phạm */}
       {showWarningModal && (
         <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center px-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full border-2 border-red-200">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl p-8 shadow-2xl max-w-md w-full border-2 border-red-200">
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 animate-pulse">
                 <span className="material-symbols-outlined text-red-600 text-4xl">warning</span>
@@ -544,7 +544,7 @@ export default function TakeExam() {
 
       {/* Chỉ báo số vi phạm (hiển thị khi đang thi) */}
       {examVersion?.aiProctoring && violationCount > 0 && !submissionResult && (
-        <div className="fixed top-20 right-4 z-50 flex items-center gap-2 bg-white border-2 border-red-200 text-red-600 rounded-xl px-3 py-2 shadow-lg text-xs font-bold">
+        <div className="fixed top-20 right-4 z-50 flex items-center gap-2 bg-white dark:bg-[#0A1F3E] border-2 border-red-200 text-red-600 rounded-xl px-3 py-2 shadow-lg text-xs font-bold">
           <span className="material-symbols-outlined text-[16px]">warning</span>
           {t('violation_badge')}: {violationCount}/{maxViolations}
         </div>
@@ -555,7 +555,7 @@ export default function TakeExam() {
       {/* Overlay hết giờ */}
       {isTimeUp && (
         <div className="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-10 text-center shadow-2xl max-w-sm mx-4">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-10 text-center shadow-2xl max-w-sm mx-4">
             <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <span className="material-symbols-outlined text-red-600 text-3xl">timer_off</span>
             </div>
@@ -572,7 +572,7 @@ export default function TakeExam() {
         </div>
       )}
       {/* Sticky Header with Timer */}
-      <header className="sticky top-0 bg-white border-b border-slate-200 z-50 px-8 py-4 shadow-sm">
+      <header className="sticky top-0 bg-white dark:bg-[#0A1F3E] border-b border-slate-200 z-50 px-8 py-4 shadow-sm">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-blue-50 rounded-lg text-blue-700">
@@ -607,7 +607,7 @@ export default function TakeExam() {
               <>
                 <button 
                   onClick={() => setShowReview(false)}
-                  className="px-6 py-2.5 bg-white text-slate-700 border border-slate-200 font-bold rounded-xl active:scale-95 transition-all hover:bg-slate-50 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-white dark:bg-[#0A1F3E] text-slate-700 border border-slate-200 font-bold rounded-xl active:scale-95 transition-all hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                   Tổng quan
@@ -627,7 +627,7 @@ export default function TakeExam() {
 
       {submissionResult && !showReview ? (
         <div className="max-w-3xl mx-auto mt-12 px-4 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="bg-white rounded-3xl p-8 md:p-12 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl p-8 md:p-12 shadow-2xl border border-slate-100 dark:border-cyan-950/30 text-center relative overflow-hidden">
              {/* Background shapes */}
              <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-50 rounded-full blur-3xl pointer-events-none"></div>
              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-green-50 rounded-full blur-3xl pointer-events-none"></div>
@@ -652,7 +652,7 @@ export default function TakeExam() {
                </div>
 
                {/* Thống kê chi tiết */}
-               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col justify-center">
+               <div className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 p-6 rounded-2xl border border-slate-100 dark:border-cyan-950/30 flex flex-col justify-center">
                  <div className="flex items-center justify-between py-2 border-b border-slate-200/60">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-green-500"></div>
@@ -685,7 +685,7 @@ export default function TakeExam() {
              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative">
                <button 
                  onClick={() => setShowReview(true)}
-                 className="w-full sm:w-auto px-8 py-3.5 bg-white border-2 border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all flex items-center justify-center gap-2"
+                 className="w-full sm:w-auto px-8 py-3.5 bg-white dark:bg-[#0A1F3E] border-2 border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 hover:border-slate-300 active:scale-95 transition-all flex items-center justify-center gap-2"
                >
                  <span className="material-symbols-outlined text-[20px]">fact_check</span>
                  Xem chi tiết đáp án
@@ -709,7 +709,7 @@ export default function TakeExam() {
             const isStudentCorrect = studentAnswer === isCorrectAnswer;
 
             return (
-              <div key={q.id} id={`question-${q.id}`} className={`bg-white rounded-2xl p-8 shadow-sm border space-y-6 ${submissionResult ? (isStudentCorrect ? 'border-green-200 shadow-green-100' : 'border-red-200 shadow-red-100') : 'border-slate-200'}`}>
+              <div key={q.id} id={`question-${q.id}`} className={`bg-white dark:bg-[#0A1F3E] rounded-2xl p-8 shadow-sm border space-y-6 ${submissionResult ? (isStudentCorrect ? 'border-green-200 shadow-green-100' : 'border-red-200 shadow-red-100') : 'border-slate-200'}`}>
                 <div className="flex items-start gap-4">
                   <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${submissionResult ? (isStudentCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700') : 'bg-slate-100 text-slate-500'}`}>
                     {idx + 1}
@@ -721,7 +721,7 @@ export default function TakeExam() {
 
                 <div className="grid grid-cols-1 gap-3 pl-12">
                   {q.options.map((opt: any) => {
-                    let optionClass = 'border-slate-100 bg-slate-50 hover:border-slate-200';
+                    let optionClass = 'border-slate-100 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 hover:border-slate-200';
                     let textClass = 'text-slate-600';
                     let showIcon = null;
 
@@ -736,7 +736,7 @@ export default function TakeExam() {
                         textClass = 'font-bold text-red-700';
                         showIcon = <span className="material-symbols-outlined text-red-600">cancel</span>;
                       } else {
-                        optionClass = 'border-slate-100 bg-slate-50 opacity-60';
+                        optionClass = 'border-slate-100 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 opacity-60';
                       }
                     } else {
                       // Chế độ làm bài
@@ -786,7 +786,7 @@ export default function TakeExam() {
           
           {/* AI Proctoring Camera Block */}
           {examVersion?.aiProctoring && !submissionResult && (
-            <div className={`bg-white rounded-2xl p-4 shadow-sm border-2 transition-all duration-300 ${currentViolations.length > 0 ? "border-red-400 shadow-red-500/10" : "border-slate-200"}`}>
+            <div className={`bg-white dark:bg-[#0A1F3E] rounded-2xl p-4 shadow-sm border-2 transition-all duration-300 ${currentViolations.length > 0 ? "border-red-400 shadow-red-500/10" : "border-slate-200"}`}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm">
                   <span className={`material-symbols-outlined ${currentViolations.length > 0 ? "text-red-500 animate-pulse" : "text-green-600"}`}>
@@ -832,7 +832,7 @@ export default function TakeExam() {
                   </div>
                 </div>
               ) : (
-                <div className="mt-3 bg-slate-50 rounded-lg p-2 flex items-center justify-center gap-2 border border-slate-100">
+                <div className="mt-3 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-lg p-2 flex items-center justify-center gap-2 border border-slate-100 dark:border-cyan-950/30">
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                   <span className="text-xs font-bold text-slate-500">Hệ thống đang giám sát</span>
                 </div>
@@ -841,7 +841,7 @@ export default function TakeExam() {
           )}
 
           {/* Map Block */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hidden md:block">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-200 hidden md:block">
             <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-blue-600">grid_view</span>
               Sơ đồ câu hỏi
@@ -870,7 +870,7 @@ export default function TakeExam() {
               })}
             </div>
             {!submissionResult && (
-              <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
+              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-cyan-950/30 space-y-3">
                 <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
                   <div className="w-4 h-4 rounded-md bg-[#00355f] shadow-inner"></div> Đã làm
                 </div>

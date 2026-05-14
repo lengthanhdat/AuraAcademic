@@ -6,17 +6,24 @@ type User = { id: string; fullName: string; email: string; role: string; emailVe
 type Stats = Record<string, number>;
 
 function StatCard({ icon, label, value, sub, color }: any) {
-  const g: any = { violet:"from-violet-600 to-indigo-600 shadow-violet-500/20", emerald:"from-emerald-500 to-teal-600 shadow-emerald-500/20", amber:"from-amber-500 to-orange-500 shadow-amber-500/20", blue:"from-blue-500 to-cyan-500 shadow-blue-500/20", rose:"from-rose-500 to-pink-600 shadow-rose-500/20", slate:"from-slate-500 to-slate-600 shadow-slate-500/10" };
+  const g: any = { 
+    violet: "from-violet-600 to-indigo-600 shadow-violet-500/20", 
+    emerald: "from-emerald-500 to-teal-600 shadow-emerald-500/20", 
+    amber: "from-amber-500 to-orange-500 shadow-amber-500/20", 
+    blue: "from-blue-500 to-cyan-500 shadow-blue-500/20", 
+    rose: "from-rose-500 to-pink-600 shadow-rose-500/20", 
+    slate: "from-[#0C2E5E] to-[#0E3E7A] shadow-slate-500/10" 
+  };
   return (
-    <div className="bg-[#1e293b] border border-slate-700/50 rounded-2xl p-5 hover:border-slate-600 transition-all">
+    <div className="bg-white dark:bg-[#0A1F3E]/95 backdrop-blur-md border border-slate-200/50 dark:border-cyan-950/40 rounded-2xl p-5 hover:border-[#00C6FF]/20 hover:shadow-[0_16px_36px_rgba(12,46,94,0.06)] transition-all duration-300 group">
       <div className="flex items-start justify-between mb-4">
-        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${g[color]} shadow-lg flex items-center justify-center`}>
+        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${g[color]} shadow-md flex items-center justify-center group-hover:scale-105 transition-transform`}>
           <span className="material-symbols-outlined text-white text-xl" style={{fontVariationSettings:"'FILL' 1"}}>{icon}</span>
         </div>
-        {sub && <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full">{sub}</span>}
+        {sub && <span className="text-[10px] font-extrabold tracking-wider uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">{sub}</span>}
       </div>
-      <p className="text-3xl font-black text-white">{value ?? "—"}</p>
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">{label}</p>
+      <p className="text-3xl font-black text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] dark:text-[#00C6FF] tracking-tight">{value ?? "—"}</p>
+      <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mt-1.5">{label}</p>
     </div>
   );
 }
@@ -32,35 +39,35 @@ function AddUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
     finally { setLoading(false); }
   };
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1e293b] border border-slate-700 rounded-2xl w-full max-w-md p-6">
+    <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-[#0A1F3E] border border-slate-200/60 dark:border-cyan-950/50 shadow-2xl rounded-2xl w-full max-w-md p-6 animate-scaleIn">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-white text-lg">Thêm người dùng</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-white"><span className="material-symbols-outlined">close</span></button>
+          <h3 className="font-black text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] text-lg tracking-tight">Thêm người dùng mới</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-red-500 p-1 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-lg transition-all"><span className="material-symbols-outlined">close</span></button>
         </div>
-        {err && <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-sm mb-4">{err}</div>}
+        {err && <div className="p-3 bg-red-50 border border-red-100 text-red-600 font-semibold rounded-xl text-xs mb-4">{err}</div>}
         <form onSubmit={submit} className="space-y-4">
-          {[["Họ tên", "fullName", "text"], ["Email", "email", "email"]].map(([label, key, type]) => (
+          {[["Họ tên đầy đủ", "fullName", "text"], ["Địa chỉ Email", "email", "email"]].map(([label, key, type]) => (
             <div key={key} className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</label>
               <input required type={type} value={(form as any)[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/40" />
+                className="w-full bg-slate-50 dark:bg-[#051329] border border-slate-200 dark:border-cyan-950/40 rounded-xl px-4 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0C2E5E]/10 focus:border-[#0C2E5E]/30 transition-all font-medium" />
             </div>
           ))}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Vai trò</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Vai trò người dùng</label>
             <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/40">
-              <option value="student">Học sinh</option>
-              <option value="teacher">Giáo viên</option>
-              <option value="admin">Admin</option>
+              className="w-full bg-slate-50 dark:bg-[#051329] border border-slate-200 dark:border-cyan-950/40 rounded-xl px-4 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0C2E5E]/10 focus:border-[#0C2E5E]/30 transition-all font-bold cursor-pointer">
+              <option value="student">Học sinh (Student)</option>
+              <option value="teacher">Giáo viên (Teacher)</option>
+              <option value="admin">Quản trị viên (Admin)</option>
             </select>
           </div>
-          <div className="flex gap-3 pt-2">
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
-              {loading ? "Đang tạo..." : "Tạo tài khoản"}
+          <div className="flex gap-3 pt-3">
+            <button type="submit" disabled={loading} className="flex-1 py-3 bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] text-white rounded-xl font-black text-sm hover:opacity-95 transition-all disabled:opacity-50 shadow-md shadow-[#0C2E5E]/10 border-l-4 border-[#00C6FF] active:scale-95">
+              {loading ? "Đang tạo tài khoản..." : "Xác nhận tạo"}
             </button>
-            <button type="button" onClick={onClose} className="px-4 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 rounded-xl font-semibold text-sm hover:bg-slate-700">Huỷ</button>
+            <button type="button" onClick={onClose} className="px-5 py-3 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all">Huỷ</button>
           </div>
         </form>
       </div>
@@ -120,154 +127,187 @@ export default function AdminDashboard() {
     catch (e: any) { alert(e.message); }
   };
 
-  const roleBadge = (r: string) => ({ admin: "bg-violet-500/15 text-violet-300 border-violet-500/30", teacher: "bg-blue-500/15 text-blue-300 border-blue-500/30", student: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" } as any)[r] || "bg-slate-700 text-slate-400";
+  const roleBadge = (r: string) => ({ 
+    admin: "bg-violet-50 text-violet-700 border-violet-200", 
+    teacher: "bg-blue-50 text-blue-700 border-blue-200", 
+    student: "bg-emerald-50 text-emerald-700 border-emerald-200" 
+  } as any)[r] || "bg-slate-100 text-slate-500 border-slate-200";
+
   const roleLabel = (r: string) => ({ admin: "Admin", teacher: "Giáo viên", student: "Học sinh" } as any)[r] || r;
   const maxW = Math.max(...weekData);
 
   return (
-    <div className="p-6 space-y-6 bg-[#0f172a] min-h-screen relative">
-      {/* Toast */}
+    <div className="space-y-8 relative bg-transparent min-h-max">
+      {/* Toast Notification Container */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 px-5 py-3 bg-emerald-600 text-white rounded-xl font-semibold text-sm shadow-xl animate-bounce">
-          ✓ {toast}
+        <div className="fixed bottom-6 right-6 z-50 px-5 py-3 bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] text-white rounded-2xl font-extrabold text-sm shadow-xl border border-cyan-400/20 flex items-center gap-2 animate-slideUp">
+          <span className="material-symbols-outlined text-emerald-400 text-lg">check_circle</span> {toast}
         </div>
       )}
 
       {showAddModal && <AddUserModal onClose={() => setShowAddModal(false)} onCreated={u => { setUsers(p => [u, ...p]); showToast("Đã tạo tài khoản"); }} />}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header Banner */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white">Tổng quan hệ thống</h1>
-          <p className="text-slate-500 text-sm mt-1">Quản trị toàn bộ nền tảng AuraAcademic</p>
+          <h1 className="text-2xl font-black text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] dark:text-[#E2E8F0] tracking-tight">Tổng quan quản trị hệ thống</h1>
+          <p className="text-slate-500 text-sm mt-1 font-medium">Kiểm soát và quản trị toàn bộ tài nguyên nền tảng AuraAcademic</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={loadStats} className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-700 transition-all">
-            <span className="material-symbols-outlined text-lg">refresh</span>Làm mới
+          <button onClick={loadStats} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 hover:bg-slate-50 dark:hover:bg-cyan-950/30 dark:text-slate-300 text-slate-600 rounded-xl text-xs font-extrabold hover:border-slate-300 transition-all shadow-sm active:scale-95">
+            <span className="material-symbols-outlined text-base">refresh</span>Làm mới
           </button>
-          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:opacity-90 shadow-lg shadow-violet-500/20">
-            <span className="material-symbols-outlined text-lg">person_add</span>Thêm người dùng
+          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] text-white rounded-xl text-xs font-black hover:opacity-95 shadow-md shadow-[#0C2E5E]/10 border-l-[3px] border-[#00C6FF] transition-all active:scale-95">
+            <span className="material-symbols-outlined text-base">person_add</span>Thêm người dùng
           </button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon="group" label="Tổng người dùng" value={loadingStats ? "…" : stats?.totalUsers} color="violet" />
-        <StatCard icon="school" label="Giáo viên" value={loadingStats ? "…" : stats?.totalTeachers} color="blue" />
-        <StatCard icon="person" label="Học sinh" value={loadingStats ? "…" : stats?.totalStudents} color="emerald" />
-        <StatCard icon="quiz" label="Bài thi hoạt động" value={loadingStats ? "…" : stats?.publishedExams} sub="active" color="amber" />
+      {/* Stat Widgets Grid 1 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard icon="group" label="Tổng người dùng" value={loadingStats ? "…" : stats?.totalUsers} color="slate" />
+        <StatCard icon="school" label="Giáo viên hệ thống" value={loadingStats ? "…" : stats?.totalTeachers} color="blue" />
+        <StatCard icon="person" label="Tổng số Học sinh" value={loadingStats ? "…" : stats?.totalStudents} color="emerald" />
+        <StatCard icon="quiz" label="Bài thi đang chạy" value={loadingStats ? "…" : stats?.publishedExams} sub="Hoạt động" color="amber" />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon="task_alt" label="Lượt nộp bài" value={loadingStats ? "…" : stats?.totalResults} color="rose" />
-        <StatCard icon="verified_user" label="Đã xác thực email" value={loadingStats ? "…" : stats?.verifiedUsers} color="emerald" />
-        <StatCard icon="library_books" label="Tổng bài thi" value={loadingStats ? "…" : stats?.totalExams} color="slate" />
+
+      {/* Stat Widgets Grid 2 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard icon="task_alt" label="Tổng lượt nộp bài" value={loadingStats ? "…" : stats?.totalResults} color="rose" />
+        <StatCard icon="verified_user" label="Email đã xác thực" value={loadingStats ? "…" : stats?.verifiedUsers} color="emerald" />
+        <StatCard icon="library_books" label="Tổng kho đề thi" value={loadingStats ? "…" : stats?.totalExams} color="slate" />
         <StatCard icon="lock" label="Tài khoản bị khoá" value={loadingStats ? "…" : stats?.lockedUsers} color="rose" />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-[#1e293b] border border-slate-700/50 rounded-2xl p-6">
-          <h3 className="text-sm font-bold text-white mb-5">Phân bổ vai trò</h3>
-          <div className="space-y-4">
+      {/* Data Analytics Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Role Distribution Bar Chart */}
+        <div className="bg-white dark:bg-[#0A1F3E]/95 border border-slate-200/50 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
+          <h3 className="text-sm font-black text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] dark:text-[#E2E8F0] uppercase tracking-wider mb-5">Phân bổ vai trò</h3>
+          <div className="space-y-5">
             {[["Học sinh", stats?.totalStudents ?? 0, stats?.totalUsers ?? 1, "emerald"],
               ["Giáo viên", stats?.totalTeachers ?? 0, stats?.totalUsers ?? 1, "blue"],
-              ["Admin", stats?.totalAdmins ?? 0, stats?.totalUsers ?? 1, "violet"]].map(([l, v, max, c]) => {
+              ["Quản trị viên", stats?.totalAdmins ?? 0, stats?.totalUsers ?? 1, "slate"]].map(([l, v, max, c]) => {
               const pct = max ? Math.round(((v as number) / (max as number)) * 100) : 0;
-              const cols: any = { emerald: "bg-emerald-500", blue: "bg-blue-500", violet: "bg-violet-500" };
+              const cols: any = { emerald: "bg-emerald-500", blue: "bg-blue-500", slate: "bg-[#0C2E5E]" };
               return (
-                <div key={l as string}>
-                  <div className="flex justify-between text-xs mb-1"><span className="text-slate-400">{l as string}</span><span className="text-white font-bold">{v as number} ({pct}%)</span></div>
-                  <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden"><div className={`h-full ${cols[c as string]} rounded-full`} style={{ width: `${pct}%` }} /></div>
+                <div key={l as string} className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-bold"><span className="text-slate-500">{l as string}</span><span className="text-[#0C2E5E] dark:text-[#E2E8F0]">{v as number} tài khoản ({pct}%)</span></div>
+                  <div className="h-3 bg-slate-100 dark:bg-[#051329] rounded-full overflow-hidden border border-transparent dark:border-cyan-950/30"><div className={`h-full ${cols[c as string]} rounded-full transition-all duration-1000`} style={{ width: `${pct}%` }} /></div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="bg-[#1e293b] border border-slate-700/50 rounded-2xl p-6 lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-white">Hoạt động 7 ngày qua</h3>
-            <span className="text-xs text-slate-500">Lượt đăng nhập (mẫu)</span>
+        {/* Weekly Login activity histogram */}
+        <div className="bg-white dark:bg-[#0A1F3E]/95 border border-slate-200/50 dark:border-cyan-950/40 rounded-2xl p-6 lg:col-span-2 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-black text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] dark:text-[#E2E8F0] uppercase tracking-wider">Hoạt động hệ thống 7 ngày qua</h3>
+            <span className="text-[10px] font-extrabold tracking-wider uppercase text-slate-400 bg-slate-50 dark:bg-[#051329] border dark:border-cyan-950/40 px-2.5 py-1 rounded-md">Lượt đăng nhập hàng ngày</span>
           </div>
-          <div className="flex items-end gap-2 h-32">
+          <div className="flex items-end gap-3 h-36 mt-auto">
             {weekData.map((v, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                <span className="text-[10px] text-slate-600">{v}</span>
-                <div className="w-full rounded-t-lg bg-gradient-to-t from-violet-600 to-indigo-400 hover:opacity-100 opacity-80 transition-all" style={{ height: `${(v / maxW) * 100}%` }} />
-                <span className="text-[9px] text-slate-600">{["T2","T3","T4","T5","T6","T7","CN"][i]}</span>
+              <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                <span className="text-[10px] font-extrabold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity tabular-nums">{v}</span>
+                <div className="w-full rounded-t-xl bg-gradient-to-t from-[#0C2E5E] to-[#00C6FF] hover:shadow-[0_4px_12px_rgba(0,198,255,0.3)] hover:brightness-110 transition-all cursor-pointer" style={{ height: `${(v / maxW) * 100}%` }} />
+                <span className="text-[10px] font-black text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] mt-1">{["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7","CN"][i]}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-[#1e293b] border border-slate-700/50 rounded-2xl overflow-hidden">
-        <div className="flex border-b border-slate-700/50">
-          {([["users", "group", "Quản lý người dùng"], ["analytics", "bar_chart", "Phân tích nhanh"]] as const).map(([tab, icon, label]) => (
+      {/* Main Operational Management Card (Tabs + Table) */}
+      <div className="bg-white dark:bg-[#0A1F3E]/95 border border-slate-200/50 dark:border-cyan-950/40 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+        
+        {/* Navigation Tabs */}
+        <div className="flex border-b border-slate-100 dark:border-cyan-950/40 bg-slate-50/40 dark:bg-[#051329]/20 px-2">
+          {([["users", "group", "Quản lý tập trung người dùng"], ["analytics", "bar_chart", "Phân tích cơ sở"]] as const).map(([tab, icon, label]) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-all ${activeTab === tab ? "border-violet-500 text-violet-400 bg-violet-500/5" : "border-transparent text-slate-500 hover:text-slate-300"}`}>
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-black border-b-2 transition-all relative ${
+                activeTab === tab 
+                  ? "border-[#0C2E5E] text-[#0C2E5E] dark:text-[#E2E8F0]" 
+                  : "border-transparent text-slate-400 hover:text-slate-600"
+              }`}>
               <span className="material-symbols-outlined text-lg">{icon}</span>{label}
+              {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#0C2E5E] to-[#00C6FF]"></div>}
             </button>
           ))}
         </div>
 
+        {/* User Operations Tab View */}
         {activeTab === "users" && (
           <>
-            <div className="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-slate-700/30">
-              <div className="relative flex-1 min-w-[180px] max-w-xs">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+            {/* Filters bar */}
+            <div className="flex flex-wrap items-center gap-4 px-6 py-4 border-b border-slate-100 dark:border-cyan-950/40">
+              <div className="relative flex-1 min-w-[220px] max-w-xs group">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg transition-colors group-focus-within:text-[#0C2E5E] dark:text-[#E2E8F0]">search</span>
                 <input value={search} onChange={e => setSearch(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                  className="w-full bg-slate-50 dark:bg-[#051329] border border-slate-200 dark:border-cyan-950/40 rounded-xl pl-10 pr-4 py-2.5 text-sm dark:text-[#E2E8F0] py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0C2E5E]/10 transition-all"
                   placeholder="Tìm theo tên, email..." />
               </div>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-1.5 flex-wrap p-1 bg-slate-50 dark:bg-[#051329] rounded-xl border border-slate-100 dark:border-cyan-950/40">
                 {["all", "student", "teacher", "admin"].map(r => (
                   <button key={r} onClick={() => setRoleFilter(r)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${roleFilter === r ? "bg-violet-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"}`}>
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                      roleFilter === r 
+                        ? "bg-white text-[#0C2E5E] dark:text-[#E2E8F0] shadow-sm border border-slate-200" 
+                        : "text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-cyan-950/40"
+                    }`}>
                     {r === "all" ? "Tất cả" : roleLabel(r)}
                   </button>
                 ))}
               </div>
-              <span className="ml-auto text-xs text-slate-500">{users.length} người dùng</span>
+              <span className="ml-auto text-xs font-bold text-[#0C2E5E] dark:text-[#E2E8F0] bg-slate-100/50 border border-slate-200/40 px-2.5 py-1 rounded-md">{users.length} tài khoản được tìm thấy</span>
             </div>
 
+            {/* Table content */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-800/50">
-                    {["Người dùng", "Email", "Vai trò", "Trạng thái", "Ngày tạo", "Hành động"].map(h => (
-                      <th key={h} className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  <tr className="bg-slate-50/60 dark:bg-[#051329]/50 border-b border-slate-100 dark:border-cyan-950/40">
+                    {["Người dùng", "Thông tin Email", "Phân quyền vai trò", "Xác thực Email", "Thời gian đăng ký", "Tác vụ Quản lý"].map(h => (
+                      <th key={h} className="px-6 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/30">
+                <tbody className="divide-y divide-slate-100 dark:divide-cyan-950/30">
                   {loadingUsers ? (
-                    <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-500">
-                      <span className="material-symbols-outlined text-4xl animate-spin block mx-auto mb-2">progress_activity</span>Đang tải...
+                    <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <span className="material-symbols-outlined text-3xl animate-spin text-[#0C2E5E] dark:text-[#E2E8F0]">progress_activity</span>
+                        <span className="text-sm font-bold">Đang đồng bộ cơ sở dữ liệu...</span>
+                      </div>
                     </td></tr>
                   ) : users.length === 0 ? (
-                    <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-500">Không tìm thấy người dùng nào.</td></tr>
+                    <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-400 font-bold">Không tìm thấy tài khoản phù hợp với điều kiện lọc.</td></tr>
                   ) : users.map(u => (
-                    <tr key={u.id} className="hover:bg-slate-800/40 transition-colors group">
+                    <tr key={u.id} className="hover:bg-slate-50/60 dark:hover:bg-[#0C2E5E]/20 transition-all group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 bg-gradient-to-br ${u.role === "admin" ? "from-violet-500 to-indigo-500" : u.role === "teacher" ? "from-blue-500 to-cyan-500" : "from-emerald-500 to-teal-500"}`}>
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0 bg-gradient-to-br ${
+                            u.role === "admin" ? "from-violet-500 to-indigo-500" : u.role === "teacher" ? "from-blue-500 to-cyan-500" : "from-emerald-500 to-teal-500"
+                          }`}>
                             {u.fullName?.charAt(0)?.toUpperCase() || "?"}
                           </div>
                           <div>
-                            <p className="font-semibold text-white text-sm">
-                              {u.fullName} {u.email === currentUser?.email && <span className="text-[10px] text-violet-400 font-bold ml-1">(Bạn)</span>}
+                            <p className="font-extrabold text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] text-sm tracking-tight leading-tight">
+                              {u.fullName} {u.email === currentUser?.email && <span className="text-[10px] text-[#00C6FF] font-black ml-1">(BẠN)</span>}
                             </p>
-                            {u.accountLocked && <span className="text-[10px] text-red-400 font-bold">🔒 Đang bị khoá</span>}
+                            {u.accountLocked && <span className="text-[9px] font-black bg-red-50 text-red-600 border border-red-100 rounded px-1.5 py-0.5 inline-block mt-0.5 uppercase tracking-wider">🔒 TÀI KHOẢN ĐÃ KHOÁ</span>}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-400">{u.email}</td>
+                      <td className="px-6 py-4 text-sm text-slate-500 font-medium">{u.email}</td>
                       <td className="px-6 py-4">
                         <select value={u.role} disabled={u.email === currentUser?.email} onChange={e => handleRoleChange(u.id, e.target.value)}
-                          className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider bg-transparent ${u.email === currentUser?.email ? "opacity-50 cursor-not-allowed " + roleBadge(u.role) : "cursor-pointer " + roleBadge(u.role)}`}>
+                          className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all ${
+                            u.email === currentUser?.email 
+                              ? "opacity-50 cursor-not-allowed " + roleBadge(u.role) 
+                              : "cursor-pointer hover:brightness-95 " + roleBadge(u.role)
+                          } outline-none`}>
                           <option value="student">Học sinh</option>
                           <option value="teacher">Giáo viên</option>
                           <option value="admin">Admin</option>
@@ -275,20 +315,20 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         {u.emailVerified
-                          ? <span className="flex items-center gap-1 text-xs text-emerald-400 font-semibold"><span className="material-symbols-outlined text-base" style={{fontVariationSettings:"'FILL' 1"}}>check_circle</span>Xác thực</span>
-                          : <span className="flex items-center gap-1 text-xs text-amber-400 font-semibold"><span className="material-symbols-outlined text-base">pending</span>Chưa xác thực</span>}
+                          ? <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5"><span className="material-symbols-outlined text-sm" style={{fontVariationSettings:"'FILL' 1"}}>check_circle</span>ĐÃ XÁC THỰC</span>
+                          : <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 font-extrabold bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5"><span className="material-symbols-outlined text-sm">pending</span>ĐANG CHỜ</span>}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString("vi-VN") : "—"}
+                      <td className="px-6 py-4 text-sm font-semibold text-[#0C2E5E] dark:text-[#E2E8F0] whitespace-nowrap">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit', year: 'numeric' }) : "—"}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button disabled={u.email === currentUser?.email} onClick={() => handleLock(u)} title={u.accountLocked ? "Mở khoá" : "Khoá"}
-                            className={`p-1.5 rounded-lg transition-all ${u.email === currentUser?.email ? "text-slate-600 cursor-not-allowed" : u.accountLocked ? "text-emerald-400 hover:bg-emerald-500/10" : "text-amber-400 hover:bg-amber-500/10"}`}>
+                        <div className="flex items-center gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <button disabled={u.email === currentUser?.email} onClick={() => handleLock(u)} title={u.accountLocked ? "Mở khoá tài khoản" : "Khoá tài khoản"}
+                            className={`p-1.5 rounded-lg border transition-all ${u.email === currentUser?.email ? "text-slate-300 border-transparent cursor-not-allowed" : u.accountLocked ? "text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-100" : "text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-100"}`}>
                             <span className="material-symbols-outlined text-lg">{u.accountLocked ? "lock_open" : "lock"}</span>
                           </button>
-                          <button disabled={u.email === currentUser?.email} onClick={() => handleDelete(u)} title="Xoá tài khoản"
-                            className={`p-1.5 rounded-lg transition-all ${u.email === currentUser?.email ? "text-slate-600 cursor-not-allowed" : "text-slate-400 hover:text-red-400 hover:bg-red-500/10"}`}>
+                          <button disabled={u.email === currentUser?.email} onClick={() => handleDelete(u)} title="Xoá vĩnh viễn"
+                            className={`p-1.5 rounded-lg border border-transparent transition-all ${u.email === currentUser?.email ? "text-slate-300 cursor-not-allowed" : "text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100"}`}>
                             <span className="material-symbols-outlined text-lg">delete</span>
                           </button>
                         </div>
@@ -301,33 +341,34 @@ export default function AdminDashboard() {
           </>
         )}
 
+        {/* Statistics Subtab View */}
         {activeTab === "analytics" && (
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 animate-fadeIn">
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-white">Thống kê tài khoản</h4>
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-cyan-950/40 pb-2">Báo cáo tổng hợp tài khoản</h4>
               {[
-                ["Tổng người dùng", stats?.totalUsers ?? "—"],
-                ["Đã xác thực email", stats?.verifiedUsers ?? "—"],
-                ["Tài khoản bị khoá", stats?.lockedUsers ?? "—"],
-                ["Tổng bài thi", stats?.totalExams ?? "—"],
-                ["Lượt nộp bài", stats?.totalResults ?? "—"],
+                ["Tổng số tài khoản đăng ký", stats?.totalUsers ?? "—"],
+                ["Lượng người dùng đã Active Email", stats?.verifiedUsers ?? "—"],
+                ["Tài khoản bị vô hiệu hóa (Lock)", stats?.lockedUsers ?? "—"],
+                ["Tổng số ngân hàng đề", stats?.totalExams ?? "—"],
+                ["Lượt phản hồi nộp bài", stats?.totalResults ?? "—"],
               ].map(([l, v]) => (
-                <div key={l as string} className="flex items-center justify-between py-2 border-b border-slate-700/30">
-                  <span className="text-sm text-slate-400">{l as string}</span>
-                  <span className="text-sm font-bold text-white">{v as any}</span>
+                <div key={l as string} className="flex items-center justify-between py-2 border-b border-slate-50 dark:border-cyan-950/20 text-sm">
+                  <span className="text-slate-500 font-medium">{l as string}</span>
+                  <span className="font-black text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] tabular-nums">{v as any}</span>
                 </div>
               ))}
             </div>
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-white">Phân quyền</h4>
-              {[["Admin", stats?.totalAdmins ?? 0, "violet"], ["Giáo viên", stats?.totalTeachers ?? 0, "blue"], ["Học sinh", stats?.totalStudents ?? 0, "emerald"]].map(([l, v, c]) => {
+            <div className="space-y-4">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-cyan-950/40 pb-2">Báo cáo tỷ trọng cơ cấu</h4>
+              {[["Quản trị viên (Admin)", stats?.totalAdmins ?? 0, "slate"], ["Đội ngũ Giáo viên", stats?.totalTeachers ?? 0, "blue"], ["Đối tượng Học sinh", stats?.totalStudents ?? 0, "emerald"]].map(([l, v, c]) => {
                 const total = stats?.totalUsers || 1;
                 const pct = Math.round(((v as number) / total) * 100);
-                const bar: any = { violet: "bg-violet-500", blue: "bg-blue-500", emerald: "bg-emerald-500" };
+                const bar: any = { slate: "bg-[#0C2E5E]", blue: "bg-blue-500", emerald: "bg-emerald-500" };
                 return (
-                  <div key={l as string}>
-                    <div className="flex justify-between text-xs mb-1"><span className="text-slate-400">{l as string}</span><span className="font-bold text-white">{v as number} ({pct}%)</span></div>
-                    <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden"><div className={`h-full ${bar[c as string]} rounded-full`} style={{ width: `${pct}%` }} /></div>
+                  <div key={l as string} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold"><span className="text-slate-500">{l as string}</span><span className="font-black text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0]">{v as number} ({pct}%)</span></div>
+                    <div className="h-2.5 bg-slate-100 dark:bg-[#051329] rounded-full overflow-hidden border border-transparent dark:border-cyan-950/30"><div className={`h-full ${bar[c as string]} rounded-full transition-all duration-700`} style={{ width: `${pct}%` }} /></div>
                   </div>
                 );
               })}

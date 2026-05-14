@@ -329,12 +329,12 @@ export default function TeacherExamRoom() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-surface-container rounded-xl transition-colors"
+            className="p-2 hover:bg-surface-container dark:bg-cyan-950/20 rounded-xl transition-colors"
           >
-            <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+            <span className="material-symbols-outlined text-on-surface-variant dark:text-slate-400">arrow_back</span>
           </button>
           <div>
-            <p className="text-xs text-on-surface-variant uppercase tracking-widest">{t('header.breadcrumb')}</p>
+            <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">{t('header.breadcrumb')}</p>
             <h1 className="text-2xl font-extrabold text-primary">{exam.title}</h1>
           </div>
         </div>
@@ -377,35 +377,35 @@ export default function TeacherExamRoom() {
         {/* Stats Cards - Grid 2x2 for balance */}
         <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
           {/* Phòng chờ */}
-          <div className="bg-surface-container-lowest rounded-xl p-6 flex flex-col justify-between shadow-sm border border-outline-variant/10">
+          <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-xl p-6 flex flex-col justify-between shadow-sm border border-outline-variant/10">
             <span className="material-symbols-outlined text-amber-500 text-3xl mb-2">hourglass_top</span>
             <div>
               <p className="text-3xl font-black text-amber-500">{lobbyCount}</p>
-              <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">{t('stats.waiting')}</p>
+              <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-widest mt-1">{t('stats.waiting')}</p>
             </div>
           </div>
           {/* Đang làm bài */}
-          <div className="bg-surface-container-lowest rounded-xl p-6 flex flex-col justify-between shadow-sm border border-outline-variant/10">
+          <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-xl p-6 flex flex-col justify-between shadow-sm border border-outline-variant/10">
             <span className="material-symbols-outlined text-blue-600 text-3xl mb-2">edit_document</span>
             <div>
               <p className="text-3xl font-black text-blue-600">{examCount}</p>
-              <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">{t('stats.taking')}</p>
+              <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-widest mt-1">{t('stats.taking')}</p>
             </div>
           </div>
-          <div className="bg-surface-container-lowest rounded-xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/10">
+          <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/10">
             <span className="material-symbols-outlined text-green-600 text-2xl mb-2">assignment_turned_in</span>
             <div>
               <p className="text-2xl font-black text-green-600">{results.length}</p>
-              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">{t('stats.submitted')}</p>
+              <p className="text-[10px] text-on-surface-variant dark:text-slate-400 uppercase tracking-widest mt-1">{t('stats.submitted')}</p>
             </div>
           </div>
-          <div className="bg-surface-container-lowest rounded-xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/10">
+          <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-xl p-4 flex flex-col justify-between shadow-sm border border-outline-variant/10">
             <span className="material-symbols-outlined text-amber-600 text-2xl mb-2">timer</span>
             <div>
               <p className={`text-2xl font-black ${timeLeft !== null && timeLeft < 300 ? "text-red-500 animate-pulse" : "text-amber-600"}`}>
                 {isActive ? formatTime(timeLeft) : `${exam.duration}:00`}
               </p>
-              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
+              <p className="text-[10px] text-on-surface-variant dark:text-slate-400 uppercase tracking-widest mt-1">
                 {isActive ? t('stats.remaining') : t('stats.duration')}
               </p>
             </div>
@@ -430,7 +430,7 @@ export default function TeacherExamRoom() {
                 {startCountDown !== null && startCountDown > 0 && ` (Tự động bắt đầu sau ${formatTime(startCountDown)})`}
               </button>
               
-              <div className="flex items-center gap-2 justify-center text-sm text-slate-500 bg-white p-2 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2 justify-center text-sm text-slate-500 bg-white dark:bg-[#0A1F3E] p-2 rounded-xl border border-slate-200">
                 <span className="material-symbols-outlined text-sm">schedule</span>
                 <span>Hẹn giờ tự động:</span>
                 <input 
@@ -475,14 +475,14 @@ export default function TeacherExamRoom() {
       )}
 
       {/* Results Table */}
-      <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <section className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-xl shadow-sm overflow-hidden">
         <div className="px-6 py-5 border-b border-surface-container flex items-center justify-between">
           <h3 className="text-lg font-bold text-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-primary-fixed-dim">leaderboard</span>
             {t('results.title')} ({results.length})
           </h3>
           {results.length > 0 && (
-            <span className="text-xs text-on-surface-variant">
+            <span className="text-xs text-on-surface-variant dark:text-slate-400">
               TB: <strong className="text-primary">
                 {(results.reduce((a, r) => a + r.score, 0) / results.length).toFixed(1)}/10
               </strong>
@@ -493,7 +493,7 @@ export default function TeacherExamRoom() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-surface-container-low/50 text-[10px] font-bold uppercase text-on-surface-variant">
+                <tr className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300/50 text-[10px] font-bold uppercase text-on-surface-variant dark:text-slate-400">
                   <th className="px-6 py-4">{t('results.col_rank')}</th>
                   <th className="px-6 py-4">{t('results.col_student')}</th>
                   <th className="px-6 py-4">{t('results.col_version')}</th>
@@ -502,24 +502,24 @@ export default function TeacherExamRoom() {
                   <th className="px-6 py-4">{t('results.col_time')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-container">
+              <tbody className="divide-y divide-surface-container dark:divide-cyan-950/40">
                 {[...results].sort((a, b) => b.score - a.score).map((r, idx) => (
-                  <tr key={r.id} className="hover:bg-surface-container-low/30 transition-colors">
-                    <td className="px-6 py-4 text-on-surface-variant font-bold">#{idx + 1}</td>
+                  <tr key={r.id} className="hover:bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300/30 transition-colors">
+                    <td className="px-6 py-4 text-on-surface-variant dark:text-slate-400 font-bold">#{idx + 1}</td>
                     <td className="px-6 py-4">
-                      <p className="font-bold text-on-surface">{r.studentName}</p>
+                      <p className="font-bold text-on-surface dark:text-slate-200">{r.studentName}</p>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-on-surface-variant">{r.versionCode}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-on-surface-variant dark:text-slate-400">{r.versionCode}</td>
                     <td className="px-6 py-4">
                       <span className={`text-xl font-black ${r.score >= 5 ? "text-green-600" : "text-red-500"}`}>
                         {r.score?.toFixed(1)}
                       </span>
-                      <span className="text-on-surface-variant text-sm">/10</span>
+                      <span className="text-on-surface-variant dark:text-slate-400 text-sm">/10</span>
                     </td>
-                    <td className="px-6 py-4 text-on-surface-variant">
+                    <td className="px-6 py-4 text-on-surface-variant dark:text-slate-400">
                       {r.correctAnswers}/{r.totalQuestions}
                     </td>
-                    <td className="px-6 py-4 text-on-surface-variant text-sm">
+                    <td className="px-6 py-4 text-on-surface-variant dark:text-slate-400 text-sm">
                       {r.submittedAt ? new Date(r.submittedAt).toLocaleTimeString("vi-VN") : "--"}
                     </td>
                   </tr>
@@ -528,7 +528,7 @@ export default function TeacherExamRoom() {
             </table>
           </div>
         ) : (
-          <div className="py-12 text-center text-on-surface-variant italic">
+          <div className="py-12 text-center text-on-surface-variant dark:text-slate-400 italic">
             {isActive ? t('results.empty_waiting') : t('results.empty_none')}
           </div>
         )}
@@ -557,11 +557,11 @@ export default function TeacherExamRoom() {
                 onClick={() => setSelectedStudent(null)}
               >
                 <div
-                  className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col"
+                  className="bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col"
                   onClick={e => e.stopPropagation()}
                 >
                   {/* Modal Header */}
-                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <div className="px-6 py-4 border-b border-slate-100 dark:border-cyan-950/30 flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-bold text-slate-800">{modalStudent.studentName}</h3>
                       <p className="text-xs text-slate-400 mt-0.5">ID: {modalStudent.studentId} · {modalStudent.violations.length}  {t('violation_modal.violations_count')}</p>
@@ -589,7 +589,7 @@ export default function TeacherExamRoom() {
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
+                        <div className="flex-1 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-xl overflow-hidden border border-slate-100 dark:border-cyan-950/30">
                           {/* Video bằng chứng */}
                           {(() => {
                             const src = getVideoSrc(v);
@@ -641,9 +641,9 @@ export default function TeacherExamRoom() {
                       const count = group.violations.length;
                       const severity = count >= 4 ? "high" : count >= 2 ? "med" : "low";
                       const severityStyle = {
-                        high: { card: "border-red-500 bg-white",  badge: "bg-red-600 text-white",   icon: "text-red-600" },
-                        med:  { card: "border-amber-400 bg-white", badge: "bg-amber-500 text-white", icon: "text-amber-500" },
-                        low:  { card: "border-slate-300 bg-white", badge: "bg-slate-500 text-white", icon: "text-slate-500" },
+                        high: { card: "border-red-500 bg-white dark:bg-[#0A1F3E]",  badge: "bg-red-600 text-white",   icon: "text-red-600" },
+                        med:  { card: "border-amber-400 bg-white dark:bg-[#0A1F3E]", badge: "bg-amber-500 text-white", icon: "text-amber-500" },
+                        low:  { card: "border-slate-300 bg-white dark:bg-[#0A1F3E]", badge: "bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/400 text-white", icon: "text-slate-500" },
                       }[severity];
 
                       return (

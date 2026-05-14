@@ -4,6 +4,8 @@ import "./globals.css";
 import 'katex/dist/katex.min.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { AlertProvider } from "@/components/ui/AlertProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
 const manrope = Manrope({ subsets: ["latin", "vietnamese"], variable: "--font-manrope" });
@@ -12,8 +14,6 @@ export const metadata: Metadata = {
   title: "Aura Academic | Smart Exam Engine",
   description: "Hệ thống thi trắc nghiệm thông minh tích hợp AI",
 };
-
-import { AlertProvider } from "@/components/ui/AlertProvider";
 
 export default async function RootLayout({
   children,
@@ -25,7 +25,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="light">
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logoweb.png" />
         <link
@@ -33,12 +33,14 @@ export default async function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} ${manrope.variable} bg-surface text-on-surface min-h-screen flex flex-col font-body`}>
-        <NextIntlClientProvider messages={messages}>
-          <AlertProvider>
-            {children}
-          </AlertProvider>
-        </NextIntlClientProvider>
+      <body className={`${inter.variable} ${manrope.variable} bg-surface text-on-surface min-h-screen flex flex-col font-body transition-colors duration-300`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+          <NextIntlClientProvider messages={messages}>
+            <AlertProvider>
+              {children}
+            </AlertProvider>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

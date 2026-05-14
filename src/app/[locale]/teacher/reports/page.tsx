@@ -42,36 +42,36 @@ export default function ReportsPage() {
   };
 
   return (
-    <main className="flex-1 p-8 bg-[#f8fafc]">
+    <main className="flex-1 p-8 bg-[#F8FAFC] dark:bg-[#051329]">
       <div className="max-w-[1200px] mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-800 flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold text-slate-800 dark:text-[#E2E8F0] flex items-center gap-3">
               <span className="material-symbols-outlined text-4xl text-purple-600">assessment</span>
               Báo Cáo Phân Tích
             </h1>
-            <p className="text-slate-500 mt-1 font-medium">Xem thống kê kết quả, bảng điểm và phân tích chất lượng kỳ thi.</p>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Xem thống kê kết quả, bảng điểm và phân tích chất lượng kỳ thi.</p>
           </div>
         </div>
 
         {loading ? (
           <div className="py-20 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-slate-500 font-medium">Đang tải dữ liệu báo cáo...</p>
+            <p className="mt-4 text-slate-500 dark:text-slate-400 font-medium">Đang tải dữ liệu báo cáo...</p>
           </div>
         ) : exams.length === 0 ? (
-          <div className="bg-white rounded-3xl p-16 text-center border border-slate-200 shadow-sm">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl p-16 text-center border border-slate-200 dark:border-cyan-950/40 shadow-sm">
+            <div className="w-20 h-20 bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="material-symbols-outlined text-4xl text-slate-400">bar_chart_off</span>
             </div>
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Chưa có báo cáo nào</h2>
-            <p className="text-slate-500 max-w-sm mx-auto">Các kỳ thi đã kết thúc hoặc có dữ liệu nộp bài sẽ xuất hiện tại đây để bạn phân tích.</p>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-[#E2E8F0] mb-2">Chưa có báo cáo nào</h2>
+            <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Các kỳ thi đã kết thúc hoặc có dữ liệu nộp bài sẽ xuất hiện tại đây để bạn phân tích.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-sm border border-slate-200 dark:border-cyan-950/40 overflow-hidden">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
+                <tr className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border-b border-slate-100 dark:border-cyan-950/30">
                   <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Tên kỳ thi</th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Mã phòng</th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Số lượt nộp</th>
@@ -81,22 +81,22 @@ export default function ReportsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {exams.map((exam) => (
-                  <tr key={exam.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={exam.id} className="hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 transition-colors">
                     <td className="px-6 py-5">
-                      <p className="font-bold text-slate-800">{exam.title}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{new Date(exam.startTime || Date.now()).toLocaleDateString('vi-VN')}</p>
+                      <p className="font-bold text-slate-800 dark:text-[#E2E8F0]">{exam.title}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{new Date(exam.startTime || Date.now()).toLocaleDateString('vi-VN')}</p>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="font-mono text-sm bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold">{exam.accessCode}</span>
+                      <span className="font-mono text-sm bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 px-2 py-1 rounded text-slate-600 font-bold">{exam.accessCode}</span>
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-purple-600 text-lg">groups</span>
-                        <span className="font-bold text-slate-700">{exam.submissionCount || 0}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{exam.submissionCount || 0}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-full ${exam.status === 'COMPLETED' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                      <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-full ${exam.status === 'COMPLETED' ? 'bg-green-50 text-green-700' : 'bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 text-slate-600'}`}>
                         {exam.status === 'COMPLETED' ? t("ended") : exam.status === 'FINISHED' ? t("closed") : t("ongoing")}
                       </span>
                     </td>

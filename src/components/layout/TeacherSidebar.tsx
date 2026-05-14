@@ -5,7 +5,12 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
-export function TeacherSidebar() {
+interface SidebarProps {
+  isCollapsed?: boolean;
+  onClose?: () => void;
+}
+
+export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const t = useTranslations('Sidebar');
@@ -30,105 +35,177 @@ export function TeacherSidebar() {
     { label: t("bottom.profile"), icon: "manage_accounts", href: "/teacher/profile" },
   ];
 
-  const isActive = (href: string) => {
-    return pathname === href;
-  };
+  const isActive = (href: string) => pathname === href;
 
   return (
-    <aside className="hidden md:flex flex-col h-screen w-64 sticky left-0 top-0 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 p-5 space-y-6 z-50 shrink-0">
-      {/* Logo Section */}
-      <div className="flex items-center space-x-3 px-3 py-2">
-        <div className="w-10 h-10 rounded-xl bg-[#00355f] flex items-center justify-center text-white shadow-lg shadow-blue-900/10 shrink-0">
-          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
-        </div>
-        <div className="overflow-hidden">
-          <h1 className="text-base font-black text-[#00355f] dark:text-blue-100 leading-tight tracking-tight truncate">AuraAcademic</h1>
-          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 mt-0.5">Smart Exam Engine</p>
-        </div>
-      </div>
-      
-      {/* Primary Action */}
-      <div className="px-1">
-        <Link href="/teacher/exams" className="w-full py-3.5 px-4 bg-[#00355f] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 hover:bg-[#002a4d] hover:-translate-y-0.5 active:scale-95 transition-all duration-200">
-          <span className="material-symbols-outlined text-[18px]">add_circle</span>
-          {t("create_exam")}
-        </Link>
-      </div>
+    <>
+      {/* Mobile Backdrop overlay - Only active on mobile when expanded (!isCollapsed) */}
+      <div 
+        onClick={onClose}
+        className={`fixed inset-0 bg-slate-950/30 dark:bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300 ${
+          !isCollapsed ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
 
-      {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-1 px-1">
-        {menuItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link 
-              key={item.href}
-              href={item.href}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
-                active 
-                  ? "bg-blue-50/80 dark:bg-blue-900/20 text-[#00355f] dark:text-blue-400 font-bold" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-[#00355f] hover:bg-slate-50"
-              }`}
-            >
-              {/* Active Indicator Line */}
-              {active && (
-                <div className="absolute left-0 top-3 bottom-3 w-1 bg-[#00355f] rounded-r-full" />
-              )}
-              
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
-                active ? "scale-110" : "group-hover:scale-110"
-              }`}>
-                <span className={`material-symbols-outlined text-[22px] transition-colors ${
-                  active ? "text-[#00355f] dark:text-blue-400" : "text-slate-400 group-hover:text-[#00355f]"
-                }`} style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
-                  {item.icon}
-                </span>
-              </div>
-              <span className="text-sm tracking-tight">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Language Switcher */}
-      <div className="px-1 pt-2">
-        <LanguageSwitcher />
-      </div>
-
-      {/* Bottom Actions */}
-      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-1 px-1">
-        {bottomItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link 
-              key={item.href}
-              href={item.href}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                active 
-                  ? "bg-blue-50/80 dark:bg-blue-900/20 text-[#00355f] dark:text-blue-400 font-bold" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-[#00355f] hover:bg-slate-50"
-              }`}
-            >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:scale-110">
-                <span className="material-symbols-outlined text-[22px] text-slate-400 group-hover:text-[#00355f]" style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
-                  {item.icon}
-                </span>
-              </div>
-              <span className="text-sm tracking-tight">{item.label}</span>
-            </Link>
-          );
-        })}
+      {/* Main Aside Sidebar */}
+      <aside className={`
+        fixed md:sticky inset-y-0 left-0 z-50 bg-white/80 dark:bg-[#0A1F3E]/90 backdrop-blur-md py-8 flex flex-col border-r border-slate-200/40 dark:border-cyan-950/40 shrink-0 shadow-[4px_0_24px_-12px_rgba(12,46,94,0.08)]
+        transition-all duration-300 ease-in-out
+        ${isCollapsed 
+          ? "-translate-x-full md:translate-x-0 md:w-[78px] !px-2.5" 
+          : "translate-x-0 w-64 px-5"
+        }
+        space-y-6
+      `}>
         
-        <Link 
-          onClick={() => { localStorage.removeItem("user"); localStorage.removeItem("accessToken"); }} 
-          className="flex items-center space-x-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-all group mt-2" 
-          href="/login"
-        >
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
-            <span className="material-symbols-outlined text-[22px]">logout</span>
+        {/* Logo Section */}
+        <div className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between px-3 mb-2"}`}>
+          <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
+            {isCollapsed ? (
+              <div className="w-10 h-10 rounded-xl bg-[#0C2E5E] flex items-center justify-center text-white shadow-lg shadow-[#0C2E5E]/15 dark:shadow-[#00C6FF]/10">
+                <span className="material-symbols-outlined text-xl text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              </div>
+            ) : (
+              <img src="/logoweb.png" alt="AuraAcademic" className="h-9 object-contain transition-opacity duration-200 dark:brightness-110" />
+            )}
+          </Link>
+          
+          {/* Close button (Mobile view only) */}
+          {!isCollapsed && (
+            <button 
+              onClick={onClose}
+              className="md:hidden p-1 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-lg transition-all"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          )}
+        </div>
+        
+        {/* Primary Action "Tạo đề thi" */}
+        <div className={isCollapsed ? "px-0" : "px-1"}>
+          <Link 
+            href="/teacher/exams" 
+            title={isCollapsed ? t("create_exam") : ""}
+            className={`bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] dark:from-[#0A1F3E] dark:to-[#0E3E7A] text-white shadow-lg shadow-[#0C2E5E]/15 dark:shadow-[#00C6FF]/10 hover:shadow-cyan-400/10 hover:-translate-y-0.5 active:scale-95 transition-all duration-300 border-l-4 border-[#00C6FF] font-bold text-sm flex items-center justify-center ${
+              isCollapsed 
+                ? "w-12 h-12 rounded-xl mx-auto p-0" 
+                : "w-full py-3.5 px-4 rounded-2xl gap-2"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">add_circle</span>
+            {!isCollapsed && <span>{t("create_exam")}</span>}
+          </Link>
+        </div>
+
+        {/* Main Navigation Links */}
+        <nav className="flex-1 flex flex-col gap-1.5">
+          {menuItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link 
+                key={item.href}
+                href={item.href}
+                title={isCollapsed ? item.label : ""}
+                className={`flex items-center transition-all duration-300 group relative active:scale-95 ${
+                  isCollapsed 
+                    ? "justify-center w-12 h-12 rounded-xl mx-auto" 
+                    : "space-x-3 px-4 py-3.5 rounded-2xl mx-1"
+                } ${
+                  active 
+                    ? "bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] dark:from-[#0A1F3E] dark:to-[#0E3E7A] text-white font-extrabold shadow-lg shadow-[#0C2E5E]/10 dark:shadow-[#00C6FF]/10 border-l-4 border-[#00C6FF]" 
+                    : "text-slate-500 dark:text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-[#0C2E5E]/5 dark:hover:bg-cyan-950/40"
+                }`}
+              >
+                <div className={`transition-all duration-300 flex items-center justify-center ${
+                  isCollapsed ? "" : "w-8 h-8"
+                } ${
+                  active ? "scale-110 text-white" : "group-hover:scale-110 text-slate-400 group-hover:text-[#0C2E5E] dark:group-hover:text-[#00C6FF] dark:text-slate-500"
+                }`}>
+                  <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
+                    {item.icon}
+                  </span>
+                </div>
+                
+                {!isCollapsed && (
+                  <span className="text-sm font-semibold tracking-wide whitespace-nowrap animate-fadeIn">
+                    {item.label}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Language Switcher Container (Only visible when fully expanded) */}
+        {!isCollapsed && (
+          <div className="px-2 pt-2 transition-opacity duration-200">
+            <div className="p-1 bg-slate-100/50 border border-slate-200/30 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-xl">
+              <LanguageSwitcher />
+            </div>
           </div>
-          <span className="text-sm font-bold tracking-tight">{t("bottom.logout")}</span>
-        </Link>
-      </div>
-    </aside>
+        )}
+
+        {/* Bottom Utility Items */}
+        <div className={`pt-4 border-t border-slate-200/40 dark:border-cyan-950/40 flex flex-col gap-1.5 ${isCollapsed ? "px-0" : "px-1"}`}>
+          {bottomItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link 
+                key={item.href}
+                href={item.href}
+                title={isCollapsed ? item.label : ""}
+                className={`flex items-center transition-all duration-300 group active:scale-95 ${
+                  isCollapsed 
+                    ? "justify-center w-12 h-12 rounded-xl mx-auto" 
+                    : "space-x-3 px-4 py-3 rounded-xl"
+                } ${
+                  active 
+                    ? "bg-slate-100 dark:bg-[#051329]/60 text-[#0C2E5E] dark:text-slate-200 font-extrabold border-l-2 border-[#0C2E5E] dark:border-[#00C6FF]" 
+                    : "text-slate-500 dark:text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-50 dark:hover:bg-cyan-950/30"
+                }`}
+              >
+                <div className={`transition-all duration-300 flex items-center justify-center ${
+                  isCollapsed ? "" : "w-8 h-8"
+                } group-hover:scale-110`}>
+                  <span className={`material-symbols-outlined text-[22px] ${active ? 'text-[#0C2E5E] dark:text-slate-200' : 'text-slate-400 group-hover:text-[#0C2E5E] dark:group-hover:text-[#00C6FF] dark:text-slate-500'}`} style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
+                    {item.icon}
+                  </span>
+                </div>
+                {!isCollapsed && (
+                  <span className="text-sm font-semibold tracking-wide whitespace-nowrap animate-fadeIn">
+                    {item.label}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+          
+          <Link 
+            title={isCollapsed ? t("bottom.logout") : ""}
+            onClick={() => {
+              localStorage.removeItem("user");
+              localStorage.removeItem("accessToken");
+            }} 
+            className={`flex items-center text-slate-500 dark:text-slate-400 font-semibold hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-300 group mt-1 active:scale-95 ${
+              isCollapsed 
+                ? "justify-center w-12 h-12 rounded-xl mx-auto" 
+                : "space-x-3 px-4 py-3 rounded-xl"
+            }`} 
+            href="/login"
+          >
+            <div className={`transition-transform duration-300 flex items-center justify-center ${
+              isCollapsed ? "" : "w-8 h-8"
+            } group-hover:scale-110`}>
+              <span className="material-symbols-outlined text-[22px] text-slate-400 dark:text-slate-500 group-hover:text-red-500">logout</span>
+            </div>
+            {!isCollapsed && (
+              <span className="text-sm tracking-wide whitespace-nowrap animate-fadeIn">
+                {t("bottom.logout")}
+              </span>
+            )}
+          </Link>
+        </div>
+      </aside>
+    </>
   );
 }

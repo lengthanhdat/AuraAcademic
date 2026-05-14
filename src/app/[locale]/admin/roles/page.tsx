@@ -55,7 +55,7 @@ export default function RolesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-[#0f172a] min-h-screen relative">
+    <div className="p-6 space-y-6 bg-transparent min-h-screen relative">
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 px-5 py-3 bg-emerald-600 text-white rounded-xl font-semibold text-sm shadow-xl animate-bounce">
           ✓ {toast}
@@ -63,8 +63,8 @@ export default function RolesPage() {
       )}
 
       <div>
-        <h1 className="text-2xl font-black text-white">Phân quyền (RBAC)</h1>
-        <p className="text-slate-500 text-sm mt-1">Tuỳ chỉnh vai trò và ma trận quyền hạn hệ thống. Các thay đổi được lưu cục bộ.</p>
+        <h1 className="text-2xl font-black text-[#0C2E5E] dark:text-[#E2E8F0]">Phân quyền (RBAC)</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Tuỳ chỉnh vai trò và ma trận quyền hạn hệ thống. Các thay đổi được lưu cục bộ.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -73,11 +73,11 @@ export default function RolesPage() {
           const isEditing = editingRole === r.id;
           
           return (
-            <div key={r.id} className={`bg-[#1e293b] border rounded-2xl overflow-hidden flex flex-col transition-all ${isEditing ? "border-violet-500 shadow-lg shadow-violet-500/10" : "border-slate-700/50"}`}>
-              <div className="p-6 border-b border-slate-700/50 relative overflow-hidden">
+            <div key={r.id} className={`bg-white dark:bg-[#0A1F3E]/80 backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-cyan-950/40 border rounded-2xl overflow-hidden flex flex-col transition-all ${isEditing ? "border-violet-500 shadow-lg shadow-violet-500/10" : "border-slate-200/50"}`}>
+              <div className="p-6 border-b border-slate-200/50 relative overflow-hidden">
                 <div className={`absolute top-0 left-0 w-full h-1 ${c[r.color]}`} />
-                <h3 className="text-lg font-bold text-white mb-1">{r.name}</h3>
-                <p className="text-xs text-slate-500">{counts[r.id]} người dùng</p>
+                <h3 className="text-lg font-bold text-[#0C2E5E] dark:text-[#E2E8F0] mb-1">{r.name}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{counts[r.id]} người dùng</p>
               </div>
               <div className="p-6 flex-1 space-y-4">
                 {PERMISSIONS.map(p => {
@@ -88,21 +88,21 @@ export default function RolesPage() {
                         {hasPerm && <span className="material-symbols-outlined text-[12px] font-bold">check</span>}
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold transition-colors ${hasPerm ? "text-slate-300" : "text-slate-500"} ${isEditing && !hasPerm ? "group-hover:text-slate-400" : ""}`}>{p.name}</p>
+                        <p className={`text-sm font-semibold transition-colors ${hasPerm ? "text-slate-600 font-semibold" : "text-slate-500 dark:text-slate-400"} ${isEditing && !hasPerm ? "group-hover:text-slate-500 dark:text-slate-400" : ""}`}>{p.name}</p>
                         <p className="text-xs text-slate-600 mt-0.5">{p.desc}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div className="p-4 border-t border-slate-700/50 bg-slate-800/30 flex gap-2">
+              <div className="p-4 border-t border-slate-200/50 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/30 flex gap-2">
                 {isEditing ? (
                   <>
                     <button onClick={saveConfig} className="flex-1 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-violet-500/20">Lưu</button>
-                    <button onClick={() => { setEditingRole(null); setRolesConfig(DEFAULT_ROLES); }} className="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded-xl font-semibold text-sm hover:bg-slate-700 transition-all">Huỷ</button>
+                    <button onClick={() => { setEditingRole(null); setRolesConfig(DEFAULT_ROLES); }} className="px-4 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 text-slate-600 dark:text-slate-300 font-semibold rounded-xl font-semibold text-sm hover:bg-slate-700 transition-all">Huỷ</button>
                   </>
                 ) : (
-                  <button onClick={() => setEditingRole(r.id)} className="w-full py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded-xl font-semibold text-sm hover:bg-slate-700 transition-all">
+                  <button onClick={() => setEditingRole(r.id)} className="w-full py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 text-slate-600 dark:text-slate-300 font-semibold rounded-xl font-semibold text-sm hover:bg-slate-700 transition-all">
                     Chỉnh sửa quyền
                   </button>
                 )}

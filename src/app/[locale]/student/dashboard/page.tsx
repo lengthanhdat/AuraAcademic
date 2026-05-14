@@ -79,8 +79,8 @@ export default function StudentDashboard() {
       {/* Welcome Section */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-7">
-          <h2 className="font-headline font-extrabold text-4xl text-on-surface tracking-tight mb-4">{t('greeting', {name: user?.fullName || t('default_name')})}</h2>
-          <p className="text-on-surface-variant text-lg max-w-xl">
+          <h2 className="font-headline font-extrabold text-4xl text-on-surface dark:text-slate-200 tracking-tight mb-4">{t('greeting', {name: user?.fullName || t('default_name')})}</h2>
+          <p className="text-on-surface-variant dark:text-slate-400 text-lg max-w-xl">
             Chào mừng bạn quay trở lại. Hãy nhập mã phòng thi để bắt đầu bài kiểm tra của mình.
           </p>
         </div>
@@ -98,14 +98,14 @@ export default function StudentDashboard() {
       </section>
 
       {/* Enter Exam Room Card */}
-      <section className="flex justify-center">
-        <div className="w-full max-w-3xl bg-white/80 backdrop-blur-[20px] rounded-xl p-10 shadow-sm relative overflow-hidden group">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl"></div>
+      <section className="flex justify-center py-2">
+        <div className="w-full max-w-3xl bg-white dark:bg-[#0A1F3E] backdrop-blur-[20px] rounded-[2rem] border border-slate-200/50 p-10 shadow-[0_10px_40px_-15px_rgba(12,46,94,0.05)] relative overflow-hidden group hover:shadow-[0_20px_50px_-12px_rgba(0,198,255,0.12)] hover:border-[#00C6FF]/20 transition-all duration-500">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#00C6FF]/5 rounded-full blur-3xl group-hover:bg-[#00C6FF]/10 transition-colors"></div>
           
           <div className="relative z-10 text-center space-y-8">
             <div className="space-y-2">
-              <h3 className="font-headline font-bold text-2xl text-on-surface">{t('enter_room_title')}</h3>
-              <p className="text-on-surface-variant">{t('enter_room_subtitle')}</p>
+              <h3 className="font-headline font-bold text-2xl text-on-surface dark:text-slate-200">{t('enter_room_title')}</h3>
+              <p className="text-on-surface-variant dark:text-slate-400">{t('enter_room_subtitle')}</p>
             </div>
             
             <div className="max-w-md mx-auto flex flex-col gap-4">
@@ -118,11 +118,11 @@ export default function StudentDashboard() {
                 <input 
                   value={accessCode}
                   onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                  className="w-full px-6 py-4 bg-surface-container-highest text-on-surface font-headline font-bold text-center tracking-widest text-xl rounded-xl border-none focus:ring-2 focus:ring-primary/40 placeholder:text-outline-variant/60 placeholder:font-normal placeholder:text-base placeholder:tracking-normal transition-all outline-none" 
+                  className="w-full px-6 py-4 bg-surface-container-high dark:bg-cyan-950/50 dark:text-slate-200est text-on-surface dark:text-slate-200 font-headline font-bold text-center tracking-widest text-xl rounded-xl border-none focus:ring-2 focus:ring-primary/40 placeholder:text-outline-variant/60 placeholder:font-normal placeholder:text-base placeholder:tracking-normal transition-all outline-none" 
                   placeholder={t('placeholder')} 
                   type="text"
                 />
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">key</span>
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400">key</span>
               </div>
               <button 
                 onClick={handleJoin}
@@ -135,11 +135,11 @@ export default function StudentDashboard() {
             </div>
             
             <div className="flex items-center justify-center gap-6 pt-4">
-              <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+              <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400">
                 <span className="material-symbols-outlined text-sm">verified_user</span>
                 Môi trường an toàn
               </div>
-              <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+              <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400">
                 <span className="material-symbols-outlined text-sm">videocam</span>
                 Giám sát mở
               </div>
@@ -152,8 +152,8 @@ export default function StudentDashboard() {
       <section className="space-y-6">
         <div className="flex items-end justify-between px-2">
           <div className="space-y-1">
-            <h3 className="font-headline font-bold text-xl text-on-surface">{t('history_title')}</h3>
-            <p className="text-sm text-on-surface-variant">{t('history_subtitle')}</p>
+            <h3 className="font-headline font-bold text-xl text-on-surface dark:text-slate-200">{t('history_title')}</h3>
+            <p className="text-sm text-on-surface-variant dark:text-slate-400">{t('history_subtitle')}</p>
           </div>
           <button className="text-sm font-bold text-primary flex items-center gap-1 hover:underline">
             Xem tất cả
@@ -161,36 +161,36 @@ export default function StudentDashboard() {
           </button>
         </div>
         
-        <div className="bg-surface-container-lowest rounded-xl shadow-sm border-none overflow-x-auto">
+        <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-xl shadow-sm border-none overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
-              <tr className="bg-surface-container-low">
-                <th className="px-8 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest min-w-[250px]">{t('col_exam')}</th>
-                <th className="px-8 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest whitespace-nowrap">{t('col_time')}</th>
-                <th className="px-8 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t('col_status')}</th>
-                <th className="px-8 py-5 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-right">{t('col_score')}</th>
+              <tr className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300">
+                <th className="px-8 py-5 text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest min-w-[250px]">{t('col_exam')}</th>
+                <th className="px-8 py-5 text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest whitespace-nowrap">{t('col_time')}</th>
+                <th className="px-8 py-5 text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">{t('col_status')}</th>
+                <th className="px-8 py-5 text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest text-right">{t('col_score')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-container-low">
+            <tbody className="divide-y divide-surface-container dark:divide-cyan-950/40-low">
               {loadingResults ? (
                 <tr><td colSpan={4} className="px-8 py-10 text-center text-slate-400">{t('loading_results')}</td></tr>
               ) : results.length === 0 ? (
                 <tr><td colSpan={4} className="px-8 py-10 text-center text-slate-400">{t('no_results')}</td></tr>
               ) : (
                 results.map((res) => (
-                  <tr key={res.id} className="hover:bg-surface-container-low transition-colors group">
+                  <tr key={res.id} className="hover:bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300 transition-colors group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                           <span className="material-symbols-outlined">assignment</span>
                         </div>
                         <div>
-                          <p className="font-bold text-on-surface">{res.examTitle || `${t('room_prefix')} ${res.examId}`}</p>
-                          <p className="text-xs text-on-surface-variant">{t('version_code')} {res.versionCode}</p>
+                          <p className="font-bold text-on-surface dark:text-slate-200">{res.examTitle || `${t('room_prefix')} ${res.examId}`}</p>
+                          <p className="text-xs text-on-surface-variant dark:text-slate-400">{t('version_code')} {res.versionCode}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-sm text-on-surface-variant whitespace-nowrap">
+                    <td className="px-8 py-6 text-sm text-on-surface-variant dark:text-slate-400 whitespace-nowrap">
                       {new Date(res.submittedAt).toLocaleDateString("vi-VN")}
                     </td>
                     <td className="px-8 py-6">
@@ -209,15 +209,15 @@ export default function StudentDashboard() {
 
       {/* Bottom Dashboard Grid (Bento Style) */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-12">
-        <div className="bg-surface-container-low p-6 rounded-xl space-y-4">
+        <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300 p-6 rounded-xl space-y-4">
           <span className="material-symbols-outlined text-primary text-3xl">workspace_premium</span>
           <h4 className="font-bold text-lg">{t('bento_top_title')}</h4>
-          <p className="text-sm text-on-surface-variant">{t('bento_top_desc')}</p>
+          <p className="text-sm text-on-surface-variant dark:text-slate-400">{t('bento_top_desc')}</p>
         </div>
-        <div className="bg-surface-container-low p-6 rounded-xl space-y-4">
+        <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300 p-6 rounded-xl space-y-4">
           <span className="material-symbols-outlined text-primary text-3xl">lightbulb</span>
           <h4 className="font-bold text-lg">{t('bento_study_title')}</h4>
-          <p className="text-sm text-on-surface-variant">{t('bento_study_desc')}</p>
+          <p className="text-sm text-on-surface-variant dark:text-slate-400">{t('bento_study_desc')}</p>
         </div>
         <div className="bg-primary text-white p-6 rounded-xl space-y-4 shadow-lg shadow-primary/20">
           <span className="material-symbols-outlined text-primary-fixed text-3xl">trending_up</span>

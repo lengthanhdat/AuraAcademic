@@ -24,7 +24,7 @@ const colorMap: Record<string, string> = {
   blue:    "text-blue-400 bg-blue-400/10",
   amber:   "text-amber-400 bg-amber-400/10",
   violet:  "text-violet-400 bg-violet-400/10",
-  slate:   "text-slate-400 bg-slate-400/10",
+  slate:   "text-slate-500 dark:text-slate-400 bg-slate-400/10",
   cyan:    "text-cyan-400 bg-cyan-400/10",
 };
 
@@ -58,13 +58,13 @@ export default function AuditLogsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-[#0f172a] min-h-screen">
+    <div className="p-6 space-y-6 bg-transparent min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white">Audit Logs</h1>
-          <p className="text-slate-500 text-sm mt-1">Toàn bộ hoạt động bảo mật hệ thống — real-time</p>
+          <h1 className="text-2xl font-black text-[#0C2E5E] dark:text-[#E2E8F0]">Audit Logs</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Toàn bộ hoạt động bảo mật hệ thống — real-time</p>
         </div>
-        <button onClick={load} className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-700">
+        <button onClick={load} className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 text-slate-600 dark:text-slate-300 font-semibold rounded-xl text-sm font-semibold hover:bg-slate-700">
           <span className="material-symbols-outlined text-lg">refresh</span>Làm mới
         </button>
       </div>
@@ -79,57 +79,57 @@ export default function AuditLogsPage() {
         ].map(([l, v, ic, c]) => {
           const bg: any = { violet:"bg-violet-500/10 border-violet-500/20 text-violet-400", emerald:"bg-emerald-500/10 border-emerald-500/20 text-emerald-400", rose:"bg-rose-500/10 border-rose-500/20 text-rose-400", amber:"bg-amber-500/10 border-amber-500/20 text-amber-400" };
           return (
-            <div key={l as string} className="bg-[#1e293b] border border-slate-700/50 rounded-2xl p-5">
+            <div key={l as string} className="bg-white dark:bg-[#0A1F3E]/80 backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-cyan-950/40 border border-slate-200/50 rounded-2xl p-5">
               <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-3 ${bg[c as string]}`}>
                 <span className="material-symbols-outlined text-lg" style={{fontVariationSettings:"'FILL' 1"}}>{ic as string}</span>
               </div>
               <p className="text-2xl font-black text-white">{loading ? "…" : v as any}</p>
-              <p className="text-xs text-slate-500 font-semibold mt-1">{l as string}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">{l as string}</p>
             </div>
           );
         })}
       </div>
 
       {/* Table */}
-      <div className="bg-[#1e293b] border border-slate-700/50 rounded-2xl overflow-hidden">
-        <div className="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-slate-700/30">
+      <div className="bg-white dark:bg-[#0A1F3E]/80 backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-cyan-950/40 border border-slate-200/50 rounded-2xl overflow-hidden">
+        <div className="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-slate-100">
           <div className="relative min-w-[200px] flex-1 max-w-xs">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 text-lg">search</span>
             <input value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+              className="w-full bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium placeholder:text-slate-500 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
               placeholder="Email, IP, sự kiện..." />
           </div>
           <div className="flex flex-wrap gap-2">
             {["all", "fail", "LOGIN", "REGISTER", "FAILED_LOGIN"].map(f => (
               <button key={f} onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === f ? "bg-violet-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"}`}>
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === f ? "bg-violet-600 text-white" : "bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 text-slate-500 dark:text-slate-400 hover:bg-slate-700"}`}>
                 {f === "all" ? "Tất cả" : f === "fail" ? "Thất bại" : f.replace(/_/g, " ")}
               </button>
             ))}
           </div>
-          <span className="ml-auto text-xs text-slate-500">{filtered.length} sự kiện</span>
+          <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">{filtered.length} sự kiện</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-800/50">
+              <tr className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/80">
                 {["Sự kiện", "Email", "IP Address", "Thiết bị", "Thời gian", "Kết quả"].map(h => (
-                  <th key={h} className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-6 py-3 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/30">
+            <tbody className="divide-y divide-slate-100 dark:divide-cyan-950/40">
               {loading ? (
-                <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-500">
+                <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400">
                   <span className="material-symbols-outlined text-4xl animate-spin block mx-auto mb-2">progress_activity</span>Đang tải...
                 </td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-500">Không có sự kiện nào.</td></tr>
+                <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400">Không có sự kiện nào.</td></tr>
               ) : filtered.map(log => {
                 const [ic, c] = EVENT_ICONS[log.event] || ["info", "slate"];
                 return (
-                  <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={log.id} className="hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/40 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colorMap[c]}`}>
@@ -138,10 +138,10 @@ export default function AuditLogsPage() {
                         <span className="text-sm font-semibold text-white whitespace-nowrap">{log.event?.replace(/_/g, " ")}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-400">{log.email || "—"}</td>
-                    <td className="px-6 py-4 text-sm font-mono text-slate-400">{log.ipAddress || "—"}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500 max-w-[180px] truncate" title={log.userAgent}>{log.userAgent || "—"}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">{fmtTime(log.timestamp)}</td>
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{log.email || "—"}</td>
+                    <td className="px-6 py-4 text-sm font-mono text-slate-500 dark:text-slate-400">{log.ipAddress || "—"}</td>
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 max-w-[180px] truncate" title={log.userAgent}>{log.userAgent || "—"}</td>
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{fmtTime(log.timestamp)}</td>
                     <td className="px-6 py-4">
                       <span className={`flex items-center gap-1 text-xs font-bold ${log.success ? "text-emerald-400" : "text-red-400"}`}>
                         <span className="material-symbols-outlined text-sm" style={{fontVariationSettings:"'FILL' 1"}}>{log.success ? "check_circle" : "cancel"}</span>

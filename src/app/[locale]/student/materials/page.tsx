@@ -252,31 +252,31 @@ export default function StudentMaterials() {
     <main className="flex-1 p-8 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <section>
-        <h1 className="text-3xl font-extrabold text-on-surface tracking-tight mb-1">{t('title')}</h1>
-        <p className="text-on-surface-variant">{t('subtitle')}</p>
+        <h1 className="text-3xl font-extrabold text-on-surface dark:text-slate-200 tracking-tight mb-1">{t('title')}</h1>
+        <p className="text-on-surface-variant dark:text-slate-400">{t('subtitle')}</p>
       </section>
 
       {/* Featured */}
       {!loading && featured.length > 0 && (
         <section>
-          <h2 className="text-sm font-black text-on-surface-variant uppercase tracking-widest mb-4 flex items-center gap-2">
+          <h2 className="text-sm font-black text-on-surface-variant dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-amber-500 text-lg">star</span>Tài liệu nổi bật
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {featured.map(m => {
               const ft = FILE_TYPES[m.fileType]||FILE_TYPES.pdf;
               return (
-                <div key={m.id} className="group bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/15 rounded-2xl p-6 border border-primary/10 flex gap-4 transition-all hover:shadow-md">
+                <div key={m.id} className="group bg-white dark:bg-[#0A1F3E]/90 hover:bg-slate-50 dark:hover:bg-[#0C2E5E]/60 rounded-2xl p-6 border border-slate-200/60 dark:border-cyan-950/40 flex gap-4 transition-all hover:shadow-md">
                   <div className={`w-12 h-12 rounded-xl ${ft.bg} flex items-center justify-center flex-shrink-0`}>
                     <span className={`material-symbols-outlined ${ft.color} text-2xl`}>{ft.icon}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-on-surface group-hover:text-primary transition-colors leading-snug">{m.title}</h3>
-                    <p className="text-xs text-on-surface-variant mt-1 line-clamp-2">{m.description}</p>
-                    <p className="text-[10px] text-on-surface-variant/60 mt-2">{m.uploaderName} · {CAT_LABELS[m.category]||m.category}</p>
+                    <h3 className="font-bold text-on-surface dark:text-slate-200 group-hover:text-primary transition-colors leading-snug">{m.title}</h3>
+                    <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 line-clamp-2">{m.description}</p>
+                    <p className="text-[10px] text-on-surface-variant dark:text-slate-300 mt-2">{m.uploaderName} · {CAT_LABELS[m.category]||m.category}</p>
                   </div>
                   <div className="flex flex-col gap-2 flex-shrink-0">
-                    <button onClick={()=>setPreviewItem(m)} className="p-2 rounded-xl bg-surface/80 hover:bg-white text-on-surface-variant hover:text-primary transition-all" title={t('btn_download')}>
+                    <button onClick={()=>setPreviewItem(m)} className="p-2 rounded-xl bg-surface/80 hover:bg-white dark:bg-[#0A1F3E] text-on-surface-variant dark:text-slate-400 hover:text-primary transition-all" title={t('btn_download')}>
                       <span className="material-symbols-outlined text-lg">visibility</span>
                     </button>
                     <button onClick={()=>trackDownload(m)} className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all" title={t('btn_download')}>
@@ -291,34 +291,42 @@ export default function StudentMaterials() {
       )}
 
       {/* Search & Filters */}
-      <section className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm space-y-4">
+      <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 shadow-sm rounded-2xl p-5 shadow-sm space-y-4">
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 text-lg">search</span>
           <input value={search} onChange={e=>setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:border-primary transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary transition-colors"
             placeholder={t('search_placeholder')} />
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-bold text-on-surface-variant">{t('subject_label')}</span>
+          <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">{t('subject_label')}</span>
           {subjects.map(s=>(
             <button key={s} onClick={()=>setSubject(s)}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${subject===s?"bg-primary text-white":"bg-surface-container text-on-surface-variant hover:bg-surface-container-high"}`}>
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 border ${
+                subject===s
+                  ? "bg-[#0C2E5E] dark:bg-[#00C6FF] text-white dark:text-[#051329] border-[#0C2E5E] dark:border-[#00C6FF] shadow-sm"
+                  : "bg-slate-100 dark:bg-[#0A1F3E] text-slate-600 dark:text-slate-300 border-slate-200/60 dark:border-cyan-950/50 hover:bg-slate-200 dark:hover:bg-cyan-950/50"
+              }`}>
               {s==="all"?t("all"):s}
             </button>
           ))}
         </div>
         <div className="flex flex-wrap gap-2 items-center justify-between">
           <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-xs font-bold text-on-surface-variant">{t('type_label')}</span>
+            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">{t('type_label')}</span>
             {categories.map(c=>(
               <button key={c} onClick={()=>setCategory(c)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${category===c?"bg-surface-container-highest text-on-surface":"bg-surface-container text-on-surface-variant hover:bg-surface-container-high"}`}>
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 border ${
+                  category===c
+                    ? "bg-[#0C2E5E] dark:bg-[#00C6FF] text-white dark:text-[#051329] border-[#0C2E5E] dark:border-[#00C6FF] shadow-sm"
+                    : "bg-slate-100 dark:bg-[#0A1F3E] text-slate-600 dark:text-slate-300 border-slate-200/60 dark:border-cyan-950/50 hover:bg-slate-200 dark:hover:bg-cyan-950/50"
+                }`}>
                 {c==="all"?t("all"):(CAT_LABELS[c]||c)}
               </button>
             ))}
           </div>
           <select value={sortBy} onChange={e=>setSortBy(e.target.value as any)}
-            className="px-3 py-1.5 rounded-xl border border-outline-variant bg-surface text-xs font-bold focus:outline-none focus:border-primary">
+            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-xs font-bold focus:outline-none focus:border-primary">
             <option value="date">{t('sort_date')}</option>
             <option value="downloads">{t('sort_downloads')}</option>
           </select>
@@ -328,55 +336,55 @@ export default function StudentMaterials() {
       {/* Grid */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-on-surface">{t('all_title')}</h2>
-          <span className="text-xs text-on-surface-variant">{filtered.length} {t('materials_count')}</span>
+          <h2 className="font-bold text-on-surface dark:text-slate-200">{t('all_title')}</h2>
+          <span className="text-xs text-on-surface-variant dark:text-slate-400">{filtered.length} {t('materials_count')}</span>
         </div>
 
         {loading ? (
           <div className="p-16 text-center">
             <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
-            <p className="text-on-surface-variant text-sm">{t('loading')}</p>
+            <p className="text-on-surface-variant dark:text-slate-400 text-sm">{t('loading')}</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-surface-container-lowest rounded-2xl p-16 text-center shadow-sm">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 block mb-4">search_off</span>
-            <p className="text-on-surface-variant font-medium">{t('empty')}</p>
+          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-16 text-center shadow-sm">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant dark:text-slate-400/30 block mb-4">search_off</span>
+            <p className="text-on-surface-variant dark:text-slate-400 font-medium">{t('empty')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {filtered.map(m => {
               const ft = FILE_TYPES[m.fileType]||FILE_TYPES.pdf;
               return (
-                <div key={m.id} className="group bg-surface-container-lowest rounded-2xl p-5 shadow-sm hover:shadow-md border border-transparent hover:border-primary/10 transition-all hover:-translate-y-0.5 flex flex-col gap-4">
+                <div key={m.id} className="group bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 shadow-sm rounded-2xl p-5 shadow-sm hover:shadow-md border border-transparent hover:border-primary/10 transition-all hover:-translate-y-0.5 flex flex-col gap-4">
                   <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-xl ${ft.bg} flex items-center justify-center flex-shrink-0`}>
                       <span className={`material-symbols-outlined ${ft.color}`}>{ft.icon}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-on-surface text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">{m.title}</h3>
-                      <p className="text-[10px] text-on-surface-variant mt-0.5">{m.subject} {m.subject&&"·"} {CAT_LABELS[m.category]||m.category}</p>
+                      <h3 className="font-bold text-on-surface dark:text-slate-200 text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">{m.title}</h3>
+                      <p className="text-[10px] text-on-surface-variant dark:text-slate-400 mt-0.5">{m.subject} {m.subject&&"·"} {CAT_LABELS[m.category]||m.category}</p>
                     </div>
                   </div>
-                  {m.description && <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-2">{m.description}</p>}
+                  {m.description && <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed line-clamp-2">{m.description}</p>}
                   {m.tags?.length>0 && (
                     <div className="flex flex-wrap gap-1">
                       {m.tags.slice(0,3).map(t=>(
-                        <span key={t} className="px-2 py-0.5 bg-surface-container rounded-full text-[10px] font-bold text-on-surface-variant">#{t}</span>
+                        <span key={t} className="px-2 py-0.5 bg-surface-container dark:bg-cyan-950/50 rounded-full text-[10px] font-bold text-on-surface-variant dark:text-cyan-300">#{t}</span>
                       ))}
                     </div>
                   )}
-                  <div className="pt-3 border-t border-surface-container flex items-center justify-between mt-auto">
+                  <div className="pt-3 border-t border-slate-100 dark:border-cyan-950/50 flex items-center justify-between mt-auto">
                     <div>
-                      <p className="text-[10px] text-on-surface-variant/60 font-medium">{m.uploaderName}</p>
-                      <p className="text-[10px] text-on-surface-variant/60">{m.fileSizeBytes?fmt(m.fileSizeBytes):""} · {m.downloadCount} {t('downloads')}</p>
+                      <p className="text-[10px] text-on-surface-variant dark:text-slate-300 font-medium">{m.uploaderName}</p>
+                      <p className="text-[10px] text-on-surface-variant dark:text-slate-300">{m.fileSizeBytes?fmt(m.fileSizeBytes):""} · {m.downloadCount} {t('downloads')}</p>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={()=>setPreviewItem(m)}
-                        className="p-2 rounded-xl hover:bg-surface-container text-on-surface-variant hover:text-primary transition-all" title={t('btn_download')}>
+                        className="p-2 rounded-xl hover:bg-surface-container dark:bg-cyan-950/20 text-on-surface-variant dark:text-slate-400 hover:text-primary transition-all" title={t('btn_download')}>
                         <span className="material-symbols-outlined text-lg">visibility</span>
                       </button>
                       <button onClick={()=>trackDownload(m)}
-                        className="p-2 rounded-xl hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all" title={t('btn_download')}>
+                        className="p-2 rounded-xl hover:bg-primary/10 text-on-surface-variant dark:text-slate-400 hover:text-primary transition-all" title={t('btn_download')}>
                         <span className="material-symbols-outlined text-lg">download</span>
                       </button>
                     </div>
@@ -391,17 +399,17 @@ export default function StudentMaterials() {
       {/* Preview Modal */}
       {previewItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/10">
+          <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/10">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface/80 backdrop-blur-md z-10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-cyan-950/40 bg-white/80 dark:bg-[#0A1F3E]/90 backdrop-blur-md z-10">
               <div className="flex items-center gap-3 min-w-0">
                 <div className={`w-10 h-10 rounded-xl ${(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).bg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
                   <span className={`material-symbols-outlined ${(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).color}`}>{(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).icon}</span>
                 </div>
                 <div className="truncate">
-                  <h3 className="font-bold text-on-surface truncate leading-tight">{previewItem.title}</h3>
-                  <p className="text-xs text-on-surface-variant/80 mt-0.5 flex items-center gap-1.5">
+                  <h3 className="font-bold text-on-surface dark:text-slate-200 truncate leading-tight">{previewItem.title}</h3>
+                  <p className="text-xs text-on-surface-variant dark:text-slate-400/80 mt-0.5 flex items-center gap-1.5">
                     <span className="font-medium">{previewItem.uploaderName}</span>
                     <span className="opacity-40">•</span>
                     <span>{CAT_LABELS[previewItem.category]||previewItem.category}</span>
@@ -414,7 +422,7 @@ export default function StudentMaterials() {
                   <span className="material-symbols-outlined text-base">download</span>Tải xuống
                 </button>
                 <div className="w-px h-6 bg-outline-variant mx-1" />
-                <button onClick={()=>setPreviewItem(null)} className="p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all">
+                <button onClick={()=>setPreviewItem(null)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-cyan-950/50 dark:text-slate-200 text-on-surface-variant hover:text-on-surface dark:text-slate-200 transition-all">
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
@@ -444,8 +452,8 @@ export default function StudentMaterials() {
                    docxHtml === "ERR" ? (
                     <div className="flex flex-col items-center justify-center text-center p-8">
                       <span className="material-symbols-outlined text-6xl text-red-400 mb-4">error_outline</span>
-                      <h4 className="font-bold text-on-surface">Lỗi đọc tài liệu Word</h4>
-                      <p className="text-sm text-on-surface-variant">Không thể mở tệp xem trước.</p>
+                      <h4 className="font-bold text-on-surface dark:text-slate-200">Lỗi đọc tài liệu Word</h4>
+                      <p className="text-sm text-on-surface-variant dark:text-slate-400">Không thể mở tệp xem trước.</p>
                     </div>
                   ) : !docxHtml ? (
                     <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
@@ -465,7 +473,7 @@ export default function StudentMaterials() {
                         .docx-preview-content li { margin-bottom: 0.25rem; }
                       `}</style>
                       <div 
-                        className="max-w-3xl mx-auto bg-white border border-slate-200 shadow-lg rounded-sm p-8 sm:p-12 docx-preview-content text-slate-800 min-h-[800px]"
+                        className="max-w-3xl mx-auto bg-white dark:bg-[#0A1F3E] border border-slate-200 shadow-lg rounded-sm p-8 sm:p-12 docx-preview-content text-slate-800 min-h-[800px]"
                         dangerouslySetInnerHTML={{ __html: docxHtml }} 
                       />
                     </div>
@@ -479,8 +487,8 @@ export default function StudentMaterials() {
                   ) : (!pptxRenderer || typeof pptxLoading === "string") ? (
                     <div className="flex flex-col items-center justify-center text-center p-8">
                       <span className="material-symbols-outlined text-6xl text-red-400 mb-4">warning_amber</span>
-                      <h4 className="font-bold text-on-surface">Không thể giải mã bản trình chiếu</h4>
-                      <p className="text-sm text-on-surface-variant max-w-md mb-4">Rất tiếc, trình duyệt không thể tự dựng hình tệp tin PPTX này.</p>
+                      <h4 className="font-bold text-on-surface dark:text-slate-200">Không thể giải mã bản trình chiếu</h4>
+                      <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mb-4">Rất tiếc, trình duyệt không thể tự dựng hình tệp tin PPTX này.</p>
                       {typeof pptxLoading === "string" && (
                         <p className="text-[10px] font-mono bg-red-50 text-red-600 p-2 rounded border border-red-100 max-w-md overflow-hidden truncate">
                           Debug: {pptxLoading}
@@ -491,7 +499,7 @@ export default function StudentMaterials() {
                     <div className="w-full h-full bg-[#1e1e1e] flex flex-col">
                       {/* Navigation Overlay Bottom */}
                       <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
-                        <div className="relative bg-white shadow-2xl max-w-full flex items-center justify-center">
+                        <div className="relative bg-white dark:bg-[#0A1F3E] shadow-2xl max-w-full flex items-center justify-center">
                           <canvas id="pptx-canvas" className="max-w-full max-h-[calc(85vh-180px)] object-contain" />
                         </div>
                         
@@ -542,9 +550,9 @@ export default function StudentMaterials() {
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center p-8">
                     <span className="material-symbols-outlined text-6xl text-primary/30 mb-4">insert_drive_file</span>
-                    <h4 className="font-bold text-on-surface mb-2">Định dạng này yêu cầu tải xuống</h4>
-                    <p className="text-sm text-on-surface-variant max-w-xs mb-6">Rất tiếc, trình duyệt không hỗ trợ xem trước trực tiếp định dạng {previewItem.fileType}. Vui lòng tải về máy để xem nội dung.</p>
-                    <button onClick={()=>trackDownload(previewItem)} className="px-6 py-2.5 bg-surface-container-highest text-on-surface font-bold rounded-xl hover:bg-outline-variant transition-all flex items-center gap-2">
+                    <h4 className="font-bold text-on-surface dark:text-slate-200 mb-2">Định dạng này yêu cầu tải xuống</h4>
+                    <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-xs mb-6">Rất tiếc, trình duyệt không hỗ trợ xem trước trực tiếp định dạng {previewItem.fileType}. Vui lòng tải về máy để xem nội dung.</p>
+                    <button onClick={()=>trackDownload(previewItem)} className="px-6 py-2.5 bg-surface-container-high dark:bg-cyan-950/50 dark:bg-cyan-950/50 text-on-surface dark:text-slate-200 font-bold rounded-xl hover:bg-outline-variant transition-all flex items-center gap-2">
                        <span className="material-symbols-outlined text-lg">download_for_offline</span> Tải ngay ({previewItem.fileSizeBytes?fmt(previewItem.fileSizeBytes):"Unknown"})
                     </button>
                   </div>
@@ -552,37 +560,37 @@ export default function StudentMaterials() {
               </div>
 
               {/* Right Pane: Sidebar for info */}
-              <div className="w-full lg:w-72 flex-shrink-0 bg-surface overflow-y-auto p-6 space-y-6 flex flex-col">
+              <div className="w-full lg:w-72 flex-shrink-0 bg-slate-50 dark:bg-[#0A1F3E] border-l border-slate-200 dark:border-cyan-950/40 overflow-y-auto p-6 space-y-6 flex flex-col">
                 <div>
-                  <h4 className="text-xs font-black text-on-surface-variant uppercase tracking-wider mb-2">Mô tả tài liệu</h4>
-                  <p className="text-sm text-on-surface leading-relaxed bg-surface-container-lowest p-4 rounded-xl border border-outline-variant">
+                  <h4 className="text-xs font-black text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-2">Mô tả tài liệu</h4>
+                  <p className="text-sm text-on-surface dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200 dark:border-cyan-950/40 border border-outline-variant">
                     {previewItem.description || <span className="italic opacity-50">Không có mô tả bổ sung.</span>}
                   </p>
                 </div>
 
                 {previewItem.tags?.length>0 && (
                   <div>
-                    <h4 className="text-xs font-black text-on-surface-variant uppercase tracking-wider mb-2">Từ khóa (Tags)</h4>
+                    <h4 className="text-xs font-black text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-2">Từ khóa (Tags)</h4>
                     <div className="flex flex-wrap gap-1.5">
                       {previewItem.tags.map(t=>(
-                        <span key={t} className="px-2.5 py-1 bg-primary/10 text-primary rounded-lg text-[11px] font-bold">#{t}</span>
+                        <span key={t} className="px-2.5 py-1 bg-primary/10 dark:bg-cyan-950/40 text-primary dark:text-cyan-300 rounded-lg text-[11px] font-bold">#{t}</span>
                       ))}
                     </div>
                   </div>
                 )}
 
                 <div className="mt-auto pt-6 space-y-2">
-                  <h4 className="text-xs font-black text-on-surface-variant uppercase tracking-wider mb-3">Thông tin tệp</h4>
+                  <h4 className="text-xs font-black text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-3">Thông tin tệp</h4>
                   {[
                     { icon: "database", label: t("modal_size"), value: previewItem.fileSizeBytes ? fmt(previewItem.fileSizeBytes) : "—" },
                     { icon: "download", label: t("modal_downloads"), value: `${previewItem.downloadCount} lượt` },
                     { icon: "calendar_today", label: t("modal_date"), value: new Date(previewItem.createdAt).toLocaleDateString("vi-VN") },
                   ].map(({icon, label, value})=>(
-                    <div key={label} className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant">
-                      <span className="material-symbols-outlined text-on-surface-variant text-lg">{icon}</span>
+                    <div key={label} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#051329] rounded-xl border border-slate-200 dark:border-cyan-950/40">
+                      <span className="material-symbols-outlined text-on-surface-variant dark:text-slate-400 text-lg">{icon}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-on-surface-variant font-bold uppercase leading-none mb-1">{label}</p>
-                        <p className="text-sm font-black text-on-surface truncate">{value}</p>
+                        <p className="text-[10px] text-on-surface-variant dark:text-slate-400 font-bold uppercase leading-none mb-1">{label}</p>
+                        <p className="text-sm font-black text-on-surface dark:text-slate-200 truncate">{value}</p>
                       </div>
                     </div>
                   ))}
