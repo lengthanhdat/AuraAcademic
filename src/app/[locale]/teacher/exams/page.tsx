@@ -1,12 +1,10 @@
 "use client";
-import { useState, useRef, useEffect, Suspense } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { SmartMarkdown } from "@/components/ui/SmartMarkdown";
 
 type Option = { id: string; text: string; isCorrect: boolean };
 type Question = { id: string; type: string; text: string; imageUrl?: string; options: Option[] };
@@ -444,27 +442,27 @@ function ExamBuilderContent() {
     finally { setIsSaving(false); }
   };
 
-  const deleteQuestion = (idx: number) => {
+  const deleteQuestion = useCallback((idx: number) => {
     setQuestions(prev => prev.filter((_, i) => i !== idx));
-  };
+  }, []);
 
-  const updateQuestionText = (idx: number, text: string) => {
+  const updateQuestionText = useCallback((idx: number, text: string) => {
     setQuestions(prev => prev.map((q, i) => i === idx ? { ...q, text } : q));
-  };
+  }, []);
 
-  const updateOptionText = (qIdx: number, oIdx: number, text: string) => {
+  const updateOptionText = useCallback((qIdx: number, oIdx: number, text: string) => {
     setQuestions(prev => prev.map((q, i) => i === qIdx
       ? { ...q, options: q.options.map((o, j) => j === oIdx ? { ...o, text } : o) }
       : q
     ));
-  };
+  }, []);
 
-  const setCorrectOption = (qIdx: number, oIdx: number) => {
+  const setCorrectOption = useCallback((qIdx: number, oIdx: number) => {
     setQuestions(prev => prev.map((q, i) => i === qIdx
       ? { ...q, options: q.options.map((o, j) => ({ ...o, isCorrect: j === oIdx })) }
       : q
     ));
-  };
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -485,9 +483,9 @@ function ExamBuilderContent() {
     e.target.value = '';
   };
 
-  // Render nội dung câu hỏi: chuyển [IMG_N] → <img>, còn lại → ReactMarkdown
-  const renderContent = (text: string | null | undefined) => {
-    const safeText = text || ""; // Guard: tránh crash khi text = null/undefined
+  // Render nội dung câu hỏi: chuyển [IMG_N] → <img>, còn lại → SmartMarkdown (memoized)
+  const renderContent = useCallback((text: string | null | undefined) => {
+    const safeText = text || "";
     if (!safeText.trim()) {
       return <span className="text-slate-400 italic text-sm">{t('list.no_content')}</span>;
     }
@@ -503,22 +501,11 @@ function ExamBuilderContent() {
               ? <img key={i} src={`data:image/jpeg;base64,${src}`} alt={`Hình ${imgIdx}`} className="max-w-[450px] max-h-[300px] object-contain rounded-lg my-3 border border-slate-200 dark:border-cyan-950/40 shadow-sm" />
               : <span key={i} className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-mono">[IMG_{imgIdx} — chưa có ảnh]</span>;
           }
-          return part ? (
-            <ReactMarkdown key={i}
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeKatex]}
-              components={{
-                table: ({ node, ...props }) => <div className="overflow-x-auto my-2"><table className="text-sm border-collapse w-full" {...props} /></div>,
-                th: ({ node, ...props }) => <th className="border border-slate-300 bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 px-3 py-1.5 text-left font-bold" {...props} />,
-                td: ({ node, ...props }) => <td className="border border-slate-200 dark:border-cyan-950/40 px-3 py-1.5" {...props} />,
-                p: ({ node, ...props }) => <span {...props} />,
-              }}
-            >{part}</ReactMarkdown>
-          ) : null;
+          return part ? <SmartMarkdown key={i} content={part} /> : null;
         })}
       </>
     );
-  };
+  }, [extractedImages, t]);
 
   const addManualQuestion = () => {
     const newQ: Question = {
@@ -539,140 +526,59 @@ function ExamBuilderContent() {
   };
 
   if (step === "generating") return (
-    <main className={`flex-1 flex items-center justify-center p-6 relative overflow-hidden ${generatingMode === "prompt" ? "bg-[#06030f]" : "bg-[#F8FAFC] dark:bg-[#051329]"}`}>
-
-      {/* ── PROMPT MODE: Neural Cinematic Screen ── */}
-      {generatingMode === "prompt" && (
-        <>
-          {/* Matrix falling characters */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <div key={i} className="absolute top-0 text-violet-400 font-mono text-xs leading-tight animate-pulse"
-                style={{
-                  left: `${i * 5.2}%`,
-                  animationDelay: `${i * 0.18}s`,
-                  animationDuration: `${1.5 + (i % 4) * 0.5}s`
-                }}>
-                {"AI⚡✦◈❖⬡⬢✶∞⌬⊛".split("").map((c, j) => (
-                  <div key={j} style={{ opacity: 1 - j * 0.08, marginBottom: 4 }}>{c}</div>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          {/* Ambient glow orbs */}
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-
-          <div className="relative z-10 w-full max-w-lg flex flex-col items-center">
-            {/* Neural orb */}
-            <div className="relative w-48 h-48 mb-8">
-              {/* Rotating rings */}
-              {[0, 1, 2].map(i => (
-                <div key={i} className="absolute inset-0 rounded-full border border-violet-500/30"
-                  style={{
-                    transform: `scale(${1 + i * 0.18}) rotate(${i * 60}deg)`,
-                    animation: `spin ${3 + i * 1.5}s linear infinite ${i % 2 === 1 ? 'reverse' : ''}`,
-                  }} />
-              ))}
-              {/* Core glow */}
-              <div className="absolute inset-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-[0_0_60px_20px_rgba(139,92,246,0.4)] flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-4xl animate-pulse">psychology</span>
-              </div>
-              {/* SVG progress ring */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="48" className="fill-none stroke-violet-900/40" strokeWidth="2" />
-                <circle cx="50" cy="50" r="48" className="fill-none stroke-violet-400 transition-all duration-700"
-                  strokeWidth="2" strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 48}`}
-                  strokeDashoffset={`${2 * Math.PI * 48 * (1 - genProgress / 100)}`} />
+    <main className="flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-[#F8FAFC] dark:bg-[#051329]">
+      <div className="w-full max-w-lg">
+        <div className="bg-white dark:bg-[#0A1F3E] rounded-[40px] p-12 shadow-[0_32px_64px_-16px_rgba(0,53,95,0.1)] border border-slate-100 dark:border-cyan-950/30 relative overflow-hidden">
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 dark:bg-cyan-900/20 rounded-full blur-3xl opacity-60" />
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="relative w-40 h-40 mb-10">
+              <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="46" className="stroke-slate-100 dark:stroke-cyan-950/40 fill-none" strokeWidth="6" />
+                <circle cx="50" cy="50" r="46" className="stroke-[#00355f] dark:stroke-[#00C6FF] fill-none transition-all duration-700 ease-out"
+                  strokeWidth="6" strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 46}`}
+                  strokeDashoffset={`${2 * Math.PI * 46 * (1 - genProgress / 100)}`} />
               </svg>
-            </div>
-
-            {/* Card */}
-            <div className="w-full bg-white/5 backdrop-blur-xl border border-violet-500/20 rounded-3xl p-8 text-center shadow-[0_32px_64px_rgba(139,92,246,0.15)]">
-              <div className="text-5xl font-black text-white tabular-nums mb-2">{genProgress}<span className="text-2xl text-violet-400">%</span></div>
-              <h2 className="text-lg font-black text-white mb-1">Aura AI — Đang Suy Luận</h2>
-              <p className="text-sm text-violet-300 italic mb-6">{genLog}</p>
-
-              {/* Topic preview */}
-              {topic && (
-                <div className="text-left bg-violet-950/60 border border-violet-500/20 rounded-2xl p-4 mb-6">
-                  <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest mb-1">Chủ đề đề thi</p>
-                  <p className="text-xs text-white/80 leading-relaxed line-clamp-2">{topic}</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="bg-[#00355f]/5 dark:bg-[#00C6FF]/10 p-3 rounded-2xl mb-1">
+                  <span className="material-symbols-outlined text-[#00355f] dark:text-[#00C6FF] text-2xl animate-pulse">auto_awesome</span>
                 </div>
-              )}
-
-              {/* Progress bar */}
-              <div className="h-1 w-full bg-violet-950 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-700 rounded-full"
-                  style={{ width: `${genProgress}%` }} />
+                <div className="text-2xl font-black text-[#00355f] dark:text-slate-200 tabular-nums">{genProgress}%</div>
               </div>
-
-              {/* Animated dots */}
-              <div className="flex justify-center gap-2 mt-4">
-                {[0, 1, 2, 3].map(i => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce"
-                    style={{ animationDelay: `${i * 0.15}s` }} />
-                ))}
+            </div>
+            <div className="text-center space-y-3">
+              <h2 className="text-2xl font-black text-[#00355f] dark:text-slate-200 tracking-tight">{t('generating.title')}</h2>
+              <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 font-medium h-6">
+                {[0, 0.2, 0.4].map((d, i) => <span key={i} className="inline-block w-1.5 h-1.5 bg-blue-500 dark:bg-[#00C6FF] rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />)}
+                <p className="text-sm ml-1 italic">{genLog}</p>
               </div>
             </div>
 
-            <p className="mt-6 text-[10px] text-violet-500/60 font-bold uppercase tracking-[0.2em]">
-              Gemini 2.5 Flash — Aura Academic AI Engine
-            </p>
-          </div>
-
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </>
-      )}
-
-      {/* ── FILE MODE: Original clean loading screen ── */}
-      {generatingMode === "file" && (
-        <div className="w-full max-w-lg">
-          <div className="bg-white dark:bg-[#0A1F3E] rounded-[40px] p-12 shadow-[0_32px_64px_-16px_rgba(0,53,95,0.1)] border border-slate-100 dark:border-cyan-950/30 relative overflow-hidden">
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60" />
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="relative w-40 h-40 mb-10">
-                <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="46" className="stroke-slate-100 fill-none" strokeWidth="6" />
-                  <circle cx="50" cy="50" r="46" className="stroke-[#00355f] fill-none transition-all duration-700 ease-out"
-                    strokeWidth="6" strokeLinecap="round"
-                    strokeDasharray={`${2 * Math.PI * 46}`}
-                    strokeDashoffset={`${2 * Math.PI * 46 * (1 - genProgress / 100)}`} />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="bg-[#00355f]/5 p-3 rounded-2xl mb-1">
-                    <span className="material-symbols-outlined text-[#00355f] text-2xl animate-pulse">auto_awesome</span>
-                  </div>
-                  <div className="text-2xl font-black text-[#00355f] tabular-nums">{genProgress}%</div>
-                </div>
+            {/* Topic preview (only if prompt mode and topic is present) */}
+            {generatingMode === "prompt" && topic && (
+              <div className="w-full text-left bg-blue-50/50 dark:bg-cyan-950/20 border border-blue-100 dark:border-cyan-950/40 rounded-2xl p-4 mt-6">
+                <p className="text-[10px] font-bold text-blue-600 dark:text-[#00C6FF] uppercase tracking-widest mb-1">Chủ đề đề thi</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2">{topic}</p>
               </div>
-              <div className="text-center space-y-3">
-                <h2 className="text-2xl font-black text-[#00355f] tracking-tight">{t('generating.title')}</h2>
-                <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 font-medium h-6">
-                  {[0, 0.2, 0.4].map((d, i) => <span key={i} className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />)}
-                  <p className="text-sm ml-1 italic">{genLog}</p>
-                </div>
+            )}
+
+            <div className="w-full mt-10 space-y-2">
+              <div className="h-1.5 w-full bg-slate-100 dark:bg-cyan-950/50 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#00355f] to-[#0f4c81] dark:from-[#00C6FF] dark:to-blue-600 transition-all duration-700 ease-out rounded-full" style={{ width: `${genProgress}%` }} />
               </div>
-              <div className="w-full mt-10 space-y-2">
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#00355f] to-[#0f4c81] transition-all duration-700 ease-out rounded-full" style={{ width: `${genProgress}%` }} />
-                </div>
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('generating.progress_label')}</span>
-                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse">{t('generating.progress_value')}</span>
-                </div>
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('generating.progress_label')}</span>
+                <span className="text-[10px] font-bold text-blue-600 dark:text-[#00C6FF] uppercase tracking-widest animate-pulse">{t('generating.progress_value')}</span>
               </div>
             </div>
           </div>
-          <p className="text-center mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
-            <span className="w-8 h-px bg-slate-200" />
-            Vui lòng không đóng trình duyệt
-            <span className="w-8 h-px bg-slate-200" />
-          </p>
         </div>
-      )}
+        <p className="text-center mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
+          <span className="w-8 h-px bg-slate-200 dark:bg-slate-700" />
+          Vui lòng không đóng trình duyệt
+          <span className="w-8 h-px bg-slate-200 dark:bg-slate-700" />
+        </p>
+      </div>
     </main>
   );
 
@@ -1054,13 +960,7 @@ function ExamBuilderContent() {
                           />
                         ) : (
                           <div className={`text-sm font-medium flex-1 ${opt.isCorrect ? "text-blue-900 dark:text-[#00C6FF]" : "text-slate-600"}`}>
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm, remarkMath]}
-                              rehypePlugins={[rehypeKatex]}
-                              components={{ p: ({ node, ...props }) => <span {...props} /> }}
-                            >
-                              {opt.text}
-                            </ReactMarkdown>
+                            <SmartMarkdown content={opt.text} />
                           </div>
                         )}
                       </div>

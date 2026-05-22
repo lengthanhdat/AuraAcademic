@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { CheckCircle2, AlertTriangle, Info, XCircle, X } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { API_ORIGIN } from "@/lib/api";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -56,7 +57,11 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     const originalFetch = window.fetch;
     window.fetch = async function (...args) {
       const response = await originalFetch(...args);
-      if (response.status === 503) {
+      const requestUrl = typeof args[0] === "string" ? args[0] : args[0] instanceof Request ? args[0].url : String(args[0]);
+      const url = new URL(requestUrl, window.location.origin);
+      const backendOrigin = new URL(API_ORIGIN, window.location.origin).origin;
+
+      if (response.status === 503 && url.origin === backendOrigin) {
         redirectToMaintenance();
       }
       return response;

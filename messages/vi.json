@@ -324,7 +324,9 @@
     "bento_study_title": "Phong Độ Học Tập",
     "bento_study_desc": "Thành tích của bạn cực kỳ cao trong các môn tư duy logic và suy luận.",
     "bento_growth_title": "Biểu Đồ Tăng Trưởng",
-    "bento_growth_desc": "GPA trung bình đã tăng trưởng 0.4 điểm so với học kỳ trước."
+    "bento_growth_desc": "GPA trung bình đã tăng trưởng 0.4 điểm so với học kỳ trước.",
+    "welcome_back": "Chào mừng bạn quay trở lại. Hãy nhập mã phòng thi để bắt đầu bài kiểm tra của mình.",
+    "open_monitor": "Giám sát mở"
   },
   "StudentLobby": {
     "room_code": "Mã phòng:",

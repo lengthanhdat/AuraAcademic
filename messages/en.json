@@ -305,7 +305,7 @@
     "placeholder": "Exam Session / Room Code",
     "btn_joining": "Checking...",
     "btn_join": "Enter Room",
-    "safe_env": "Secure environment",
+    "safe_env": "Safe environment",
     "proctoring_on": "Proctoring active",
     "history_title": "Previous Exam Results",
     "history_subtitle": "Overview of your recent performance and scores.",
@@ -324,7 +324,9 @@
     "bento_study_title": "Study Performance",
     "bento_study_desc": "Your achievement is extremely high in logical reasoning and analytical thinking.",
     "bento_growth_title": "Growth Chart",
-    "bento_growth_desc": "Average GPA increased by 0.4 points compared to last semester."
+    "bento_growth_desc": "Average GPA increased by 0.4 points compared to last semester.",
+    "welcome_back": "Welcome back. Enter the exam room code to start your test.",
+    "open_monitor": "Open monitoring"
   },
   "StudentLobby": {
     "room_code": "Room Code:",

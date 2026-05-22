@@ -1,6 +1,6 @@
 "use client";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link, usePathname } from "@/navigation";
+import { useRouter } from "next/navigation";
 
 const navSections = [
   {
@@ -17,6 +17,7 @@ const navSections = [
       { href: "/admin/users", icon: "group", label: "Người dùng" },
       { href: "/admin/roles", icon: "admin_panel_settings", label: "Phân quyền RBAC" },
       { href: "/admin/exams", icon: "quiz", label: "Bài thi" },
+      { href: "/admin/exam-bank", icon: "folder_special", label: "Ngân hàng chuyên đề" },
       { href: "/admin/materials", icon: "menu_book", label: "Tài liệu hệ thống" },
       { href: "/admin/content", icon: "article", label: "Nội dung & Media" },
     ],
@@ -67,7 +68,7 @@ export function AdminSidebar({ isCollapsed = false, onClose }: SidebarProps) {
       />
 
       <aside className={`
-        fixed lg:sticky inset-y-0 left-0 z-50 bg-white/80 dark:bg-[#0A1F3E]/90 backdrop-blur-md flex flex-col shrink-0 border-r border-slate-200/40 dark:border-cyan-950/40 shadow-[4px_0_24px_-12px_rgba(12,46,94,0.08)]
+        fixed lg:sticky top-0 h-screen left-0 z-50 bg-white/80 dark:bg-[#0A1F3E]/90 backdrop-blur-md flex flex-col shrink-0 border-r border-slate-200/40 dark:border-cyan-950/40 shadow-[4px_0_24px_-12px_rgba(12,46,94,0.08)]
         transition-all duration-300 ease-in-out py-6
         ${isCollapsed 
           ? "-translate-x-full lg:translate-x-0 lg:w-[78px] px-2" 
@@ -75,22 +76,28 @@ export function AdminSidebar({ isCollapsed = false, onClose }: SidebarProps) {
         }
       `}>
         {/* Logo Area */}
-        <div className={`flex items-center mb-6 border-b border-slate-200/40 dark:border-cyan-950/40 pb-5 ${isCollapsed ? "justify-center" : "justify-between px-2"}`}>
-          <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-all">
+        <div className={`relative flex items-center mb-6 border-b border-slate-200/40 dark:border-cyan-950/40 pb-5 ${isCollapsed ? "justify-center px-2" : "justify-center px-6 w-full"}`}>
+          <Link href="/" className="group flex flex-col items-center justify-center transition-all duration-300">
             {isCollapsed ? (
               /* Glowing Shield/Lock badge in Navy for collapsed Admin */
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#0E3E7A] dark:from-[#0A1F3E] dark:to-[#0E3E7A] shadow-lg shadow-[#0C2E5E]/20 dark:shadow-[#00C6FF]/10 flex items-center justify-center text-white">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#0E3E7A] dark:from-[#0A1F3E] dark:to-[#0E3E7A] shadow-lg shadow-[#0C2E5E]/20 dark:shadow-[#00C6FF]/10 flex items-center justify-center text-white hover:scale-105 transition-all">
                 <span className="material-symbols-outlined text-[22px] text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
               </div>
             ) : (
-              /* Image Logo for expanded view */
-              <img src="/logoweb.png" alt="AuraAcademic" className="h-9 object-contain transition-opacity dark:brightness-110" />
+              /* Center and scale up the vertical logo in a premium card */
+              <div className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50/50 dark:bg-cyan-950/20 border border-slate-100/50 dark:border-cyan-950/30 shadow-[0_8px_30px_rgb(0,0,0,0.01)] transition-all duration-300 group-hover:shadow-[0_8px_30px_rgba(0,198,255,0.04)] w-48">
+                <img 
+                  src="/logoweb.png" 
+                  alt="AuraAcademic" 
+                  className="h-20 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:brightness-110" 
+                />
+              </div>
             )}
           </Link>
 
           {/* Close mobile only */}
           {!isCollapsed && (
-            <button onClick={onClose} className="lg:hidden p-1.5 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-lg transition-all">
+            <button onClick={onClose} className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-lg transition-all">
               <span className="material-symbols-outlined">close</span>
             </button>
           )}

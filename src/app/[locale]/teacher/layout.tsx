@@ -43,7 +43,7 @@ export default function TeacherLayout({
     <AuthGuard allowedRoles={["teacher"]}>
       <div className="bg-[#F8FAFC] dark:bg-[#051329] text-on-surface font-body antialiased flex min-h-screen relative transition-colors duration-300">
         <TeacherSidebar isCollapsed={isCollapsed} onClose={() => setIsCollapsed(true)} />
-        <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden transition-all duration-300">
+        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
           <TeacherHeader onMenuClick={() => setIsCollapsed(prev => !prev)} />
           {children}
         </div>

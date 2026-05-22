@@ -23,13 +23,26 @@ export default function AdminExamsPage() {
     catch (e: any) { alert(e.message); }
   };
 
-  const filtered = exams.filter(e => !search || e.title?.toLowerCase().includes(search.toLowerCase()) || e.code?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = exams.filter(e => !search || e.title?.toLowerCase().includes(search.toLowerCase()) || e.accessCode?.toLowerCase().includes(search.toLowerCase()));
 
   const statusMap: any = {
     DRAFT: { label: "Bản nháp", cls: "bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-2000/10 text-slate-500 dark:text-slate-400 border-slate-500/20" },
     PUBLISHED: { label: "Đã phát hành", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
     STARTED: { label: "Đang diễn ra", cls: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
     ENDED: { label: "Đã kết thúc", cls: "bg-rose-500/10 text-rose-400 border-rose-500/20" },
+  };
+
+  const getExamDate = (e: any) => {
+    if (e.createdAt) return new Date(e.createdAt).toLocaleDateString("vi-VN");
+    if (e.id && e.id.length === 24) {
+      try {
+        const timestamp = parseInt(e.id.substring(0, 8), 16) * 1000;
+        if (!isNaN(timestamp)) {
+          return new Date(timestamp).toLocaleDateString("vi-VN");
+        }
+      } catch {}
+    }
+    return "—";
   };
 
   return (
@@ -83,21 +96,21 @@ export default function AdminExamsPage() {
                   <tr key={e.id} className="hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/40 transition-colors group">
                     <td className="px-6 py-4">
                       <p className="font-extrabold text-[#0C2E5E] dark:text-[#E2E8F0] text-sm tracking-tight max-w-[200px] truncate" title={e.title}>{e.title}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{e.questions?.length || 0} câu hỏi</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{e.versions?.[0]?.questions?.length || 0} câu hỏi</p>
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono font-bold text-violet-400">{e.code || "—"}</td>
+                    <td className="px-6 py-4 text-sm font-mono font-bold text-violet-400">{e.accessCode || "—"}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${status.cls}`}>
                         {status.label}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{e.createdBy || "System"}</td>
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{e.teacherName || "System"}</td>
                     <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {e.createdAt ? new Date(e.createdAt).toLocaleDateString("vi-VN") : "—"}
+                      {getExamDate(e)}
                     </td>
                     <td className="px-6 py-4">
                       <button onClick={() => handleDelete(e.id, e.title)} title="Xoá bài thi"
-                        className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                        className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all">
                         <span className="material-symbols-outlined text-lg">delete</span>
                       </button>
                     </td>

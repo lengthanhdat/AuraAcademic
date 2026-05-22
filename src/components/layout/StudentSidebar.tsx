@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/navigation";
 import { useTranslations } from "next-intl";
 
 interface SidebarProps {
@@ -17,11 +16,17 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
     { label: t("menu.dashboard"), icon: "dashboard", href: "/student/dashboard" },
     { label: t("menu.exams"), icon: "quiz", href: "/student/exams" },
     { label: t("menu.results"), icon: "assignment_turned_in", href: "/student/results" },
+    { label: "Ngân hàng đề", icon: "local_library", href: "/student/exam-bank" },
     { label: t("menu.materials"), icon: "menu_book", href: "/student/materials" },
     { label: t("menu.profile"), icon: "manage_accounts", href: "/student/profile" },
   ];
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => {
+    if (href === "/student/dashboard") {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <>
@@ -35,7 +40,7 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
 
       {/* Main Collapsible & Responsive Aside Sidebar */}
       <aside className={`
-        fixed md:sticky inset-y-0 left-0 z-50 bg-white/80 dark:bg-[#0A1F3E]/90 backdrop-blur-md py-8 flex flex-col border-r border-slate-200/40 dark:border-cyan-950/40 shrink-0 shadow-[4px_0_24px_-12px_rgba(12,46,94,0.08)]
+        fixed md:sticky top-0 h-screen left-0 z-50 bg-white/80 dark:bg-[#0A1F3E]/90 backdrop-blur-md py-6 flex flex-col border-r border-slate-200/40 dark:border-cyan-950/40 shrink-0 shadow-[4px_0_24px_-12px_rgba(12,46,94,0.08)]
         transition-all duration-300 ease-in-out
         ${isCollapsed 
           ? "-translate-x-full md:translate-x-0 md:w-[78px] px-3" 
@@ -43,26 +48,30 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
         }
       `}>
         {/* Logo Section */}
-        <div className={`flex items-center mb-8 ${isCollapsed ? "justify-center" : "justify-between px-3"}`}>
-          <div className="flex items-center transition-all">
-            <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-              {isCollapsed ? (
-                /* Mini Logo glowing badge when collapsed */
-                <div className="w-10 h-10 rounded-xl bg-[#0C2E5E] flex items-center justify-center text-white shadow-lg shadow-[#0C2E5E]/15 dark:shadow-[#00C6FF]/10">
-                  <span className="material-symbols-outlined text-xl text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
-                </div>
-              ) : (
-                /* Full image logo when expanded */
-                <img src="/logoweb.png" alt="AuraAcademic" className="h-9 object-contain transition-opacity duration-200 dark:brightness-110" />
-              )}
-            </Link>
-          </div>
+        <div className={`relative flex items-center mb-6 shrink-0 ${isCollapsed ? "justify-center px-2" : "justify-center px-6 w-full"}`}>
+          <Link href="/" className="group flex flex-col items-center justify-center transition-all duration-300">
+            {isCollapsed ? (
+              /* Mini Logo glowing badge when collapsed */
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#0E3E7A] flex items-center justify-center text-white shadow-lg shadow-[#0C2E5E]/15 dark:shadow-[#00C6FF]/10 hover:scale-105 transition-all">
+                <span className="material-symbols-outlined text-2xl text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              </div>
+            ) : (
+              /* Center and scale up the vertical logo in a premium card */
+              <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-slate-50/50 dark:bg-cyan-950/20 border border-slate-100/50 dark:border-cyan-950/30 shadow-[0_8px_30px_rgb(0,0,0,0.01)] transition-all duration-300 group-hover:shadow-[0_8px_30px_rgba(0,198,255,0.04)] w-48">
+                <img 
+                  src="/logoweb.png" 
+                  alt="AuraAcademic" 
+                  className="h-16 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:brightness-110" 
+                />
+              </div>
+            )}
+          </Link>
           
-          {/* Mobile only X button inside Sidebar */}
+          {/* Mobile only floating X button inside Sidebar */}
           {!isCollapsed && (
             <button 
               onClick={onClose}
-              className="md:hidden p-1 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-lg transition-all"
+              className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-lg transition-all"
             >
               <span className="material-symbols-outlined">close</span>
             </button>
@@ -70,7 +79,7 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation List */}
-        <nav className="flex-1 space-y-1.5">
+        <nav className="flex-1 flex flex-col gap-1.5 overflow-y-auto overflow-x-hidden pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {menuItems.map((item) => {
             const active = isActive(item.href);
             return (
@@ -80,15 +89,15 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
                 title={isCollapsed ? item.label : ""}
                 className={`flex items-center transition-all duration-300 active:scale-95 ${
                   isCollapsed 
-                    ? "justify-center w-12 h-12 rounded-xl mx-auto" 
-                    : "gap-3 px-4 py-3.5 rounded-2xl mx-2"
+                    ? "justify-center w-11 h-11 rounded-xl mx-auto" 
+                    : "gap-3 px-4 py-2.5 rounded-xl mx-1"
                 } ${
                   active 
                     ? "bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] dark:from-[#0A1F3E] dark:to-[#0E3E7A] text-white font-extrabold shadow-lg shadow-[#0C2E5E]/15 dark:shadow-[#00C6FF]/10 border-l-4 border-[#00C6FF]" 
                     : "text-slate-500 dark:text-slate-400 font-semibold hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-[#0C2E5E]/5 dark:hover:bg-cyan-950/40"
                 }`}
               >
-                <span className={`material-symbols-outlined ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500'} transition-transform ${isCollapsed ? 'scale-110' : ''}`}>
+                <span className={`material-symbols-outlined text-[20px] ${active ? 'text-white' : 'text-slate-400 dark:text-slate-500'} transition-transform ${isCollapsed ? 'scale-105' : ''}`}>
                   {item.icon}
                 </span>
                 
@@ -104,36 +113,19 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
         </nav>
 
         {/* Bottom Elements Section */}
-        <div className={`mt-auto pt-6 border-t border-slate-200/40 dark:border-cyan-950/40 flex flex-col space-y-1.5 ${isCollapsed ? "px-1" : "px-2"}`}>
+        <div className={`mt-2 shrink-0 pt-4 border-t border-slate-200/40 dark:border-cyan-950/40 flex flex-col gap-1.5 ${isCollapsed ? "px-1" : "px-2"}`}>
           
-          {/* Review box (Only shown when fully expanded) */}
-          {!isCollapsed && (
-            <div className="mb-4 p-4 rounded-2xl bg-slate-50/80 dark:bg-cyan-950/30 border border-slate-100 dark:border-cyan-900/30">
-              <p className="text-xs font-bold text-[#0C2E5E] dark:text-[#E2E8F0] mb-1 uppercase tracking-wider">{t("quick_review")}</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{t("last_visit")}</p>
-            </div>
-          )}
-          
-          <Link 
-            title={isCollapsed ? t("support") : ""}
-            className={`flex items-center text-slate-500 dark:text-slate-400 font-medium hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100/50 dark:hover:bg-cyan-950/40 transition-all ${
-              isCollapsed ? "justify-center w-12 h-12 rounded-xl mx-auto" : "gap-3 py-2.5 px-3 rounded-xl"
-            }`}
-            href="#"
-          >
-            <span className="material-symbols-outlined text-slate-400 dark:text-slate-500">help_outline</span>
-            {!isCollapsed && <span className="font-label text-sm tracking-wide">{t("support")}</span>}
-          </Link>
+
           
           <Link 
             title={isCollapsed ? t("logout") : ""}
             onClick={() => localStorage.removeItem("user")} 
             className={`flex items-center text-slate-500 dark:text-slate-400 font-medium hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all ${
-              isCollapsed ? "justify-center w-12 h-12 rounded-xl mx-auto" : "gap-3 py-2.5 px-3 rounded-xl"
+              isCollapsed ? "justify-center w-10 h-10 rounded-xl mx-auto" : "gap-3 py-2 px-3 rounded-xl"
             }`}
             href="/login"
           >
-            <span className="material-symbols-outlined text-slate-400 dark:text-slate-500">logout</span>
+            <span className="material-symbols-outlined text-[20px] text-slate-400 dark:text-slate-500">logout</span>
             {!isCollapsed && <span className="font-label text-sm tracking-wide">{t("logout")}</span>}
           </Link>
         </div>

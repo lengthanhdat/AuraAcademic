@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { ArrowRight, BookOpenCheck, Camera, FileText, ShieldCheck } from "lucide-react";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
 
 type LogoWordmark = {
   name: string;
@@ -122,7 +123,13 @@ function HeroVisual() {
 
       <div className="absolute right-[6%] top-[15%] hidden lg:block w-[38rem] h-[38rem] rounded-full border border-[#00C6FF]/10 animate-[spin_90s_linear_infinite] opacity-80" />
       <div className="absolute right-[10%] top-[19%] hidden lg:block w-[30rem] h-[30rem] rounded-full border border-dashed border-[#DCA837]/20 animate-[spin_60s_linear_infinite_reverse] opacity-60" />
-      
+    </div>
+  );
+}
+
+function HeroSection() {
+  return (
+    <section className="flex-1 px-4 sm:px-6 pt-32 pb-6 flex flex-col relative min-h-screen">
       <style>{`
         @keyframes float3d {
           0%, 100% { transform: rotateX(18deg) rotateY(-22deg) translateZ(0) translateY(0); }
@@ -154,57 +161,70 @@ function HeroVisual() {
           transform: translateZ(35px);
         }
       `}</style>
-      
-      <div className="absolute right-[10%] top-[20%] hidden lg:block perspective-container w-[34rem]">
-        <div className="grid grid-cols-2 gap-7 hero-3d-grid relative">
-          {heroFeatures.map(({ title, Icon, body }, idx) => (
-            <div key={title} className="card-3d rounded-[2.5rem] bg-white/85 backdrop-blur-2xl p-8 shadow-[0_25px_60px_-15px_rgba(12,46,94,0.12)] transition-all"
-                 style={{ animationDelay: `${idx * 0.2}s` }}>
-              <div className="card-content-3d">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white to-[#eef6ff] flex items-center justify-center mb-6 shadow-[inset_0_2px_6px_rgba(0,0,0,0.03)] border border-white">
-                  <Icon className="w-8 h-8 text-[#0C2E5E] group-hover:text-[#00C6FF] transition-colors" />
+      <div className="relative w-full rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(12,46,94,0.15)] border border-white/30 flex flex-col lg:flex-row flex-1">
+        <HeroVisual />
+        
+        {/* Left Column: Text content */}
+        <div className="relative z-10 flex flex-col items-start justify-center p-8 md:p-12 lg:p-16 w-full lg:w-1/2">
+          <ScrollReveal variant="fade-up" delay={50}>
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-[#00C6FF]/30 shadow-sm mb-6">
+              <span className="w-2 h-2 bg-[#00C6FF] rounded-full animate-ping"></span>
+              <span className="text-xs font-bold text-[#0C2E5E] tracking-wider uppercase">Hệ thống Giáo dục AI Thế hệ Mới</span>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal variant="fade-up" delay={200}>
+            <h1 className="text-[#0C2E5E] text-5xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight">
+              Thi trực tuyến<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0C2E5E] via-[#00C6FF] to-[#DCA837]">Thông minh đột phá</span>
+            </h1>
+          </ScrollReveal>
+
+          <ScrollReveal variant="fade-up" delay={350}>
+            <p className="text-[#0C2E5E]/70 text-lg lg:text-xl max-w-lg mb-10 leading-relaxed font-medium">
+              Nền tảng tạo đề, tổ chức phòng thi và tích hợp trí tuệ nhân tạo giám sát bảo mật tối đa, kiến tạo sự công bằng hoàn hảo.
+            </p>
+          </ScrollReveal>
+
+          <ScrollReveal variant="fade-up" delay={500}>
+            <div className="flex flex-wrap gap-4">
+               <PillButton href="/login">Khám phá ngay</PillButton>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal variant="fade-up" delay={650}>
+            <HeroMarquee />
+          </ScrollReveal>
+        </div>
+
+        {/* Right Column: 3D Grid */}
+        <div className="relative z-10 w-full lg:w-1/2 p-8 md:p-12 lg:p-16 flex items-center justify-center">
+          <div className="hidden lg:block perspective-container w-full max-w-lg relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 hero-3d-grid relative w-full">
+              {heroFeatures.map(({ title, Icon, body }, idx) => (
+                <ScrollReveal key={title} variant="zoom-in" delay={idx * 150 + 200} className="flex">
+                  <div className="card-3d w-full h-full min-h-[14rem] rounded-[2rem] bg-white/85 backdrop-blur-2xl p-4 lg:p-6 shadow-[0_25px_60px_-15px_rgba(12,46,94,0.12)] transition-all flex flex-col justify-between relative overflow-hidden">
+                    <div className="card-content-3d flex flex-col justify-between h-full relative z-10">
+                      <div>
+                        <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-gradient-to-br from-white to-[#eef6ff] flex items-center justify-center mb-4 shadow-[inset_0_2px_6px_rgba(0,0,0,0.03)] border border-white shrink-0">
+                          <Icon className="w-6 h-6 lg:w-7 lg:h-7 text-[#0C2E5E] group-hover:text-[#00C6FF] transition-colors" />
+                        </div>
+                        <p className="text-lg lg:text-xl font-extrabold text-[#0C2E5E] tracking-tight">{title}</p>
+                        <p className="text-xs lg:text-sm text-slate-600 mt-2 font-medium leading-relaxed">{body}</p>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollReveal>
+              ))}
+              {/* Centered logo with warm radiant glow */}
+              <div className="absolute -right-8 -bottom-8 lg:-right-14 lg:-bottom-14 opacity-95 pointer-events-none z-20" style={{ animation: 'floatImg 7s ease-in-out infinite', transformStyle: 'preserve-3d' }}>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-[#DCA837]/40 rounded-full blur-[40px] -z-10 animate-pulse"></div>
+                  <img src="/logoweb.png" alt="Glowing Icon" className="w-28 h-28 lg:w-36 lg:h-36 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)]" />
                 </div>
-                <p className="text-2xl font-extrabold text-[#0C2E5E] tracking-tight">{title}</p>
-                <p className="text-sm text-slate-600 mt-3 font-medium leading-relaxed">{body}</p>
               </div>
             </div>
-          ))}
-          {/* Centered logo with warm radiant glow */}
-          <div className="absolute -right-14 -bottom-14 opacity-95 pointer-events-none" style={{ animation: 'floatImg 7s ease-in-out infinite', transformStyle: 'preserve-3d' }}>
-            <div className="relative">
-              <div className="absolute inset-0 bg-[#DCA837]/40 rounded-full blur-[40px] -z-10 animate-pulse"></div>
-              <img src="/logoweb.png" alt="Glowing Icon" className="w-44 h-44 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)]" />
-            </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HeroSection() {
-  return (
-    <section className="flex-1 px-4 sm:px-6 pt-32 pb-6 flex items-end relative">
-      <div className="relative w-full rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(12,46,94,0.15)] border border-white/30" style={{ height: "calc(100vh - 130px)" }}>
-        <HeroVisual />
-        <div className="relative z-10 flex flex-col items-start justify-center h-full p-8 md:p-16 md:pt-24 max-w-3xl">
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-[#00C6FF]/30 shadow-sm mb-6">
-            <span className="w-2 h-2 bg-[#00C6FF] rounded-full animate-ping"></span>
-            <span className="text-xs font-bold text-[#0C2E5E] tracking-wider uppercase">Hệ thống Giáo dục AI Thế hệ Mới</span>
-          </div>
-          <h1 className="text-[#0C2E5E] text-5xl md:text-7xl font-black leading-[1.1] mb-6 tracking-tight">
-            Thi trực tuyến<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0C2E5E] via-[#00C6FF] to-[#DCA837]">Thông minh đột phá</span>
-          </h1>
-          <p
-            className="text-[#0C2E5E]/70 text-lg md:text-xl max-w-lg mb-10 leading-relaxed font-medium"
-          >
-            Nền tảng tạo đề, tổ chức phòng thi và tích hợp trí tuệ nhân tạo giám sát bảo mật tối đa, kiến tạo sự công bằng hoàn hảo.
-          </p>
-          <div className="flex flex-wrap gap-4">
-             <PillButton href="/login">Khám phá ngay</PillButton>
-          </div>
-          <HeroMarquee />
         </div>
       </div>
     </section>
@@ -217,19 +237,23 @@ function InfoSection() {
       {/* Dynamic mesh elements background */}
       <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-[#00C6FF]/5 rounded-full blur-[120px] -z-10"></div>
       <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-[#DCA837]/5 rounded-full blur-[100px] -z-10"></div>
-
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-20 items-end">
-          <div>
-            <h2 className="text-[#0C2E5E] text-4xl md:text-6xl font-black leading-tight mb-8 tracking-tight">
-              Kiến tạo hệ sinh thái<br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E]">AuraAcademic.</span>
-            </h2>
-            <PillButton href="/register">Gia nhập ngay</PillButton>
-          </div>
-          <p className="text-slate-600 text-xl md:text-2xl leading-relaxed font-medium border-l-4 border-[#00C6FF] pl-8 py-2">
-            Sự giao thoa đỉnh cao giữa tri thức truyền thống và công nghệ giám sát AI tự động, tối ưu hóa quy trình từ tạo ngân hàng câu hỏi đến thống kê vi phạm.
-          </p>
+
+          <ScrollReveal variant="fade-up" delay={100}>
+            <div>
+              <h2 className="text-[#0C2E5E] text-4xl md:text-6xl font-black leading-tight mb-8 tracking-tight">
+                Kiến tạo hệ sinh thái<br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E]">AuraAcademic.</span>
+              </h2>
+              <PillButton href="/register">Gia nhập ngay</PillButton>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal variant="fade-up" delay={250}>
+            <p className="text-slate-600 text-xl md:text-2xl leading-relaxed font-medium border-l-4 border-[#00C6FF] pl-8 py-2">
+              Sự giao thoa đỉnh cao giữa tri thức truyền thống và công nghệ giám sát AI tự động, tối ưu hóa quy trình từ tạo ngân hàng câu hỏi đến thống kê vi phạm.
+            </p>
+          </ScrollReveal>
         </div>
 
         <style>{`
@@ -249,56 +273,62 @@ function InfoSection() {
         `}</style>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 perspective-container">
-          <article className="lg:col-span-2 tilt-card rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-white via-[#f8fbff] to-[#e0f2fe] shadow-[0_15px_40px_rgba(12,46,94,0.05)] hover:border-[#00C6FF]/30 transition-all">
-            <div className="p-12 min-h-[26rem] flex flex-col justify-between tilt-content h-full relative">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-[#00C6FF]/10 rounded-full blur-3xl -z-10"></div>
-              <div>
-                <div className="w-16 h-16 bg-[#0C2E5E] rounded-2xl flex items-center justify-center mb-10 shadow-lg shadow-[#0C2E5E]/20">
-                  <FileText className="w-8 h-8 text-[#00C6FF]" />
+          <ScrollReveal variant="fade-up" delay={50} className="lg:col-span-2">
+            <article className="lg:col-span-2 tilt-card rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-white via-[#f8fbff] to-[#e0f2fe] shadow-[0_15px_40px_rgba(12,46,94,0.05)] hover:border-[#00C6FF]/30 transition-all">
+              <div className="p-12 min-h-[26rem] flex flex-col justify-between tilt-content h-full relative">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#00C6FF]/10 rounded-full blur-3xl -z-10"></div>
+                <div>
+                  <div className="w-16 h-16 bg-[#0C2E5E] rounded-2xl flex items-center justify-center mb-10 shadow-lg shadow-[#0C2E5E]/20">
+                    <FileText className="w-8 h-8 text-[#00C6FF]" />
+                  </div>
+                  <h3 className="text-[#0C2E5E] text-4xl font-extrabold leading-tight mb-6 tracking-tight">
+                    Biên Soạn Đề Thi<br />Tự Động Siêu Tốc
+                  </h3>
+                  <p className="text-slate-600 text-lg font-medium leading-relaxed max-w-sm">
+                    Trích xuất thông minh tài liệu từ DOCX, PDF hoặc ra lệnh cho AI sinh đề cấu trúc phân hóa chỉ trong một lần chạm.
+                  </p>
                 </div>
-                <h3 className="text-[#0C2E5E] text-4xl font-extrabold leading-tight mb-6 tracking-tight">
-                  Biên Soạn Đề Thi<br />Tự Động Siêu Tốc
-                </h3>
-                <p className="text-slate-600 text-lg font-medium leading-relaxed max-w-sm">
-                  Trích xuất thông minh tài liệu từ DOCX, PDF hoặc ra lệnh cho AI sinh đề cấu trúc phân hóa chỉ trong một lần chạm.
-                </p>
               </div>
-            </div>
-          </article>
+            </article>
+          </ScrollReveal>
 
-          <article className="tilt-card bg-[#0C2E5E] rounded-[2.5rem] p-10 min-h-[26rem] flex flex-col justify-between shadow-xl border-[#0C2E5E]/80 relative overflow-hidden group hover:border-[#DCA837]/40 transition-all">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00C6FF]/20 to-[#DCA837]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="tilt-content relative z-10 h-full flex flex-col justify-between">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/20">
-                <ShieldCheck className="w-8 h-8 text-[#00C6FF]" />
+          <ScrollReveal variant="fade-up" delay={200}>
+            <article className="tilt-card bg-[#0C2E5E] rounded-[2.5rem] p-10 min-h-[26rem] flex flex-col justify-between shadow-xl border-[#0C2E5E]/80 relative overflow-hidden group hover:border-[#DCA837]/40 transition-all h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00C6FF]/20 to-[#DCA837]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="tilt-content relative z-10 h-full flex flex-col justify-between">
+                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/20">
+                  <ShieldCheck className="w-8 h-8 text-[#00C6FF]" />
+                </div>
+                <div>
+                  <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
+                    Phòng Thi<br />Khép Kín.
+                  </h3>
+                  <p className="text-white/70 text-base font-medium leading-relaxed">
+                    Môi trường bảo mật tuyệt đối, ghi nhận sự cố mất kết nối và theo dõi màn hình thí sinh thời gian thực.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
-                  Phòng Thi<br />Khép Kín.
-                </h3>
-                <p className="text-white/70 text-base font-medium leading-relaxed">
-                  Môi trường bảo mật tuyệt đối, ghi nhận sự cố mất kết nối và theo dõi màn hình thí sinh thời gian thực.
-                </p>
-              </div>
-            </div>
-          </article>
+            </article>
+          </ScrollReveal>
 
-          <article className="tilt-card bg-gradient-to-b from-[#0A192F] to-[#0C2E5E] rounded-[2.5rem] p-10 min-h-[26rem] flex flex-col justify-between shadow-xl relative overflow-hidden group hover:border-[#00C6FF]/40 transition-all">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00C6FF]/30 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="tilt-content relative z-10 h-full flex flex-col justify-between">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/20">
-                <Camera className="w-8 h-8 text-[#DCA837]" />
+          <ScrollReveal variant="fade-up" delay={350}>
+            <article className="tilt-card bg-gradient-to-b from-[#0A192F] to-[#0C2E5E] rounded-[2.5rem] p-10 min-h-[26rem] flex flex-col justify-between shadow-xl relative overflow-hidden group hover:border-[#00C6FF]/40 transition-all h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00C6FF]/30 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="tilt-content relative z-10 h-full flex flex-col justify-between">
+                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/20">
+                  <Camera className="w-8 h-8 text-[#DCA837]" />
+                </div>
+                <div>
+                  <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
+                    Proctoring AI<br />Đỉnh Cao
+                  </h3>
+                  <p className="text-white/70 text-base font-medium leading-relaxed">
+                    Nhận diện đa nhân diện, phát hiện đổi người, rời khỏi camera hoặc có tạp âm lạ chính xác tuyệt đối.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
-                  Proctoring AI<br />Đỉnh Cao
-                </h3>
-                <p className="text-white/70 text-base font-medium leading-relaxed">
-                  Nhận diện đa nhân diện, phát hiện đổi người, rời khỏi camera hoặc có tạp âm lạ chính xác tuyệt đối.
-                </p>
-              </div>
-            </div>
-          </article>
+            </article>
+          </ScrollReveal>
         </div>
       </div>
     </section>
@@ -308,31 +338,33 @@ function InfoSection() {
 function BackedBySection() {
   return (
     <section className="bg-[#F5F5F5] px-6">
-      <div className="max-w-[88rem] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 items-center overflow-hidden">
-        <p className="text-black/70 text-base leading-relaxed whitespace-pre-line">
-          Xây dựng cho nhà trường,{"\n"}giảng viên và đội ngũ vận hành thi.
-        </p>
-        <div className="md:col-span-3 overflow-hidden">
-          <style>{`
-            @keyframes backers-marquee {
-              from { transform: translateX(0); }
-              to { transform: translateX(-50%); }
-            }
-            .backers-track {
-              display: flex;
-              width: max-content;
-              animation: backers-marquee 30s linear infinite;
-            }
-          `}</style>
-          <div className="backers-track">
-            {[...partners, ...partners].map((brand, index) => (
-              <span key={`${brand.name}-${index}`} className="mx-10 shrink-0 text-black/50 whitespace-nowrap" style={brand.style}>
-                {brand.name}
-              </span>
-            ))}
+      <ScrollReveal variant="fade-up" delay={50}>
+        <div className="max-w-[88rem] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 items-center overflow-hidden">
+          <p className="text-black/70 text-base leading-relaxed whitespace-pre-line">
+            Xây dựng cho nhà trường,{"\n"}giảng viên và đội ngũ vận hành thi.
+          </p>
+          <div className="md:col-span-3 overflow-hidden">
+            <style>{`
+              @keyframes backers-marquee {
+                from { transform: translateX(0); }
+                to { transform: translateX(-50%); }
+              }
+              .backers-track {
+                display: flex;
+                width: max-content;
+                animation: backers-marquee 30s linear infinite;
+              }
+            `}</style>
+            <div className="backers-track">
+              {[...partners, ...partners].map((brand, index) => (
+                <span key={`${brand.name}-${index}`} className="mx-10 shrink-0 text-black/50 whitespace-nowrap" style={brand.style}>
+                  {brand.name}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
     </section>
   );
 }
@@ -341,79 +373,83 @@ function UseCasesSection() {
   return (
     <section className="bg-[#F8FAFC] px-6 py-32">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        <div className="lg:pr-12">
-          <p className="text-[#00C6FF] text-sm mb-4 font-black tracking-[0.2em] uppercase">Vận hành chuyên nghiệp</p>
-          <h2 className="text-[#0C2E5E] text-5xl md:text-7xl font-black leading-[1.05] mb-8 tracking-tight">
-            Quy trình khép kín
-          </h2>
-          <p className="text-slate-600 text-lg leading-relaxed mb-10 font-medium">
-            Tích hợp xuyên suốt từ bước chuẩn bị đề bài, quản lý tài liệu đến phát mã phòng và tổng hợp báo cáo phổ điểm cuối kỳ thi.
-          </p>
-          <a href="/login" className="group inline-flex items-center gap-4 text-[#0C2E5E] text-xl font-extrabold">
-            <span className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-xl shadow-[#00C6FF]/30">
-              <ArrowRight className="w-6 h-6 text-white" />
-            </span>
-            Trải nghiệm ứng dụng ngay
-          </a>
-        </div>
+        <ScrollReveal variant="fade-right" delay={100}>
+          <div className="lg:pr-12">
+            <p className="text-[#00C6FF] text-sm mb-4 font-black tracking-[0.2em] uppercase">Vận hành chuyên nghiệp</p>
+            <h2 className="text-[#0C2E5E] text-5xl md:text-7xl font-black leading-[1.05] mb-8 tracking-tight">
+              Quy trình khép kín
+            </h2>
+            <p className="text-slate-600 text-lg leading-relaxed mb-10 font-medium">
+              Tích hợp xuyên suốt từ bước chuẩn bị đề bài, quản lý tài liệu đến phát mã phòng và tổng hợp báo cáo phổ điểm cuối kỳ thi.
+            </p>
+            <a href="/login" className="group inline-flex items-center gap-4 text-[#0C2E5E] text-xl font-extrabold">
+              <span className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-xl shadow-[#00C6FF]/30">
+                <ArrowRight className="w-6 h-6 text-white" />
+              </span>
+              Trải nghiệm ứng dụng ngay
+            </a>
+          </div>
+        </ScrollReveal>
 
-        <div className="relative w-full aspect-[4/3] lg:h-[700px] perspective-container mt-12 lg:mt-0">
-          <style>{`
-            .showcase-3d {
-              transform: rotateY(-18deg) rotateX(12deg);
-              transform-style: preserve-3d;
-              animation: floatShowcase 12s ease-in-out infinite;
-            }
-            @keyframes floatShowcase {
-              0%, 100% { transform: rotateY(-18deg) rotateX(12deg) translateY(0); box-shadow: 40px 60px 100px rgba(12,46,94,0.15); }
-              50% { transform: rotateY(-12deg) rotateX(6deg) translateY(-30px); box-shadow: 25px 75px 120px rgba(0,198,255,0.25); }
-            }
-            .glass-panel-3d {
-              transform: translateZ(70px);
-              transform-style: preserve-3d;
-              border: 1px solid rgba(255, 255, 255, 0.7);
-            }
-            .floating-stats-3d {
-              transform: translateZ(100px);
-            }
-            .stat-card-3d {
-              transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-              border: 1px solid rgba(255, 255, 255, 0.8);
-            }
-            .stat-card-3d:hover {
-              transform: translateZ(25px) translateY(-8px);
-              box-shadow: 0 25px 50px rgba(12,46,94,0.15);
-              border-color: rgba(0, 198, 255, 0.3);
-            }
-          `}</style>
-          
-          <div className="w-full h-full rounded-[3.5rem] overflow-hidden showcase-3d relative bg-[radial-gradient(circle_at_60%_10%,rgba(255,255,255,0.95),transparent_25%),linear-gradient(145deg,#eaf6ff_0%,#ffffff_45%,#cbe5f9_100%)] border border-white/70">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,198,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,198,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <ScrollReveal variant="fade-left" delay={250}>
+          <div className="relative w-full aspect-[4/3] lg:h-[700px] perspective-container mt-12 lg:mt-0">
+            <style>{`
+              .showcase-3d {
+                transform: rotateY(-18deg) rotateX(12deg);
+                transform-style: preserve-3d;
+                animation: floatShowcase 12s ease-in-out infinite;
+              }
+              @keyframes floatShowcase {
+                0%, 100% { transform: rotateY(-18deg) rotateX(12deg) translateY(0); box-shadow: 40px 60px 100px rgba(12,46,94,0.15); }
+                50% { transform: rotateY(-12deg) rotateX(6deg) translateY(-30px); box-shadow: 25px 75px 120px rgba(0,198,255,0.25); }
+              }
+              .glass-panel-3d {
+                transform: translateZ(70px);
+                transform-style: preserve-3d;
+                border: 1px solid rgba(255, 255, 255, 0.7);
+              }
+              .floating-stats-3d {
+                transform: translateZ(100px);
+              }
+              .stat-card-3d {
+                transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+                border: 1px solid rgba(255, 255, 255, 0.8);
+              }
+              .stat-card-3d:hover {
+                transform: translateZ(25px) translateY(-8px);
+                box-shadow: 0 25px 50px rgba(12,46,94,0.15);
+                border-color: rgba(0, 198, 255, 0.3);
+              }
+            `}</style>
             
-            <div className="absolute inset-8 lg:inset-12 glass-panel-3d bg-white/60 backdrop-blur-xl rounded-[3rem] shadow-[0_30px_80px_rgba(12,46,94,0.1)] flex flex-col justify-between p-10 md:p-14">
-               <div>
-                 <div className="w-16 h-16 bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] rounded-3xl flex items-center justify-center mb-10 shadow-xl shadow-[#00C6FF]/30">
-                   <ShieldCheck className="w-8 h-8 text-white" />
-                 </div>
-                 <h3 className="text-4xl md:text-6xl font-black leading-tight mb-6 tracking-tight text-[#0C2E5E]">
-                   Trung Tâm<br/>Theo Dõi
-                 </h3>
-                 <p className="text-slate-600 text-lg font-medium leading-relaxed max-w-md">
-                   Bảng điều khiển giám sát trung tâm giúp quản trị viên phát hiện sự cố và duy trì tính chính trực của bài thi.
-                 </p>
-               </div>
-               
-               <div className="grid grid-cols-3 gap-5 floating-stats-3d">
-                 {["Chờ thi", "Đang làm", "Đã nộp"].map((label, index) => (
-                   <div key={label} className="stat-card-3d rounded-2xl bg-white shadow-[0_20px_50px_-10px_rgba(12,46,94,0.08)] p-6 border border-slate-100 flex flex-col items-center text-center">
-                     <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] mb-2">{[24, 18, 42][index]}</p>
-                     <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+            <div className="w-full h-full rounded-[3.5rem] overflow-hidden showcase-3d relative bg-[radial-gradient(circle_at_60%_10%,rgba(255,255,255,0.95),transparent_25%),linear-gradient(145deg,#eaf6ff_0%,#ffffff_45%,#cbe5f9_100%)] border border-white/70">
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,198,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,198,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+              
+              <div className="absolute inset-8 lg:inset-12 glass-panel-3d bg-white/60 backdrop-blur-xl rounded-[3rem] shadow-[0_30px_80px_rgba(12,46,94,0.1)] flex flex-col justify-between p-10 md:p-14">
+                 <div>
+                   <div className="w-16 h-16 bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] rounded-3xl flex items-center justify-center mb-10 shadow-xl shadow-[#00C6FF]/30">
+                     <ShieldCheck className="w-8 h-8 text-white" />
                    </div>
-                 ))}
-               </div>
+                   <h3 className="text-4xl md:text-6xl font-black leading-tight mb-6 tracking-tight text-[#0C2E5E]">
+                     Trung Tâm<br/>Theo Dõi
+                   </h3>
+                   <p className="text-slate-600 text-lg font-medium leading-relaxed max-w-md">
+                     Bảng điều khiển giám sát trung tâm giúp quản trị viên phát hiện sự cố và duy trì tính chính trực của bài thi.
+                   </p>
+                 </div>
+                 
+                 <div className="grid grid-cols-3 gap-5 floating-stats-3d">
+                   {["Chờ thi", "Đang làm", "Đã nộp"].map((label, index) => (
+                     <div key={label} className="stat-card-3d rounded-2xl bg-white shadow-[0_20px_50px_-10px_rgba(12,46,94,0.08)] p-6 border border-slate-100 flex flex-col items-center text-center">
+                       <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] mb-2">{[24, 18, 42][index]}</p>
+                       <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+                     </div>
+                   ))}
+                 </div>
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );
