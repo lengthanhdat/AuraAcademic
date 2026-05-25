@@ -5,7 +5,14 @@ import { TeacherHeader } from "@/components/layout/TeacherHeader";
 import { Toaster } from "sonner";
 import AuthGuard from "@/components/layout/AuthGuard";
 import { usePathname } from "next/navigation";
-import { ChatBox } from "@/components/chat/ChatBox";
+import dynamic from "next/dynamic";
+
+const ChatBox = dynamic(
+  () => import("@/components/chat/ChatBox").then(m => ({ default: m.ChatBox })),
+  { ssr: false, loading: () => null }
+);
+
+const KatexStyles = dynamic(() => import("@/components/KatexStyles"), { ssr: false });
 
 export default function TeacherLayout({
   children,
@@ -58,6 +65,7 @@ export default function TeacherLayout({
             style: { fontFamily: "inherit" },
           }}
         />
+        <KatexStyles />
         <ChatBox />
       </div>
     </AuthGuard>

@@ -5,6 +5,9 @@ import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminHeader } from "@/components/layout/AdminHeader";
 import AuthGuard from "@/components/layout/AuthGuard";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const KatexStyles = dynamic(() => import("@/components/KatexStyles"), { ssr: false });
 
 export default function AdminLayout({
   children,
@@ -48,6 +51,7 @@ export default function AdminLayout({
             {children}
           </main>
         </div>
+        <KatexStyles />
       </div>
     </AuthGuard>
   );

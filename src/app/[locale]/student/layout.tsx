@@ -4,7 +4,14 @@ import { StudentSidebar } from "@/components/layout/StudentSidebar";
 import { StudentHeader } from "@/components/layout/StudentHeader";
 import AuthGuard from "@/components/layout/AuthGuard";
 import { usePathname } from "next/navigation";
-import { ChatBox } from "@/components/chat/ChatBox";
+import dynamic from "next/dynamic";
+
+const ChatBox = dynamic(
+  () => import("@/components/chat/ChatBox").then(m => ({ default: m.ChatBox })),
+  { ssr: false, loading: () => null }
+);
+
+const KatexStyles = dynamic(() => import("@/components/KatexStyles"), { ssr: false });
 
 export default function StudentLayout({
   children,
@@ -58,6 +65,7 @@ export default function StudentLayout({
           <StudentHeader onMenuClick={() => setIsCollapsed(prev => !prev)} />
           {children}
         </div>
+        <KatexStyles />
         <ChatBox />
       </div>
     </AuthGuard>

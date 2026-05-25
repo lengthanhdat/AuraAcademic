@@ -5,7 +5,9 @@ import { MessageSquare, Send, X, Loader2, Sparkles, CornerDownLeft } from "lucid
 import { chatApi, ChatMessage, ChatRoom } from "@/lib/chatApi";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import ReactMarkdown from "react-markdown";
+import dynamic from "next/dynamic";
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 
 export function ChatBox() {
   const [isOpen, setIsOpen] = useState(false);
