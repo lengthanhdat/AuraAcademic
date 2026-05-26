@@ -16,6 +16,7 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
     { label: t("menu.dashboard"), icon: "dashboard", href: "/student/dashboard" },
     { label: t("menu.exams"), icon: "quiz", href: "/student/exams" },
     { label: t("menu.results"), icon: "assignment_turned_in", href: "/student/results" },
+    { label: "Lớp học", icon: "school", href: "/student/classrooms" },
     { label: "Ngân hàng đề", icon: "local_library", href: "/student/exam-bank" },
     { label: t("menu.materials"), icon: "menu_book", href: "/student/materials" },
     { label: t("menu.profile"), icon: "manage_accounts", href: "/student/profile" },

@@ -168,7 +168,7 @@ export default function Register() {
               </button>
             </div>
 
-            <div className="w-full mb-8 rounded-2xl overflow-hidden shadow-sm border border-slate-200/60 bg-white hover:shadow-md transition-shadow">
+            <div className="w-full mb-8 rounded-2xl overflow-hidden shadow-sm border border-slate-200/60 bg-white hover:shadow-md transition-shadow flex justify-center p-2">
               <GoogleOAuthProvider clientId="800081855688-vvu143d2r2hgoo24h6adsm6j7vaj95mn.apps.googleusercontent.com" locale={currentLocale}>
                 <GoogleLogin 
                   onSuccess={async (creds) => {
@@ -197,7 +197,7 @@ export default function Register() {
                   }}
                   onError={() => showAlert({ title: t("google_error_title"), message: t("google_error_msg"), type: "error" })}
                   text="signup_with"
-                  width="100%"
+                  width="380"
                   shape="rectangular"
                   size="large"
                 />
