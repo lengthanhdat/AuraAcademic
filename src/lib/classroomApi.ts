@@ -72,4 +72,29 @@ export const classroomApi = {
       method: "POST",
       headers: authOnly(),
     }),
+
+  /** All auth: Lấy danh sách đề thi của lớp */
+  getClassroomExams: (id: string) =>
+    apiFetch<any[]>(`${API_BASE}/${id}/exams`, { headers: authOnly() }),
+
+  /** Teacher: Giao đề thi từ Ngân hàng đề vào lớp */
+  linkExamFromBank: (id: string, examId: string) =>
+    apiFetch<any>(`${API_BASE}/${id}/exams/link`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ examId }),
+    }),
+
+  /** Teacher: Lấy danh sách đề thi trong ngân hàng đề (isBankItem=true) */
+  getTeacherBankExams: (teacherId: string) =>
+    apiFetch<any[]>(`${GLOBAL_API_BASE}/exams/teacher/${teacherId}/bank-items`, {
+      headers: authOnly(),
+    }),
+
+  /** Teacher: Xóa đề thi khỏi lớp học */
+  deleteClassroomExam: (id: string, examId: string) =>
+    apiFetch<{ message: string }>(`${API_BASE}/${id}/exams/${examId}`, {
+      method: "DELETE",
+      headers: authOnly(),
+    }),
 };

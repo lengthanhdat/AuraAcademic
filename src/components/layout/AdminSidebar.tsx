@@ -18,6 +18,7 @@ const navSections = [
       { href: "/admin/roles", icon: "admin_panel_settings", label: "Phân quyền RBAC" },
       { href: "/admin/exams", icon: "quiz", label: "Bài thi" },
       { href: "/admin/exam-bank", icon: "folder_special", label: "Ngân hàng chuyên đề" },
+      { href: "/admin/folders", icon: "create_new_folder", label: "Quản lý Chuyên đề" },
       { href: "/admin/materials", icon: "menu_book", label: "Tài liệu hệ thống" },
       { href: "/admin/content", icon: "article", label: "Nội dung & Media" },
     ],

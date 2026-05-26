@@ -24,12 +24,7 @@ interface ClassroomMsg {
   timestamp?: string;
 }
 
-interface EmbeddedExamState {
-  exam: any;
-  answers: Record<string, string>;
-  submitted: boolean;
-  score: number | null;
-}
+// Embedded exam state interface removed
 
 export default function StudentClassroomDetailPage() {
   const params = useParams();
@@ -42,7 +37,6 @@ export default function StudentClassroomDetailPage() {
   const [chatMsgs, setChatMsgs] = useState<ClassroomMsg[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [wsConnected, setWsConnected] = useState(false);
-  const [embeddedExam, setEmbeddedExam] = useState<EmbeddedExamState | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stompRef = useRef<Client | null>(null);
   const userRef = useRef<any>(null);
@@ -133,26 +127,8 @@ export default function StudentClassroomDetailPage() {
   };
 
   const startExam = (exam: any) => {
-    setEmbeddedExam({ exam, answers: {}, submitted: false, score: null });
-  };
-
-  const selectAnswer = (qKey: string, answer: string) => {
-    setEmbeddedExam(prev => prev ? { ...prev, answers: { ...prev.answers, [qKey]: answer } } : null);
-  };
-
-  const submitExam = () => {
-    if (!embeddedExam) return;
-    const questions: any[] = embeddedExam.exam.questions || [];
-    let correct = 0;
-    questions.forEach((q: any, i: number) => {
-      const key = q.id ?? String(i);
-      if (embeddedExam.answers[key] === (q.correctAnswer ?? q.answer)) correct++;
-    });
-    const score = questions.length > 0
-      ? Math.round((correct / questions.length) * 10 * 10) / 10
-      : 0;
-    setEmbeddedExam(prev => prev ? { ...prev, submitted: true, score } : null);
-    toast.success(`Nộp bài thành công! Điểm: ${score}/10`);
+    sessionStorage.setItem("exam_redirect_classroomId", classroomId);
+    router.push(`/student/lobby?code=${exam.accessCode}`);
   };
 
   if (isLoading) return (
@@ -174,116 +150,24 @@ export default function StudentClassroomDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#060f1e]">
-
-      {/* ── EMBEDDED EXAM ── */}
-      {embeddedExam && !embeddedExam.submitted && (
-        <div className="fixed inset-0 z-50 bg-[#060f1e] flex flex-col overflow-hidden">
-          <div className="bg-slate-900/95 border-b border-slate-700/60 px-6 py-4 flex items-center justify-between shrink-0">
-            <div>
-              <h2 className="text-white font-bold text-lg">{embeddedExam.exam.title}</h2>
-              <p className="text-slate-400 text-sm">
-                {Object.keys(embeddedExam.answers).length} / {embeddedExam.exam.questions?.length || 0} đã trả lời
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={submitExam}
-                className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_12px_rgba(0,198,255,0.3)]"
-              >
-                Nộp bài
-              </button>
-              <button
-                onClick={() => setEmbeddedExam(null)}
-                className="px-4 py-2.5 bg-slate-800 text-slate-400 hover:text-white rounded-xl font-medium transition-colors"
-              >
-                Thoát
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-6 md:p-10">
-            {(!embeddedExam.exam.questions || embeddedExam.exam.questions.length === 0) ? (
-              <div className="text-center text-slate-400 py-20">
-                <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>Bài thi chưa có câu hỏi chi tiết.</p>
-              </div>
-            ) : (
-              <div className="max-w-2xl mx-auto space-y-6">
-                {embeddedExam.exam.questions.map((q: any, i: number) => {
-                  const key = q.id ?? String(i);
-                  return (
-                    <div key={key} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6">
-                      <p className="text-white font-medium mb-4">
-                        <span className="text-cyan-400 mr-2">Câu {i + 1}.</span>
-                        {q.content ?? q.question ?? "Câu hỏi"}
-                      </p>
-                      <div className="space-y-2">
-                        {(q.options ?? q.answers ?? []).map((opt: string, oi: number) => {
-                          const selected = embeddedExam.answers[key] === opt;
-                          return (
-                            <button
-                              key={oi}
-                              onClick={() => selectAnswer(key, opt)}
-                              className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all border ${
-                                selected
-                                  ? "bg-cyan-500/20 border-cyan-500/60 text-cyan-300"
-                                  : "bg-slate-900/40 border-slate-700/40 text-slate-300 hover:border-slate-600 hover:bg-slate-800/60"
-                              }`}
-                            >
-                              <span className="font-bold text-xs mr-2">{String.fromCharCode(65 + oi)}.</span>
-                              {opt}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── EXAM RESULT ── */}
-      {embeddedExam?.submitted && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8 text-center max-w-sm w-full">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(0,198,255,0.4)]">
-              <Trophy className="w-10 h-10 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Nộp bài thành công!</h2>
-            <p className="text-slate-400 text-sm mb-4">{embeddedExam.exam.title}</p>
-            <div className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">
-              {embeddedExam.score}
-            </div>
-            <p className="text-slate-400 text-sm mb-6">Điểm số / 10</p>
-            <button
-              onClick={() => setEmbeddedExam(null)}
-              className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium hover:from-cyan-400 hover:to-blue-500 transition-all"
-            >
-              Quay lại lớp học
-            </button>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#060f1e] text-slate-800 dark:text-slate-100">
 
       {/* ── HEADER ── */}
-      <div className="relative bg-gradient-to-r from-slate-900 via-[#0a1f3e] to-slate-900 border-b border-slate-800/60 px-8 pt-8 pb-0">
+      <div className="relative bg-white dark:bg-gradient-to-r dark:from-slate-900 dark:via-[#0a1f3e] dark:to-slate-900 border-b border-slate-200 dark:border-slate-800/60 px-8 pt-8 pb-0">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/3 w-96 h-32 bg-cyan-500/5 rounded-full blur-3xl" />
         </div>
         <button
           onClick={() => router.push("/student/classrooms")}
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors text-sm mb-6 group"
+          className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors text-sm mb-6 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Quay lại
         </button>
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white">{classroom?.name}</h1>
-          <p className="text-slate-400 mt-1 text-sm">{classroom?.description}</p>
-          <p className="text-slate-500 text-sm mt-2">
-            Giáo viên: <span className="text-slate-300 font-medium">{classroom?.teacherName}</span>
+          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white">{classroom?.name}</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm leading-relaxed">{classroom?.description}</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm mt-2 font-semibold">
+            Giáo viên: <span className="text-slate-700 dark:text-slate-300 font-bold">{classroom?.teacherName}</span>
           </p>
         </div>
         <div className="flex gap-1 overflow-x-auto">
@@ -291,10 +175,10 @@ export default function StudentClassroomDetailPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`relative flex items-center gap-2 px-5 py-3 text-sm font-medium transition-all rounded-t-xl whitespace-nowrap ${
+              className={`relative flex items-center gap-2 px-5 py-3 text-sm font-bold transition-all rounded-t-xl whitespace-nowrap ${
                 tab === t.key
-                  ? "bg-[#060f1e] text-cyan-400 border-x border-t border-slate-700/60"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+                  ? "bg-slate-50 dark:bg-[#060f1e] text-cyan-600 dark:text-cyan-400 border-x border-t border-slate-200 dark:border-slate-700/60 shadow-[0_-2px_10px_rgba(0,0,0,0.02)]"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-slate-800/40"
               }`}
             >
               {t.icon}{t.label}
@@ -324,9 +208,9 @@ export default function StudentClassroomDetailPage() {
         {/* TÀI LIỆU */}
         {tab === "materials" && (
           <div className="max-w-3xl mx-auto">
-            <h3 className="text-white font-semibold mb-4">Tài liệu học tập ({materials.length})</h3>
+            <h3 className="text-slate-800 dark:text-white font-bold text-lg mb-4">Tài liệu học tập ({materials.length})</h3>
             {materials.length === 0 ? (
-              <div className="text-center text-slate-500 py-12 border border-dashed border-slate-700/50 rounded-2xl">
+              <div className="text-center text-slate-400 dark:text-slate-500 py-12 border border-dashed border-slate-200 dark:border-slate-700/50 rounded-2xl">
                 <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-20" />
                 <p>Giáo viên chưa chia sẻ tài liệu nào.</p>
               </div>
@@ -338,16 +222,16 @@ export default function StudentClassroomDetailPage() {
                     href={m.fileUrl || "#"}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-4 bg-slate-800/40 border border-slate-700/50 rounded-xl px-5 py-4 hover:border-cyan-500/40 transition-all group"
+                    className="flex items-center gap-4 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-slate-700/50 rounded-xl px-5 py-4 hover:border-cyan-500/40 transition-all shadow-sm group"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
-                      <FileText className="w-5 h-5 text-blue-400" />
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center shrink-0">
+                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate group-hover:text-cyan-400 transition-colors">{m.title}</p>
-                      <p className="text-slate-500 text-xs mt-0.5">{m.subject || "Tài liệu"}</p>
+                      <p className="text-slate-800 dark:text-white font-medium truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{m.title}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">{m.subject || "Tài liệu"}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors shrink-0" />
                   </a>
                 ))}
               </div>
@@ -358,32 +242,33 @@ export default function StudentClassroomDetailPage() {
         {/* BÀI THI */}
         {tab === "exams" && (
           <div className="max-w-3xl mx-auto">
-            <h3 className="text-white font-semibold mb-4">Bài thi được giao ({exams.length})</h3>
+            <h3 className="text-slate-800 dark:text-white font-bold text-lg mb-4">Bài thi được giao ({exams.length})</h3>
             {exams.length === 0 ? (
-              <div className="text-center text-slate-500 py-12 border border-dashed border-slate-700/50 rounded-2xl">
+              <div className="text-center text-slate-400 dark:text-slate-500 py-12 border border-dashed border-slate-200 dark:border-slate-700/50 rounded-2xl">
                 <Trophy className="w-10 h-10 mx-auto mb-3 opacity-20" />
                 <p>Giáo viên chưa giao bài thi nào.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {exams.map((exam: any) => (
-                  <div key={exam.id} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5 hover:border-cyan-500/30 transition-all">
+                  <div key={exam.id} className="bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 hover:border-cyan-500/30 dark:hover:border-cyan-500/30 transition-all shadow-sm">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-semibold text-lg">{exam.title}</h4>
-                        <p className="text-slate-400 text-sm mt-1 line-clamp-2">{exam.description}</p>
+                        <h4 className="text-slate-850 dark:text-white font-bold text-lg">{exam.title}</h4>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 line-clamp-2 leading-relaxed">{exam.description}</p>
                         <div className="flex items-center gap-4 mt-3 text-sm flex-wrap">
-                          <span className="text-slate-400">
-                            <span className="text-cyan-400">{exam.questionCount ?? exam.questions?.length ?? 0}</span> câu hỏi
+                          <span className="text-slate-500 dark:text-slate-400">
+                            <span className="text-cyan-600 dark:text-cyan-400 font-semibold">{exam.questionCount ?? exam.questions?.length ?? 0}</span> câu hỏi
                           </span>
-                          <span className="text-slate-400">
-                            <span className="text-cyan-400">{exam.duration ?? 60}</span> phút
+                          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            <Clock className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                            <span className="text-cyan-600 dark:text-cyan-400 font-semibold">{exam.duration ?? 60}</span> phút
                           </span>
                         </div>
                       </div>
                       <button
                         onClick={() => startExam(exam)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_12px_rgba(0,198,255,0.25)] text-sm shrink-0"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_12px_rgba(0,198,255,0.25)] text-sm shrink-0"
                       >
                         <PlayCircle className="w-4 h-4" /> Làm bài
                       </button>
@@ -399,16 +284,16 @@ export default function StudentClassroomDetailPage() {
         {tab === "chat" && (
           <div className="max-w-3xl mx-auto">
             <div
-              className="bg-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden flex flex-col"
+              className="bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-slate-700/50 rounded-2xl overflow-hidden flex flex-col shadow-sm"
               style={{ height: "calc(100vh - 290px)", minHeight: "400px" }}
             >
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-700/50 bg-slate-900/40 shrink-0">
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/40 shrink-0">
                 <div className={`w-2 h-2 rounded-full transition-colors ${wsConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
-                <span className="text-xs text-slate-400">{wsConnected ? "Realtime đang kết nối" : "Đang kết nối..."}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{wsConnected ? "Realtime đang kết nối" : "Đang kết nối..."}</span>
               </div>
-              <div className="flex-1 overflow-y-auto p-5 space-y-3">
+              <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-slate-50/30 dark:bg-transparent">
                 {chatMsgs.length === 0 && (
-                  <div className="text-center text-slate-500 py-10 text-sm">Chưa có tin nhắn nào. Bắt đầu thảo luận với lớp!</div>
+                  <div className="text-center text-slate-400 dark:text-slate-500 py-10 text-sm">Chưa có tin nhắn nào. Bắt đầu thảo luận với lớp!</div>
                 )}
                 {chatMsgs.map((msg, i) => {
                   const isMe = msg.senderId === userRef.current?.id;
@@ -419,11 +304,11 @@ export default function StudentClassroomDetailPage() {
                         isMe
                           ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-br-sm"
                           : isTeacher
-                          ? "bg-gradient-to-r from-amber-500/15 to-orange-500/15 border border-amber-500/30 text-white rounded-bl-sm"
-                          : "bg-slate-700/60 text-slate-200 rounded-bl-sm"
+                          ? "bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 text-amber-900 dark:text-white rounded-bl-sm"
+                          : "bg-slate-100 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 rounded-bl-sm"
                       }`}>
                         {!isMe && (
-                          <p className={`text-xs font-medium mb-1 ${isTeacher ? "text-amber-400" : "text-cyan-300"}`}>
+                          <p className={`text-xs font-bold mb-1 ${isTeacher ? "text-amber-600 dark:text-amber-400" : "text-cyan-600 dark:text-cyan-300"}`}>
                             {isTeacher ? "👨‍🏫 " : ""}{msg.senderName}
                           </p>
                         )}
@@ -434,13 +319,13 @@ export default function StudentClassroomDetailPage() {
                 })}
                 <div ref={chatEndRef} />
               </div>
-              <div className="p-4 border-t border-slate-700/50 bg-slate-900/40 flex gap-3 shrink-0">
+              <div className="p-4 border-t border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/40 flex gap-3 shrink-0">
                 <input
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
                   placeholder="Đặt câu hỏi hoặc thảo luận..."
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500 transition-all"
+                  className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white text-sm focus:outline-none focus:border-cyan-500 transition-all placeholder-slate-400"
                 />
                 <button
                   onClick={sendMsg}

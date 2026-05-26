@@ -75,31 +75,37 @@ export default function TeacherClassroomsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {classrooms.map((cls) => (
-            <div key={cls.id} className="group relative bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 transition-all hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(0,198,255,0.15)] overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-cyan-500/20" />
+            <div key={cls.id} className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-500/50 dark:hover:border-cyan-500/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-500 group-hover:scale-125" />
               
               <Link href={`/teacher/classrooms/${cls.id}`}>
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{cls.name}</h3>
-                <p className="text-slate-400 text-sm mb-4 line-clamp-2">{cls.description}</p>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center shadow-md shadow-blue-500/10">
+                    <span className="material-symbols-outlined text-white text-xl">class</span>
+                  </div>
+                  <h3 className="text-xl font-extrabold text-slate-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors leading-none">{cls.name}</h3>
+                </div>
                 
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1.5 text-slate-300">
-                    <Users className="w-4 h-4 text-cyan-400" />
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2 min-h-[40px] leading-relaxed">{cls.description || "Chưa có mô tả ngắn nào cho lớp học này."}</p>
+                
+                <div className="flex items-center gap-4 text-sm font-semibold">
+                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                    <Users className="w-4 h-4 text-cyan-500" />
                     <span>{cls.studentIds?.length || 0} học sinh</span>
                   </div>
                   {cls.pendingStudentIds?.length > 0 && (
-                    <div className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-medium">
+                    <div className="px-2.5 py-0.5 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold animate-pulse">
                       {cls.pendingStudentIds.length} chờ duyệt
                     </div>
                   )}
                 </div>
               </Link>
               
-              <div className="mt-5 pt-4 border-t border-slate-700/50 flex items-center justify-between">
-                <div className="text-xs text-slate-500">Mã tham gia:</div>
+              <div className="mt-5 pt-4 border-t border-slate-100 dark:border-cyan-950/40 flex items-center justify-between">
+                <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Mã tham gia</div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-cyan-400 font-bold tracking-widest">{cls.code}</span>
-                  <button onClick={() => copyCode(cls.code)} className="p-1.5 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors">
+                  <span className="font-mono text-[#00C6FF] font-black tracking-widest text-sm bg-cyan-50 dark:bg-cyan-950/30 px-2.5 py-1 rounded-lg border border-cyan-100/50 dark:border-cyan-900/30">{cls.code}</span>
+                  <button onClick={() => copyCode(cls.code)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-lg text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>

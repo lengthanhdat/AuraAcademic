@@ -73,17 +73,17 @@ export default function StudentClassroomsPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-48 rounded-2xl bg-slate-800/40 border border-slate-700/50 animate-pulse" />
+            <div key={i} className="h-48 rounded-2xl bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 animate-pulse" />
           ))}
         </div>
       ) : classrooms.length === 0 ? (
-        <div className="text-center py-24 border border-dashed border-slate-700/50 rounded-2xl bg-slate-800/20 backdrop-blur-sm">
-          <BookOpen className="w-14 h-14 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 font-medium">Bạn chưa tham gia lớp học nào.</p>
-          <p className="text-slate-500 text-sm mt-1">Nhập mã lớp từ giáo viên để bắt đầu!</p>
+        <div className="text-center py-24 border border-dashed border-slate-200 dark:border-cyan-950/60 rounded-3xl bg-white dark:bg-[#0A1F3E]/20 backdrop-blur-sm">
+          <BookOpen className="w-14 h-14 text-slate-400 dark:text-slate-600 mx-auto mb-4 animate-bounce" />
+          <p className="text-slate-700 dark:text-slate-300 font-bold text-lg">Bạn chưa tham gia lớp học nào</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Nhập mã lớp từ giáo viên để bắt đầu hành trình học tập ngay!</p>
           <button
             onClick={() => setShowModal(true)}
-            className="mt-6 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-sm font-medium hover:from-cyan-400 hover:to-blue-500 transition-all"
+            className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(0,198,255,0.25)]"
           >
             Tham gia lớp học ngay
           </button>
@@ -96,34 +96,34 @@ export default function StudentClassroomsPage() {
               <Link
                 key={cls.id}
                 href={`/vi/student/classrooms/${cls.id}`}
-                className="group relative bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 transition-all hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(0,198,255,0.12)] overflow-hidden"
+                className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-500/50 dark:hover:border-cyan-500/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden"
               >
                 {/* Glow accent */}
-                <div className={`absolute top-0 right-0 w-36 h-36 rounded-full bg-gradient-to-br ${accent} opacity-10 blur-3xl -mr-12 -mt-12 transition-all group-hover:opacity-20`} />
+                <div className={`absolute top-0 right-0 w-36 h-36 rounded-full bg-gradient-to-br ${accent} opacity-10 blur-3xl -mr-12 -mt-12 transition-all duration-500 group-hover:scale-125`} />
 
                 {/* Header card */}
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${accent} mb-4 shadow-lg`}>
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${accent} mb-4 shadow-md`}>
                   <BookOpen className="w-6 h-6 text-white" />
                 </div>
 
-                <h3 className="text-lg font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors line-clamp-1">
+                <h3 className="text-lg font-extrabold text-slate-800 dark:text-white mb-1.5 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-1">
                   {cls.name}
                 </h3>
-                <p className="text-slate-400 text-sm mb-4 line-clamp-2">{cls.description || "Không có mô tả"}</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2 leading-relaxed min-h-[40px]">{cls.description || "Không có mô tả chi tiết cho lớp học này."}</p>
 
-                <div className="flex items-center gap-4 text-sm border-t border-slate-700/50 pt-4">
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <Users className="w-4 h-4 text-cyan-400" />
+                <div className="flex items-center gap-4 text-sm font-semibold border-t border-slate-100 dark:border-cyan-950/40 pt-4">
+                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                    <Users className="w-4 h-4 text-cyan-500" />
                     <span>{cls.studentIds?.length || 0} học sinh</span>
                   </div>
-                  <div className="ml-auto flex items-center gap-1.5 text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <div className="ml-auto flex items-center gap-1.5 text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     Đã tham gia
                   </div>
                 </div>
 
-                <p className="mt-2 text-xs text-slate-500">
-                  Giáo viên: <span className="text-slate-300">{cls.teacherName}</span>
+                <p className="mt-3 text-xs font-semibold text-slate-400 dark:text-slate-500">
+                  Giáo viên: <span className="text-slate-600 dark:text-slate-300 font-bold">{cls.teacherName || "Chưa cập nhật"}</span>
                 </p>
               </Link>
             );

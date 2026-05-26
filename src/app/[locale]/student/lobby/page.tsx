@@ -244,7 +244,18 @@ export default function StudentLobby() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4 md:p-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-6">
+        {examInfo?.isPreviewMode && (
+          <div className="max-w-6xl w-full mb-6 bg-gradient-to-r from-amber-500/15 to-orange-500/10 border-l-4 border-amber-500 rounded-xl p-4 flex items-center gap-3 shadow-sm animate-in slide-in-from-top duration-300">
+            <span className="material-symbols-outlined text-amber-500 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>gavel</span>
+            <div className="flex-1 text-left">
+              <p className="font-extrabold text-amber-700 dark:text-amber-400 text-sm">Chế độ xem trước phòng thi (Preview Mode)</p>
+              <p className="text-xs text-amber-600/90 dark:text-amber-500/80 mt-0.5 font-semibold">
+                Bạn đang truy cập phòng thi với tư cách Giáo viên/Quản trị viên. Hệ thống tự động bỏ qua kiểm tra danh sách thành viên lớp học và cho phép bạn xem trước phòng chờ này.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="max-w-6xl w-full grid md:grid-cols-2 gap-6 items-start">
 
           {/* LEFT — Camera (nếu có AI) HOẶC Info Card (nếu không AI) */}
