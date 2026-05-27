@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -25,6 +26,14 @@ export default function TakeExam() {
   const [isTimeUp, setIsTimeUp] = useState(false); // Hiển thị thông báo hết giờ
   const [examStarted, setExamStarted] = useState(false); // Màn hình nội quy
   const [showSubmitModal, setShowSubmitModal] = useState(false); // Modal xác nhận nộp bài
+  const [classroomId, setClassroomId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const redirectId = sessionStorage.getItem("exam_redirect_classroomId");
+    if (redirectId) {
+      setClassroomId(redirectId);
+    }
+  }, []);
 
   // --- AI PROCTORING LOGIC ---
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -336,7 +345,16 @@ export default function TakeExam() {
             document.exitFullscreen().catch(() => {});
           }
         }, 200);
-        // Không redirect nữa, hiển thị trang tổng quan kết quả
+
+        // Tự động chuyển hướng về lớp học nếu có classroomId
+        const redirectClassroomId = sessionStorage.getItem("exam_redirect_classroomId");
+        if (redirectClassroomId) {
+          sessionStorage.removeItem("exam_redirect_classroomId");
+          toast.success("Nộp bài thành công! Đang chuyển hướng bạn quay lại lớp học...");
+          setTimeout(() => {
+            router.push(`/student/classrooms/${redirectClassroomId}`);
+          }, 3000);
+        }
       } else {
         alert(t("submit_error"));
       }
@@ -613,11 +631,17 @@ export default function TakeExam() {
                   Tổng quan
                 </button>
                 <button 
-                  onClick={() => router.push("/student/dashboard")}
+                  onClick={() => {
+                    if (classroomId) {
+                      router.push(`/student/classrooms/${classroomId}`);
+                    } else {
+                      router.push("/student/dashboard");
+                    }
+                  }}
                   className="px-6 py-2.5 bg-[#00355f] text-white shadow-lg shadow-blue-900/20 font-bold rounded-xl active:scale-95 transition-all hover:bg-[#002848] flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[20px]">home</span>
-                  Trang chủ
+                  <span className="material-symbols-outlined text-[20px]">{classroomId ? "school" : "home"}</span>
+                  {classroomId ? "Quay lại lớp học" : "Trang chủ"}
                 </button>
               </>
             )}
@@ -691,11 +715,17 @@ export default function TakeExam() {
                  Xem chi tiết đáp án
                </button>
                <button 
-                 onClick={() => router.push("/student/dashboard")}
+                  onClick={() => {
+                    if (classroomId) {
+                      router.push(`/student/classrooms/${classroomId}`);
+                    } else {
+                      router.push("/student/dashboard");
+                    }
+                  }}
                  className="w-full sm:w-auto px-8 py-3.5 bg-[#00355f] text-white font-bold rounded-xl hover:bg-[#002848] shadow-lg shadow-blue-900/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                >
-                 <span className="material-symbols-outlined text-[20px]">home</span>
-                 Trở về trang chủ
+                 <span className="material-symbols-outlined text-[20px]">{classroomId ? "school" : "home"}</span>
+                 {classroomId ? "Quay lại lớp học" : "Trở về trang chủ"}
                </button>
              </div>
           </div>
@@ -741,8 +771,8 @@ export default function TakeExam() {
                     } else {
                       // Chế độ làm bài
                       if (answers[q.id] === opt.id) {
-                        optionClass = 'border-[#00355f] bg-blue-50/50';
-                        textClass = 'font-bold text-[#00355f]';
+                        optionClass = 'border-[#00355f] bg-[#00355f]/10 dark:bg-[#00C6FF]/10 text-[#00355f] dark:text-[#00C6FF] shadow-sm';
+                        textClass = 'font-bold text-[#00355f] dark:text-[#00C6FF]';
                       }
                     }
 

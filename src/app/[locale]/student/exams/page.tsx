@@ -51,7 +51,7 @@ export default function StudentExams() {
       });
       if (res.ok) {
         window.location.href = `/${locale}/student/lobby?code=${code}`;
-      } else if (res.status === 401 || res.status === 403) {
+      } else if (res.status === 401) {
         setError(t('session_expired'));
       } else {
         const msg = await res.text();

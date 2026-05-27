@@ -131,6 +131,7 @@ export default function TeacherDashboard() {
         title: `${examToShare.title} (Ngân hàng)`,
         status: "PUBLISHED", // or PENDING if moderation is enabled
         isPractice: true,
+        isBankItem: true,
         bankItem: true,
         folderId: selectedFolderId
       };
