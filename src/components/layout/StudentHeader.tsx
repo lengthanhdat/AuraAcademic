@@ -52,7 +52,8 @@ export function StudentHeader({ onMenuClick }: HeaderProps) {
         </span>
         <div className="flex items-center gap-3 md:hidden">
           <Link href="/">
-            <img src="/logoweb.png" alt="AuraAcademic" className="h-8 object-contain dark:brightness-110" />
+            <img src="/logoweb.png" alt="AuraAcademic" className="h-8 object-contain dark:hidden" />
+            <img src="/logoweb-dark.png" alt="AuraAcademic" className="h-8 object-contain hidden dark:block" />
           </Link>
         </div>
       </div>

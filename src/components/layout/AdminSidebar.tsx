@@ -16,7 +16,8 @@ const navSections = [
     items: [
       { href: "/admin/users", icon: "group", label: "Người dùng" },
       { href: "/admin/roles", icon: "admin_panel_settings", label: "Phân quyền RBAC" },
-      { href: "/admin/exams", icon: "quiz", label: "Bài thi" },
+      { href: "/admin/exams", icon: "quiz", label: "Quản lý Bài thi" },
+      { href: "/admin/my-exams", icon: "magic_button", label: "Thiết kế & Kho đề cá nhân" },
       { href: "/admin/exam-bank", icon: "folder_special", label: "Ngân hàng chuyên đề" },
       { href: "/admin/materials", icon: "menu_book", label: "Tài liệu hệ thống" },
       { href: "/admin/content", icon: "article", label: "Nội dung & Media" },
@@ -85,11 +86,16 @@ export function AdminSidebar({ isCollapsed = false, onClose }: SidebarProps) {
               </div>
             ) : (
               /* Center and scale up the vertical logo in a premium card */
-              <div className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50/50 dark:bg-cyan-950/20 border border-slate-100/50 dark:border-cyan-950/30 shadow-[0_8px_30px_rgb(0,0,0,0.01)] transition-all duration-300 group-hover:shadow-[0_8px_30px_rgba(0,198,255,0.04)] w-48">
+              <div className="flex flex-col items-center justify-center py-2 w-full transition-all duration-300">
                 <img 
                   src="/logoweb.png" 
                   alt="AuraAcademic" 
-                  className="h-20 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:brightness-110" 
+                  className="h-20 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:hidden" 
+                />
+                <img 
+                  src="/logoweb-dark.png" 
+                  alt="AuraAcademic" 
+                  className="h-20 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] hidden dark:block" 
                 />
               </div>
             )}

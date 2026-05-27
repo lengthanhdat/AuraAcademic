@@ -112,7 +112,7 @@ export default function Register() {
           
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center gap-3 text-white mb-12 hover:opacity-90 transition-all hover:scale-[1.02]">
-               <img src="/logoweb.png" alt="AuraAcademic" className="h-11 object-contain brightness-125" />
+               <img src="/logoweb-dark.png" alt="AuraAcademic" className="h-11 object-contain brightness-125" />
             </Link>
             <h1 className="text-5xl font-extrabold text-white leading-[1.15] mb-6 tracking-tight">
               {t('hero_title')}

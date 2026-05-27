@@ -52,7 +52,7 @@ function ImportFormContent() {
   const [examTitle, setExamTitle] = useState("");
   const [duration, setDuration] = useState(45);
   const [subject, setSubject] = useState("Toán học");
-  const [addToBank, setAddToBank] = useState(false);
+  const [addToBank, setAddToBank] = useState(isBank || !!folderId);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 

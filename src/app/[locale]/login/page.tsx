@@ -106,7 +106,7 @@ export default function LoginPage() {
           
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center gap-3 text-white mb-12 hover:opacity-90 transition-all hover:scale-[1.02]">
-               <img src="/logoweb.png" alt="AuraAcademic" className="h-11 object-contain brightness-125" />
+               <img src="/logoweb-dark.png" alt="AuraAcademic" className="h-11 object-contain brightness-125" />
             </Link>
             <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 mb-8 shadow-lg">
               <span className="material-symbols-outlined text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>

@@ -65,11 +65,16 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
                 <span className="material-symbols-outlined text-2xl text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-slate-50/50 dark:bg-cyan-950/20 border border-slate-100/50 dark:border-cyan-950/30 shadow-[0_8px_30px_rgb(0,0,0,0.01)] transition-all duration-300 group-hover:shadow-[0_8px_30px_rgba(0,198,255,0.04)] w-48">
+              <div className="flex flex-col items-center justify-center py-2 w-full transition-all duration-300">
                 <img 
                   src="/logoweb.png" 
                   alt="AuraAcademic" 
-                  className="h-16 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:brightness-110" 
+                  className="h-16 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:hidden" 
+                />
+                <img 
+                  src="/logoweb-dark.png" 
+                  alt="AuraAcademic" 
+                  className="h-16 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] hidden dark:block" 
                 />
               </div>
             )}

@@ -115,7 +115,7 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
                 <span className="material-symbols-outlined text-3xl text-slate-400">inbox</span>
               </div>
               <p className="font-bold text-slate-700">Chưa có đề thi nào</p>
-              <p className="text-sm">Bạn cần tạo đề thi trong phần "Thiết kế đề thi" trước.</p>
+              <p className="text-sm">Bạn cần tạo đề thi trong phần &quot;Thiết kế đề thi&quot; trước.</p>
             </div>
           ) : (
             <div className="space-y-3">

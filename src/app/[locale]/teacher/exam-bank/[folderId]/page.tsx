@@ -284,7 +284,7 @@ export default function ExamBankFolderPage({ params }: { params: { locale: strin
             <div className="px-6 py-6 space-y-4">
               <div className="bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-4 border border-blue-100 dark:border-blue-900/30">
                 <p className="text-sm text-blue-800 dark:text-blue-300">
-                  Hệ thống sẽ tạo ra một bản sao của đề <strong>"{cloneTarget.title}"</strong>.
+                  Hệ thống sẽ tạo ra một bản sao của đề <strong>&quot;{cloneTarget.title}&quot;</strong>.
                 </p>
                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                   Bản sao này sẽ nằm ở <strong>Bảng Điều Khiển</strong> và hoàn toàn độc lập. Bạn có thể cài đặt giờ thi, mật khẩu, và giám sát trên bản sao mà không ảnh hưởng tới đề gốc trong Ngân hàng đề.

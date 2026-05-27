@@ -475,7 +475,7 @@ export default function TakeExam() {
               )}
 
               <p className="text-center text-slate-500 text-sm mb-8 leading-relaxed font-medium">
-                Sau khi bấm "Xác nhận nộp", hệ thống sẽ tự động chấm điểm và bạn sẽ không thể chỉnh sửa bài thi này được nữa.
+                Sau khi bấm &quot;Xác nhận nộp&quot;, hệ thống sẽ tự động chấm điểm và bạn sẽ không thể chỉnh sửa bài thi này được nữa.
               </p>
 
               <div className="flex flex-col gap-3">

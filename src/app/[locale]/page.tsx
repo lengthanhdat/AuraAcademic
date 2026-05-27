@@ -15,7 +15,10 @@ type FeatureCard = {
 
 function LogoIcon({ className = "" }: { className?: string }) {
   return (
-    <img src="/logoweb.png" alt="AuraAcademic Logo" className={`${className} object-contain filter brightness-110`} />
+    <>
+      <img src="/logoweb.png" alt="AuraAcademic Logo" className={`${className} object-contain filter dark:hidden`} />
+      <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className={`${className} object-contain hidden dark:block`} />
+    </>
   );
 }
 
@@ -68,7 +71,8 @@ function Navbar() {
     <nav className="fixed top-6 left-4 right-4 z-50">
       <div className="max-w-7xl mx-auto bg-white/60 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(12,46,94,0.08)] rounded-full px-6 sm:px-8 py-3 flex items-center justify-between transition-all duration-300 hover:shadow-[0_12px_40px_rgba(12,46,94,0.12)]">
         <a href="#" className="flex items-center gap-1 group">
-          <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-9 sm:h-11 object-contain group-hover:scale-105 transition-transform duration-300" />
+          <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-9 sm:h-11 object-contain group-hover:scale-105 transition-transform duration-300 dark:hidden" />
+          <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className="h-9 sm:h-11 object-contain group-hover:scale-105 transition-transform duration-300 hidden dark:block" />
         </a>
 
         <div className="hidden lg:flex items-center gap-9">
@@ -220,7 +224,8 @@ function HeroSection() {
               <div className="absolute -right-8 -bottom-8 lg:-right-14 lg:-bottom-14 opacity-95 pointer-events-none z-20" style={{ animation: 'floatImg 7s ease-in-out infinite', transformStyle: 'preserve-3d' }}>
                 <div className="relative">
                   <div className="absolute inset-0 bg-[#DCA837]/40 rounded-full blur-[40px] -z-10 animate-pulse"></div>
-                  <img src="/logoweb.png" alt="Glowing Icon" className="w-28 h-28 lg:w-36 lg:h-36 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)]" />
+                  <img src="/logoweb.png" alt="Glowing Icon" className="w-28 h-28 lg:w-36 lg:h-36 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)] dark:hidden" />
+                  <img src="/logoweb-dark.png" alt="Glowing Icon" className="w-28 h-28 lg:w-36 lg:h-36 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)] hidden dark:block" />
                 </div>
               </div>
             </div>

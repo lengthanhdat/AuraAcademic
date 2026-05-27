@@ -44,13 +44,9 @@ export default function AdminExamBankPage() {
     if (!confirm("Xác nhận gỡ đề thi này khỏi ngân hàng? (Chỉ gỡ nhãn luyện tập)")) return;
     setRemovingId(examId);
     try {
-      // Tạm thời gọi trực tiếp API update exam để bỏ isPractice và isBankItem
-      const exam = items.find((e: any) => e.id === examId);
-      if (!exam) return;
-      const res = await fetch(`${API_BASE}/exams/${examId}`, {
-        method: "PUT",
+      const res = await fetch(`${API_BASE}/exams/${examId}/remove-from-bank`, {
+        method: "POST",
         headers: getAuthHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ ...exam, isPractice: false, isBankItem: false })
       });
       if (res.ok) mutate();
       else alert("Lỗi khi gỡ đề thi.");
@@ -78,13 +74,20 @@ export default function AdminExamBankPage() {
               Quản lý toàn bộ danh sách đề thi luyện tập trong hệ thống. Bạn có thể Tạo mới hoặc Upload đề thi trực tiếp vào Ngân hàng.
             </p>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0 relative z-10">
+          <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0 relative z-10">
+            <button
+              onClick={() => router.push(`/${locale}/admin/my-exams/import?isBank=true`)}
+              className="px-5 py-2.5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-all flex items-center gap-2 hover:scale-105"
+            >
+              <span className="material-symbols-outlined text-lg">upload_file</span>
+              Upload PDF/DOCX
+            </button>
             <button
               onClick={() => setIsPublishModalOpen(true)}
               className="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center gap-2 backdrop-blur-sm border border-white/10"
             >
-              <span className="material-symbols-outlined text-lg">add_circle</span>
-              Thêm đề từ Kho của tôi
+              <span className="material-symbols-outlined text-lg">library_add</span>
+              Thêm từ Kho đề
             </button>
           </div>
         </section>
