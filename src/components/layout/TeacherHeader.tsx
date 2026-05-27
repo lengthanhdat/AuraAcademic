@@ -93,7 +93,11 @@ export function TeacherHeader({ onMenuClick }: HeaderProps) {
               <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 uppercase font-extrabold tracking-wider">{t('role_teacher')}</p>
             </div>
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#0C2E5E] to-[#00C6FF] rounded-full -m-[2px] p-[2px]"></div>
+              {user?.verificationStatus === "VERIFIED" ? (
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#00C6FF] via-[#0072FF] to-[#00F2FE] rounded-full -m-[3px] p-[3px] shadow-[0_0_10px_rgba(0,198,255,0.5)] animate-pulse"></div>
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#0C2E5E] to-[#00C6FF] rounded-full -m-[2px] p-[2px]"></div>
+              )}
               <img 
                 alt="Giáo viên Profile" 
                 className="w-9 h-9 rounded-full object-cover border border-white dark:border-[#0A1F3E] shadow-md relative z-10 bg-white" 

@@ -699,6 +699,13 @@
     "submit": "Register Account",
     "have_account": "Already have an account?",
     "login_now": "Log in now",
-    "placeholder_name": "John Doe"
+    "placeholder_name": "John Doe",
+    "confirm_password": "Confirm password",
+    "agree_to": "I agree to the",
+    "terms": "Terms & Conditions",
+    "password_min_length": "Password must be at least 6 characters",
+    "password_mismatch": "Passwords do not match",
+    "agree_terms_required": "You must agree to the Terms & Conditions.",
+    "success_msg_login": "Registration successful. Please verify email (if any) and login."
   }
 }

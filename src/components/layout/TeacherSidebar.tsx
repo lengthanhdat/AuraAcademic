@@ -59,7 +59,7 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
         
         {/* Logo Section */}
         <div className={`relative flex items-center mb-6 shrink-0 ${isCollapsed ? "justify-center px-2" : "justify-center px-6 w-full"}`}>
-          <Link href="/" className="group flex flex-col items-center justify-center transition-all duration-300">
+          <Link href="/teacher/dashboard" className="group flex flex-col items-center justify-center transition-all duration-300">
             {isCollapsed ? (
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#0E3E7A] flex items-center justify-center text-white shadow-lg shadow-[#0C2E5E]/15 dark:shadow-[#00C6FF]/10 hover:scale-105 transition-all">
                 <span className="material-symbols-outlined text-2xl text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>

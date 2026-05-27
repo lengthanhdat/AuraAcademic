@@ -25,16 +25,44 @@ export default function TeacherExamBankPage() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isUserLoaded, setIsUserLoaded] = useState(false);
 
   useEffect(() => {
-    try { setUser(JSON.parse(localStorage.getItem("user") || "{}")); } catch {}
+    const loadUser = () => {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          setUser(JSON.parse(stored));
+        } else {
+          setUser({});
+        }
+      } catch {
+        setUser({});
+      }
+      setIsUserLoaded(true);
+    };
+
+    loadUser();
+
+    // Listen to changes from other tabs/windows
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "user") {
+        loadUser();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
+  const isUnverified = isUserLoaded && user && user.role === "teacher" && user.verificationStatus !== "VERIFIED";
+
   const { data: items = [], isLoading, mutate } = useSWR(
-    `${API_BASE}/exam-bank/exams`,
+    (!isUserLoaded || isUnverified) ? null : `${API_BASE}/exam-bank/exams`,
     authFetcher,
     { revalidateOnFocus: false }
   );
+
+  const showLoading = !isUserLoaded || isLoading;
 
   const uniqueAuthors = Array.from(new Set(items.map((i: any) => i.teacherName || "Ẩn danh"))).filter(Boolean) as string[];
 
@@ -61,6 +89,55 @@ export default function TeacherExamBankPage() {
       setRemovingId(null);
     }
   };
+
+  if (isUserLoaded && isUnverified) {
+    return (
+      <main className="p-8 max-w-2xl mx-auto w-full min-h-[70vh] flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-[2.5rem] p-10 shadow-[0_20px_50px_rgba(12,46,94,0.05)] dark:shadow-[0_20px_50px_rgba(0,198,255,0.03)] text-center relative overflow-hidden flex flex-col items-center gap-6">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+          
+          {/* Glowing Lock Badge */}
+          <div className="relative">
+            <div className="w-20 h-20 rounded-[2rem] bg-amber-100 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-inner-sm animate-pulse">
+              <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full p-1 border-4 border-white dark:border-[#0A1F3E]">
+              <span className="material-symbols-outlined text-xs font-black">gavel</span>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            <h2 className="font-headline font-black text-2xl text-on-surface dark:text-slate-100 tracking-tight">
+              Tính năng bảo mật giới hạn
+            </h2>
+            <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 px-4 py-1.5 rounded-full border border-amber-200/50 dark:border-amber-900/40">
+              Yêu cầu tài khoản giáo viên đã xác thực
+            </p>
+          </div>
+
+          <p className="text-xs text-on-surface-variant dark:text-slate-400 max-w-md leading-relaxed">
+            Ngân hàng đề thi chung chứa đề luyện tập, chuyên đề học tập chính thức và đáp án chi tiết. Tính năng này được giới hạn nghiêm ngặt nhằm bảo mật tuyệt đối đề thi, tránh tình trạng học sinh giả mạo giáo viên để xem đáp án trước khi thi.
+          </p>
+
+          <div className="w-full border-t border-slate-100 dark:border-cyan-950/40 pt-6 mt-2 flex flex-col gap-3">
+            <button
+              onClick={() => router.push(`/${locale}/teacher/verify`)}
+              className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-orange-500 hover:opacity-95 text-white font-black text-sm rounded-2xl shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-base">verified</span>
+              Xác thực tài khoản ngay
+            </button>
+            <button
+              onClick={() => router.push(`/${locale}/teacher/dashboard`)}
+              className="w-full py-3.5 bg-slate-100 dark:bg-cyan-950/30 dark:text-slate-300 text-slate-600 font-bold text-sm rounded-2xl hover:bg-slate-200 transition-colors"
+            >
+              Quay về Bảng điều khiển
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="p-8 space-y-8 max-w-5xl mx-auto w-full">
@@ -159,7 +236,7 @@ export default function TeacherExamBankPage() {
 
       {/* Exam list */}
       <ScrollReveal variant="fade-up" duration={600} delay={150}>
-        {isLoading ? (
+        {showLoading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex gap-4 p-4 bg-white dark:bg-[#0A1F3E]/80 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 animate-pulse">
@@ -228,7 +305,7 @@ export default function TeacherExamBankPage() {
                       )}
                     </div>
                     <h3 className="font-bold text-on-surface dark:text-slate-100 text-sm leading-snug line-clamp-1">
-                      {exam.title}
+                      {exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}
                     </h3>
                     <div className="flex items-center gap-2 mt-1.5">
                       <p className="text-[11px] text-slate-500 flex items-center gap-1">

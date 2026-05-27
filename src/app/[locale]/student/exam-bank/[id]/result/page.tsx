@@ -170,7 +170,7 @@ export default function PracticeResultPage({ params }: { params: { locale: strin
               </div>
 
               <h1 className="text-3xl font-extrabold text-on-surface dark:text-slate-200 mb-1">Hoàn thành luyện tập!</h1>
-              <p className="text-on-surface-variant dark:text-slate-400 mb-8">{exam.title}</p>
+              <p className="text-on-surface-variant dark:text-slate-400 mb-8">{exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}</p>
 
               <div className="flex justify-center items-center gap-10 md:gap-16">
                 <div>

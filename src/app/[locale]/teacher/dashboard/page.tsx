@@ -8,6 +8,69 @@ import { StatCardSkeleton, TableRowSkeleton } from "@/components/ui/Skeleton";
 
 const API_BASE = "http://localhost:8088/api";
 
+// ─── Verification Banner ─────────────────────────────────────────────────────
+function VerificationBanner({ onVerifyClick }: { onVerifyClick: () => void }) {
+  const { data: verData } = useSWR(
+    `${API_BASE}/users/me/verification`,
+    authFetcher,
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  );
+
+  const status = verData?.verificationStatus ?? "STANDARD";
+  const note = verData?.note;
+
+  if (status === "VERIFIED") return null;
+
+  const config: Record<string, { bg: string; border: string; icon: string; iconColor: string; title: string; desc: string; actionLabel?: string }> = {
+    STANDARD: {
+      bg: "bg-amber-50 dark:bg-amber-950/30",
+      border: "border-amber-200 dark:border-amber-800/50",
+      icon: "verified",
+      iconColor: "text-amber-600",
+      title: "Tài khoản đang ở chế độ dùng thử",
+      desc: "Tối đa 2 lớp học · Không truy cập Ngân hàng đề thi chung",
+      actionLabel: "Xác thực ngay →",
+    },
+    PENDING: {
+      bg: "bg-blue-50 dark:bg-blue-950/30",
+      border: "border-blue-200 dark:border-blue-800/50",
+      icon: "hourglass_empty",
+      iconColor: "text-blue-600",
+      title: "Yêu cầu xác thực đang được xem xét",
+      desc: "Chúng tôi sẽ phản hồi trong vòng 24 giờ làm việc. Trong thời gian chờ, bạn vẫn sử dụng được các tính năng cơ bản.",
+    },
+    REJECTED: {
+      bg: "bg-red-50 dark:bg-red-950/30",
+      border: "border-red-200 dark:border-red-800/50",
+      icon: "cancel",
+      iconColor: "text-red-600",
+      title: "Yêu cầu xác thực chưa được chấp thuận",
+      desc: note ? `Lý do: ${note}` : "Vui lòng cập nhật thông tin và thử lại.",
+      actionLabel: "Gửi lại yêu cầu →",
+    },
+  };
+
+  const c = config[status] ?? config.STANDARD;
+
+  return (
+    <div className={`flex items-center gap-4 px-5 py-4 rounded-2xl border ${c.bg} ${c.border} mb-2`}>
+      <span className={`material-symbols-outlined text-2xl shrink-0 ${c.iconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{c.icon}</span>
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-sm text-on-surface dark:text-slate-200">{c.title}</p>
+        <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-0.5">{c.desc}</p>
+      </div>
+      {c.actionLabel && (
+        <button
+          onClick={onVerifyClick}
+          className="shrink-0 px-4 py-2 text-xs font-bold rounded-xl bg-white dark:bg-slate-800 border border-current text-on-surface dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors whitespace-nowrap"
+        >
+          {c.actionLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function TeacherDashboard() {
   const router = useRouter();
   const t = useTranslations('Dashboard');
@@ -128,7 +191,7 @@ export default function TeacherDashboard() {
       const payload = {
         ...examToShare,
         id: undefined,
-        title: `${examToShare.title} (Ngân hàng)`,
+        title: examToShare.title,
         status: "PUBLISHED", // or PENDING if moderation is enabled
         isPractice: true,
         isBankItem: true,
@@ -172,6 +235,9 @@ export default function TeacherDashboard() {
 
   return (
     <main className="p-8 space-y-8 flex-1">
+      {/* Verification Banner */}
+      <VerificationBanner onVerifyClick={() => router.push("/teacher/verify")} />
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>

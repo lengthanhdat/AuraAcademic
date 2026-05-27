@@ -45,6 +45,7 @@ export default function TeacherProfile() {
   const { showAlert } = useAlert();
   const [user, setUser] = useState<any>(null);
   const [exams, setExams] = useState<any[]>([]);
+  const [verData, setVerData] = useState<any>(null);
 
   // States cho form
   const [isEditing, setIsEditing] = useState(false);
@@ -96,6 +97,23 @@ export default function TeacherProfile() {
           if (Array.isArray(data)) setExams(data);
         })
         .catch(err => console.error("Error fetching teacher exams:", err));
+
+      // Fetch trạng thái xác thực của giáo viên
+      fetch(`http://localhost:8088/api/users/me/verification`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          setVerData(data);
+          // Đồng bộ lại local storage nếu verificationStatus thay đổi
+          if (data && data.verificationStatus !== u.verificationStatus) {
+            const updated = { ...u, verificationStatus: data.verificationStatus };
+            localStorage.setItem("user", JSON.stringify(updated));
+            setUser(updated);
+            window.dispatchEvent(new Event("user-updated"));
+          }
+        })
+        .catch(err => console.error("Error fetching verification:", err));
     }
   }, []);
 
@@ -295,19 +313,31 @@ export default function TeacherProfile() {
         <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
           <div className="relative group cursor-pointer">
-            <div className="w-32 h-32 rounded-full border-4 border-surface overflow-hidden shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                user.fullName?.charAt(0).toUpperCase()
-              )}
-            </div>
-            <label className="absolute inset-0 bg-black/40 backdrop-blur-xs opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer text-[10px] font-bold text-white flex-col gap-1">
+            {verData?.verificationStatus === "VERIFIED" ? (
+              <div className="p-[4px] bg-gradient-to-tr from-[#00C6FF] via-[#0072FF] to-[#00F2FE] rounded-full shadow-[0_0_20px_rgba(0,198,255,0.4)] dark:shadow-[0_0_25px_rgba(0,198,255,0.2)] animate-pulse">
+                <div className="w-32 h-32 rounded-full overflow-hidden shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold border-[3px] border-white dark:border-[#0A1F3E]">
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    user.fullName?.charAt(0).toUpperCase()
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="w-32 h-32 rounded-full border-4 border-surface overflow-hidden shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  user.fullName?.charAt(0).toUpperCase()
+                )}
+              </div>
+            )}
+            <label className="absolute inset-0 bg-black/40 backdrop-blur-xs opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer text-[10px] font-bold text-white flex-col gap-1 z-10">
               <span className="material-symbols-outlined text-[20px]">photo_camera</span>
               Đổi ảnh
               <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
             </label>
-            <div className="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-white"></div>
+            <div className="absolute bottom-1 right-1 bg-green-500 w-6 h-6 rounded-full border-4 border-white dark:border-[#0A1F3E] z-10"></div>
           </div>
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-3xl font-extrabold text-primary dark:text-[#E2E8F0] mb-1 tracking-tight">{user.fullName}</h1>
@@ -404,6 +434,90 @@ export default function TeacherProfile() {
       {/* Split View */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
         <div className="lg:col-span-5 space-y-6">
+          
+          {/* Verification Status Card */}
+          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#00C6FF]">verified_user</span>
+              Trạng thái xác thực
+            </h3>
+            
+            {verData ? (
+              <div className="space-y-4">
+                {verData.verificationStatus === "VERIFIED" && (
+                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-xl space-y-3 shadow-inner-sm">
+                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold text-sm">
+                      <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                      TÀI KHOẢN ĐÃ XÁC THỰC
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Tài khoản của bạn đã được xác minh chính thức. Toàn bộ tính năng cao cấp và Ngân hàng đề thi chung đã được mở khóa.
+                    </p>
+                    {verData.proofType && (
+                      <div className="border-t border-emerald-100 dark:border-emerald-900/30 pt-2.5 text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5">
+                        <p><strong>Phương thức:</strong> {verData.proofType === "LINK" ? "Liên kết giảng dạy" : "Mô tả tài liệu"}</p>
+                        <p className="break-all"><strong>Minh chứng:</strong> {verData.proofUrl}</p>
+                        {verData.description && <p><strong>Mô tả thêm:</strong> {verData.description}</p>}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {verData.verificationStatus === "PENDING" && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl space-y-3">
+                    <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-extrabold text-sm">
+                      <span className="material-symbols-outlined text-xl animate-spin">progress_activity</span>
+                      ĐANG CHỜ XÉT DUYỆT
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Yêu cầu xác thực tài khoản giáo viên của bạn đang được đội ngũ quản trị viên xem xét. Thời gian duyệt thường trong vòng 24 giờ làm việc.
+                    </p>
+                  </div>
+                )}
+
+                {verData.verificationStatus === "REJECTED" && (
+                  <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-xl space-y-3">
+                    <div className="flex items-center gap-2 text-red-700 dark:text-red-400 font-extrabold text-sm">
+                      <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
+                      YÊU CẦU BỊ TỪ CHỐI
+                    </div>
+                    {verData.note && (
+                      <p className="text-xs text-red-600 dark:text-red-400 font-semibold bg-red-50/50 dark:bg-red-950/10 p-2.5 rounded-lg border border-red-100 dark:border-red-950/30 leading-relaxed">
+                        Lý do: {verData.note}
+                      </p>
+                    )}
+                    <button
+                      onClick={() => router.push("/teacher/verify")}
+                      className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm active:scale-95"
+                    >
+                      Gửi lại minh chứng xác thực
+                    </button>
+                  </div>
+                )}
+
+                {verData.verificationStatus === "STANDARD" && (
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl space-y-3">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold text-sm">
+                      <span className="material-symbols-outlined text-xl">gavel</span>
+                      TÀI KHOẢN CHƯA XÁC THỰC
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Bạn đang sử dụng tài khoản dùng thử và bị giới hạn tạo tối đa 2 lớp học, không được truy cập Ngân hàng đề thi chung.
+                    </p>
+                    <button
+                      onClick={() => router.push("/teacher/verify")}
+                      className="w-full py-2 bg-gradient-to-r from-amber-600 to-orange-500 hover:opacity-95 text-white text-xs font-bold rounded-lg transition-all shadow-sm active:scale-95"
+                    >
+                      Gửi yêu cầu xác thực ngay
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-slate-400 text-xs">Đang tải trạng thái xác thực...</div>
+            )}
+          </div>
+
           <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary-fixed-dim">contact_page</span>

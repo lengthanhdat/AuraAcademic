@@ -8,6 +8,7 @@ const pageTitles: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
   "/admin/analytics": "Thống kê & Báo cáo",
   "/admin/users": "Quản lý người dùng",
+  "/admin/verifications": "Xác thực giáo viên",
   "/admin/roles": "Phân quyền RBAC",
   "/admin/exams": "Quản lý bài thi",
   "/admin/content": "Nội dung & Media",

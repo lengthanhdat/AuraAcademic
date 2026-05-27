@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { fetchAdminStats, fetchUsers, deleteUser, updateUserRole, toggleUserLock, createUser } from "@/lib/adminApi";
 
 type User = { id: string; fullName: string; email: string; role: string; emailVerified: boolean; accountLocked: boolean; createdAt: string; };
@@ -76,6 +77,7 @@ function AddUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -163,6 +165,27 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Pending Verifications Banner */}
+      {!loadingStats && stats?.pendingVerifications && stats.pendingVerifications > 0 ? (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-amber-600 text-2xl animate-bounce" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            <div>
+              <p className="font-bold text-sm text-slate-800 dark:text-slate-200">Yêu cầu xác thực giáo viên chưa xử lý</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Hiện đang có <strong className="text-amber-700 dark:text-amber-400 font-extrabold">{stats.pendingVerifications}</strong> yêu cầu xác thực tài khoản giáo viên đang chờ xem xét.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push("/admin/verifications")}
+            className="shrink-0 px-4 py-2.5 bg-gradient-to-r from-amber-600 to-orange-500 hover:opacity-95 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 whitespace-nowrap"
+          >
+            Duyệt ngay →
+          </button>
+        </div>
+      ) : null}
+
       {/* Stat Widgets Grid 1 */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard icon="group" label="Tổng người dùng" value={loadingStats ? "…" : stats?.totalUsers} color="slate" />
@@ -176,7 +199,15 @@ export default function AdminDashboard() {
         <StatCard icon="task_alt" label="Tổng lượt nộp bài" value={loadingStats ? "…" : stats?.totalResults} color="rose" />
         <StatCard icon="verified_user" label="Email đã xác thực" value={loadingStats ? "…" : stats?.verifiedUsers} color="emerald" />
         <StatCard icon="library_books" label="Tổng kho đề thi" value={loadingStats ? "…" : stats?.totalExams} color="slate" />
-        <StatCard icon="lock" label="Tài khoản bị khoá" value={loadingStats ? "…" : stats?.lockedUsers} color="rose" />
+        <div onClick={() => router.push("/admin/verifications")} className="cursor-pointer flex-1">
+          <StatCard 
+            icon="verified" 
+            label="Chờ duyệt xác thực" 
+            value={loadingStats ? "…" : stats?.pendingVerifications ?? 0} 
+            color={stats?.pendingVerifications && stats.pendingVerifications > 0 ? "amber" : "slate"} 
+            sub={stats?.pendingVerifications && stats.pendingVerifications > 0 ? "Cần duyệt" : null}
+          />
+        </div>
       </div>
 
       {/* Data Analytics Row */}

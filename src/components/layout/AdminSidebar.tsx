@@ -15,6 +15,7 @@ const navSections = [
     title: "QUẢN LÝ",
     items: [
       { href: "/admin/users", icon: "group", label: "Người dùng" },
+      { href: "/admin/verifications", icon: "verified", label: "Xác thực giáo viên" },
       { href: "/admin/roles", icon: "admin_panel_settings", label: "Phân quyền RBAC" },
       { href: "/admin/exams", icon: "quiz", label: "Quản lý Bài thi" },
       { href: "/admin/my-exams", icon: "magic_button", label: "Thiết kế & Kho đề cá nhân" },
@@ -79,7 +80,7 @@ export function AdminSidebar({ isCollapsed = false, onClose }: SidebarProps) {
       `}>
         {/* Logo Area */}
         <div className={`relative flex items-center mb-6 border-b border-slate-200/40 dark:border-cyan-950/40 pb-5 ${isCollapsed ? "justify-center px-2" : "justify-center px-6 w-full"}`}>
-          <Link href="/" className="group flex flex-col items-center justify-center transition-all duration-300">
+          <Link href="/admin/dashboard" className="group flex flex-col items-center justify-center transition-all duration-300">
             {isCollapsed ? (
               /* Glowing Shield/Lock badge in Navy for collapsed Admin */
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#0E3E7A] dark:from-[#0A1F3E] dark:to-[#0E3E7A] shadow-lg shadow-[#0C2E5E]/20 dark:shadow-[#00C6FF]/10 flex items-center justify-center text-white hover:scale-105 transition-all">

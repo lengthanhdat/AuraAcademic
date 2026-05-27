@@ -339,7 +339,7 @@ export default function ExamBankPage() {
 
                       {/* Title */}
                       <h3 className="font-bold text-on-surface dark:text-slate-100 text-sm leading-snug line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-[#00C6FF] transition-colors">
-                        {exam.title}
+                        {exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}
                       </h3>
 
                       {/* Meta */}
@@ -421,7 +421,7 @@ export default function ExamBankPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[11px] font-bold text-on-surface dark:text-slate-200 line-clamp-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-[#00C6FF] transition-colors">
-                              {exam.title}
+                              {exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}
                             </p>
                             <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-0.5">
                               <span className="material-symbols-outlined text-[10px]">play_circle</span>

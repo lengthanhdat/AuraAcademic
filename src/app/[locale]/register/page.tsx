@@ -20,11 +20,28 @@ export default function Register() {
     password: "",
     classSelection: ""
   });
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.password.length < 6) {
+      setError(t('password_min_length') || "Mật khẩu phải có tối thiểu 6 ký tự.");
+      return;
+    }
+    if (formData.password !== confirmPassword) {
+      setError(t('password_mismatch') || "Mật khẩu xác nhận không khớp.");
+      return;
+    }
+    if (!agreedToTerms) {
+      setError(t('agree_terms_required') || "Bạn phải đồng ý với Điều khoản và Điều kiện.");
+      return;
+    }
+
     setError("");
     setLoading(true);
 
@@ -48,19 +65,23 @@ export default function Register() {
         } else {
           setError(data.message || data.error || t("register_error"));
         }
+        setLoading(false);
       } else {
-        // Đăng ký thành công, yêu cầu xác thực email
+        // Đăng ký thành công
+        setLoading(false); // Ngừng loading ngay lập tức để hiện Alert
         showAlert({
           title: t("success_title"),
-          message: t("success_msg"),
+          message: t("success_msg_login") || "Đăng ký thành công. Vui lòng kiểm tra email (nếu có) và đăng nhập.",
           type: "success",
-          confirmText: t("verify_now")
+          confirmText: t("login_now") || "Đăng nhập ngay",
+          onConfirm: () => {
+            router.push("/login");
+          }
         });
-        router.push(`/verify-email?email=${formData.email}`);
+        return; // Dừng lại ở đây để không chạy vào finally (tránh bị chèn UI)
       }
     } catch (err) {
       setError(t("server_error"));
-    } finally {
       setLoading(false);
     }
   };
@@ -233,12 +254,62 @@ export default function Register() {
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" htmlFor="password">{t('password')}</label>
                 <div className="relative group">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-[#0C2E5E] transition-colors">lock</span>
-                  <input id="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full pl-14 pr-5 py-3.5 rounded-2xl bg-white/70 border border-slate-200/80 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white transition-all outline-none font-bold text-[#0C2E5E] placeholder:text-slate-400 shadow-sm" placeholder="••••••••" type="password" required />
+                  <input id="password" value={formData.password} 
+                    onChange={(e) => {
+                      const newPwd = e.target.value;
+                      setFormData({...formData, password: newPwd});
+                      if (newPwd.length > 0 && newPwd.length < 6) {
+                        setPasswordError(t('password_min_length') || "Tối thiểu 6 ký tự");
+                      } else {
+                        setPasswordError("");
+                        if (confirmPassword && newPwd !== confirmPassword) {
+                          setConfirmPasswordError(t('password_mismatch') || "Mật khẩu không khớp");
+                        } else {
+                          setConfirmPasswordError("");
+                        }
+                      }
+                    }} 
+                    className={`w-full pl-14 pr-5 py-3.5 rounded-2xl bg-white/70 border focus:ring-4 focus:bg-white transition-all outline-none font-bold text-[#0C2E5E] placeholder:text-slate-400 shadow-sm ${passwordError ? 'border-red-400 focus:ring-red-100 focus:border-red-400' : 'border-slate-200/80 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF]'}`} 
+                    placeholder="••••••••" type="password" required />
                 </div>
+                {passwordError && <p className="text-red-500 text-xs font-bold ml-2 mt-1">{passwordError}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1" htmlFor="confirm_password">{t('confirm_password') || 'Xác nhận mật khẩu'}</label>
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-[#0C2E5E] transition-colors">lock_clock</span>
+                  <input id="confirm_password" value={confirmPassword} 
+                    onChange={(e) => {
+                      const confirmPwd = e.target.value;
+                      setConfirmPassword(confirmPwd);
+                      if (confirmPwd && formData.password !== confirmPwd) {
+                        setConfirmPasswordError(t('password_mismatch') || "Mật khẩu không khớp");
+                      } else {
+                        setConfirmPasswordError("");
+                      }
+                    }} 
+                    className={`w-full pl-14 pr-5 py-3.5 rounded-2xl bg-white/70 border focus:ring-4 focus:bg-white transition-all outline-none font-bold text-[#0C2E5E] placeholder:text-slate-400 shadow-sm ${confirmPasswordError ? 'border-red-400 focus:ring-red-100 focus:border-red-400' : 'border-slate-200/80 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF]'}`} 
+                    placeholder="••••••••" type="password" required />
+                </div>
+                {confirmPasswordError && <p className="text-red-500 text-xs font-bold ml-2 mt-1">{confirmPasswordError}</p>}
+              </div>
+
+              <div className="flex items-center gap-3 ml-1 mt-2">
+                <input 
+                  type="checkbox" 
+                  id="terms" 
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="w-5 h-5 rounded-md border-slate-300 text-[#00C6FF] focus:ring-[#00C6FF]"
+                />
+                <label htmlFor="terms" className="text-sm font-medium text-slate-600">
+                  {t('agree_to') || 'Tôi đồng ý với'} <Link href="/terms" className="text-[#00C6FF] font-bold hover:underline">{t('terms') || 'Điều khoản & Điều kiện'}</Link>
+                </label>
               </div>
 
               <div className="pt-4">
-                <button disabled={loading} type="submit" className="w-full bg-gradient-to-r from-[#0C2E5E] to-[#00C6FF] text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_10px_30px_rgba(0,198,255,0.25)] hover:shadow-[0_15px_40px_rgba(0,198,255,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:hover:translate-y-0">
+                <button disabled={loading || !agreedToTerms || !!passwordError || !!confirmPasswordError || formData.password.length < 6 || formData.password !== confirmPassword} type="submit" className="w-full bg-gradient-to-r from-[#0C2E5E] to-[#00C6FF] text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_10px_30px_rgba(0,198,255,0.25)] hover:shadow-[0_15px_40px_rgba(0,198,255,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:hover:translate-y-0">
                   {loading ? (
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

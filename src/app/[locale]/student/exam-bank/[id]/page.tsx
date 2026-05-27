@@ -229,7 +229,7 @@ export default function TakePracticeExamPage({ params }: { params: { locale: str
         <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#0A1F3E]/95 backdrop-blur-xl border-b border-slate-200/60 dark:border-cyan-950/40 px-6 py-3 shadow-sm">
           <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
             <div className="min-w-0">
-              <h1 className="font-bold text-on-surface dark:text-slate-200 text-sm truncate">{exam.title}</h1>
+              <h1 className="font-bold text-on-surface dark:text-slate-200 text-sm truncate">{exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}</h1>
               <div className="flex items-center gap-3 mt-0.5">
                 <div className="w-28 h-1.5 bg-slate-200 dark:bg-cyan-950/60 rounded-full overflow-hidden">
                   <div

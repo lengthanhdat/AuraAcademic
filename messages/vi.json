@@ -699,6 +699,13 @@
     "submit": "Đăng ký tài khoản",
     "have_account": "Đã có tài khoản?",
     "login_now": "Đăng nhập ngay",
-    "placeholder_name": "Nguyễn Văn A"
+    "placeholder_name": "Nguyễn Văn A",
+    "confirm_password": "Xác nhận mật khẩu",
+    "agree_to": "Tôi đồng ý với",
+    "terms": "Điều khoản & Điều kiện",
+    "password_min_length": "Mật khẩu tối thiểu 6 ký tự",
+    "password_mismatch": "Mật khẩu xác nhận không khớp",
+    "agree_terms_required": "Bạn phải đồng ý với Điều khoản và Điều kiện.",
+    "success_msg_login": "Đăng ký thành công. Vui lòng kiểm tra email (nếu có) và đăng nhập."
   }
 }
