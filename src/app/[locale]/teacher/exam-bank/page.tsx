@@ -7,7 +7,7 @@ import PublishToBankModal from "@/components/PublishToBankModal";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
-import { ALL_SUBJECTS } from "@/lib/curriculum";
+import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
 const DIFFICULTY_CONFIG: Record<string, { label: string; cls: string }> = {
   EASY:   { label: "Dễ",     cls: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
@@ -20,29 +20,76 @@ export default function TeacherExamBankPage() {
   const router = useRouter();
   const locale = useLocale();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedAuthor, setSelectedAuthor] = useState("Tất cả");
+  const [selectedGrade, setSelectedGrade] = useState("Tất cả");
   const [selectedSubject, setSelectedSubject] = useState("Tất cả");
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [isUserLoaded, setIsUserLoaded] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "table">("list");
+
+  const [user, setUser] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("user");
+        return stored ? JSON.parse(stored) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [isUserLoaded, setIsUserLoaded] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("user") !== null;
+    }
+    return false;
+  });
+
+  const [isVerifyingServerStatus, setIsVerifyingServerStatus] = useState(false);
 
   useEffect(() => {
     const loadUser = () => {
       try {
         const stored = localStorage.getItem("user");
         if (stored) {
-          setUser(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          setUser(parsed);
+          setIsUserLoaded(true);
+
+          if (parsed.role === "teacher" && parsed.verificationStatus !== "VERIFIED") {
+            const token = localStorage.getItem("accessToken");
+            if (token) {
+              setIsVerifyingServerStatus(true);
+              fetch(`${API_BASE}/users/me/verification`, {
+                headers: { "Authorization": `Bearer ${token}` }
+              })
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                  if (data && data.verificationStatus) {
+                    if (data.verificationStatus !== parsed.verificationStatus) {
+                      const updated = { ...parsed, verificationStatus: data.verificationStatus };
+                      localStorage.setItem("user", JSON.stringify(updated));
+                      setUser(updated);
+                      window.dispatchEvent(new Event("user-updated"));
+                    }
+                  }
+                })
+                .catch(err => console.error("Error updating user verification:", err))
+                .finally(() => {
+                  setIsVerifyingServerStatus(false);
+                });
+            }
+          }
         } else {
           setUser({});
+          setIsUserLoaded(true);
         }
       } catch {
         setUser({});
+        setIsUserLoaded(true);
       }
-      setIsUserLoaded(true);
     };
-
-    loadUser();
 
     // Listen to changes from other tabs/windows
     const handleStorageChange = (e: StorageEvent) => {
@@ -51,27 +98,49 @@ export default function TeacherExamBankPage() {
       }
     };
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+
+    // Listen to user-updated events (e.g. from Profile page updates)
+    const handleUserUpdated = () => {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          setUser(JSON.parse(stored));
+        }
+      } catch {}
+    };
+    window.addEventListener("user-updated", handleUserUpdated);
+
+    // Initial check on mount
+    loadUser();
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("user-updated", handleUserUpdated);
+    };
   }, []);
 
-  const isUnverified = isUserLoaded && user && user.role === "teacher" && user.verificationStatus !== "VERIFIED";
+  // Removed teacher verification requirement
+  const isUnverified = false;
 
   const { data: items = [], isLoading, mutate } = useSWR(
-    (!isUserLoaded || isUnverified) ? null : `${API_BASE}/exam-bank/exams`,
+    (!isUserLoaded || isUnverified || isVerifyingServerStatus) ? null : `${API_BASE}/exam-bank/exams`,
     authFetcher,
     { revalidateOnFocus: false }
   );
 
-  const showLoading = !isUserLoaded || isLoading;
-
-  const uniqueAuthors = Array.from(new Set(items.map((i: any) => i.teacherName || "Ẩn danh"))).filter(Boolean) as string[];
+  const showLockScreen = isUserLoaded && isUnverified && !isVerifyingServerStatus;
+  const showLoading = !isUserLoaded || isLoading || isVerifyingServerStatus;
 
   const filtered = items.filter((item: any) => {
     const matchSearch = item.title?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchAuthor = selectedAuthor === "Tất cả" || (item.teacherName || "Ẩn danh") === selectedAuthor;
+    const matchGrade = selectedGrade === "Tất cả" || item.grade === selectedGrade;
     const matchSubject = selectedSubject === "Tất cả" || item.subject === selectedSubject;
-    return matchSearch && matchAuthor && matchSubject;
+    return matchSearch && matchGrade && matchSubject;
   });
+
+  const availableSubjects = selectedGrade === "Tất cả" 
+    ? Array.from(new Set(EDUCATION_HIERARCHY.flatMap(l => l.subjects.map(s => s.name))))
+    : EDUCATION_HIERARCHY.find(l => l.name === selectedGrade)?.subjects.map(s => s.name) || [];
 
   const handleRemoveExam = async (examId: string) => {
     if (!confirm("Xác nhận gỡ đề thi này khỏi ngân hàng? (Chỉ gỡ nhãn luyện tập)")) return;
@@ -90,7 +159,24 @@ export default function TeacherExamBankPage() {
     }
   };
 
-  if (isUserLoaded && isUnverified) {
+  const handleDeleteExam = async (examId: string) => {
+    if (!confirm("Xác nhận xóa VĨNH VIỄN đề thi này khỏi hệ thống?")) return;
+    setDeletingId(examId);
+    try {
+      const res = await fetch(`${API_BASE}/exams/${examId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+      });
+      if (res.ok) mutate();
+      else alert("Lỗi khi xoá đề thi.");
+    } catch {
+      alert("Lỗi kết nối.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  if (showLockScreen) {
     return (
       <main className="p-8 max-w-2xl mx-auto w-full min-h-[70vh] flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
         <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-[2.5rem] p-10 shadow-[0_20px_50px_rgba(12,46,94,0.05)] dark:shadow-[0_20px_50px_rgba(0,198,255,0.03)] text-center relative overflow-hidden flex flex-col items-center gap-6">
@@ -195,41 +281,74 @@ export default function TeacherExamBankPage() {
             />
           </div>
           
-          <div className="relative w-full sm:w-auto">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 text-lg">person</span>
-            <select
-              value={selectedAuthor}
-              onChange={(e) => setSelectedAuthor(e.target.value)}
-              className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
-            >
-              <option value="Tất cả">Tất cả người đăng</option>
-              {uniqueAuthors.map(author => (
-                <option key={author as string} value={author as string}>{author}</option>
-              ))}
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-lg">school</span>
+              <select
+                value={selectedGrade}
+                onChange={(e) => {
+                  setSelectedGrade(e.target.value);
+                  setSelectedSubject("Tất cả");
+                }}
+                className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
+              >
+                <option value="Tất cả">Tất cả cấp bậc</option>
+                <optgroup label="Phổ Thông (K-12)">
+                  {EDUCATION_HIERARCHY.filter(l => l.type === "K12").map(l => (
+                    <option key={l.id} value={l.name}>{l.name}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Đại Học & Cao Đẳng">
+                  {EDUCATION_HIERARCHY.filter(l => l.type === "UNIVERSITY").map(l => (
+                    <option key={l.id} value={l.name}>{l.name}</option>
+                  ))}
+                </optgroup>
+              </select>
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+            </div>
+
+            <div className="relative w-full sm:w-auto">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 text-lg">category</span>
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
+              >
+                <option value="Tất cả">Tất cả môn học</option>
+                {availableSubjects.map((sub: string) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+            </div>
           </div>
 
-          <div className="relative w-full sm:w-auto">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 text-lg">category</span>
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
-            >
-              <option value="Tất cả">Tất cả môn học</option>
-              {ALL_SUBJECTS.map((sub: string) => (
-                <option key={sub} value={sub}>{sub}</option>
-              ))}
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
-          </div>
+          <div className="flex items-center gap-4 ml-auto">
+            {/* View mode switcher */}
+            <div className="flex items-center bg-slate-100 dark:bg-cyan-950/40 p-1 rounded-xl border border-slate-200/50 dark:border-cyan-950/30">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
+                title="Dạng danh sách"
+              >
+                <span className="material-symbols-outlined text-lg">format_list_bulleted</span>
+              </button>
+              <button
+                onClick={() => setViewMode("table")}
+                className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === "table" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
+                title="Dạng bảng"
+              >
+                <span className="material-symbols-outlined text-lg">table_chart</span>
+              </button>
+            </div>
 
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl ml-auto">
-            <span className="material-symbols-outlined text-slate-400 text-lg">quiz</span>
-            <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
-              {filtered.length} đề thi
-            </span>
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl">
+              <span className="material-symbols-outlined text-slate-400 text-lg">quiz</span>
+              <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                {filtered.length} đề thi
+              </span>
+            </div>
           </div>
         </div>
       </ScrollReveal>
@@ -265,11 +384,123 @@ export default function TeacherExamBankPage() {
                 : "Admin và Giáo viên có thể Upload hoặc Tạo đề thi ngay tại đây."}
             </p>
           </div>
+        ) : viewMode === "table" ? (
+          <div className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-3xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-cyan-950/40 bg-slate-50/50 dark:bg-cyan-950/20">
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Đề thi</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Môn học</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Thông số</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Độ khó</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-cyan-950/30">
+                  {filtered.map((exam: any) => {
+                    const diff = exam.difficulty ? DIFFICULTY_CONFIG[exam.difficulty] : null;
+                    const isRemoving = removingId === exam.id;
+                    const isDeleting = deletingId === exam.id;
+                    return (
+                      <tr
+                        key={exam.id}
+                        className="group hover:bg-slate-50/50 dark:hover:bg-[#0E2D56]/30 transition-colors"
+                      >
+                        {/* Title */}
+                        <td className="py-4 px-6 min-w-[250px]">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center shrink-0">
+                              <span className="material-symbols-outlined text-indigo-500 text-lg">quiz</span>
+                            </div>
+                            <span className="font-bold text-on-surface dark:text-slate-100 text-sm line-clamp-1">
+                              {exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Subject */}
+                        <td className="py-4 px-6">
+                          <span className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-lg border border-slate-100 dark:border-cyan-950/20">
+                            {exam.subject || "Chưa rõ"}
+                          </span>
+                        </td>
+
+                        {/* Stats */}
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col gap-0.5 text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">format_list_numbered</span>
+                              {exam.questionCount > 0 ? `${exam.questionCount} câu` : "--"}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">schedule</span>
+                              {exam.duration > 0 ? `${exam.duration} phút` : "--"}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Difficulty */}
+                        <td className="py-4 px-6">
+                          {diff ? (
+                            <span className={`px-2 py-0.5 text-[10px] font-black rounded-md inline-block uppercase tracking-wider ${diff.cls}`}>
+                              {diff.label}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">--</span>
+                          )}
+                        </td>
+
+
+                        {/* Actions */}
+                        <td className="py-4 px-6 text-right">
+                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => router.push(`/${locale}/teacher/exams/${exam.id}`)}
+                              title="Xem chi tiết"
+                              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"
+                            >
+                              <span className="material-symbols-outlined text-lg">visibility</span>
+                            </button>
+                            {user?.id === exam.teacherId && (
+                              <>
+                                <button
+                                  onClick={() => handleRemoveExam(exam.id)}
+                                  disabled={isRemoving || isDeleting}
+                                  title="Gỡ khỏi ngân hàng"
+                                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-orange-50 dark:hover:bg-orange-900/30 text-slate-400 hover:text-orange-500 transition-all disabled:opacity-40"
+                                >
+                                  <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
+                                    {isRemoving ? "refresh" : "link_off"}
+                                  </span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteExam(exam.id)}
+                                  disabled={isRemoving || isDeleting}
+                                  title="Xoá vĩnh viễn"
+                                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all disabled:opacity-40"
+                                >
+                                  <span className={`material-symbols-outlined text-lg ${isDeleting ? "animate-spin" : ""}`}>
+                                    {isDeleting ? "refresh" : "delete_forever"}
+                                  </span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
           <div className="space-y-2.5">
             {filtered.map((exam: any) => {
               const diff = exam.difficulty ? DIFFICULTY_CONFIG[exam.difficulty] : null;
               const isRemoving = removingId === exam.id;
+              const isDeleting = deletingId === exam.id;
               return (
                 <div
                   key={exam.id}
@@ -307,21 +538,6 @@ export default function TeacherExamBankPage() {
                     <h3 className="font-bold text-on-surface dark:text-slate-100 text-sm leading-snug line-clamp-1">
                       {exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <p className="text-[11px] text-slate-500 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">person</span>
-                        {exam.teacherName || "Ẩn danh"}
-                      </p>
-                      {exam.teacherName === "System Admin" || exam.teacherName?.toLowerCase().includes("admin") ? (
-                        <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 text-[9px] font-black uppercase tracking-wider rounded">
-                          Admin
-                        </span>
-                      ) : (
-                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[9px] font-black uppercase tracking-wider rounded">
-                          Giáo viên
-                        </span>
-                      )}
-                    </div>
                   </div>
 
                   {/* Actions */}
@@ -336,16 +552,28 @@ export default function TeacherExamBankPage() {
                       <span className="material-symbols-outlined text-lg">visibility</span>
                     </button>
                     {user?.id === exam.teacherId && (
-                      <button
-                        onClick={() => handleRemoveExam(exam.id)}
-                        disabled={isRemoving}
-                        title="Gỡ khỏi ngân hàng đề thi"
-                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all disabled:opacity-40"
-                      >
-                        <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
-                          {isRemoving ? "refresh" : "link_off"}
-                        </span>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleRemoveExam(exam.id)}
+                          disabled={isRemoving || isDeleting}
+                          title="Gỡ khỏi ngân hàng đề thi"
+                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-orange-50 dark:hover:bg-orange-900/30 text-slate-400 hover:text-orange-500 transition-all disabled:opacity-40"
+                        >
+                          <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
+                            {isRemoving ? "refresh" : "link_off"}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteExam(exam.id)}
+                          disabled={isRemoving || isDeleting}
+                          title="Xoá vĩnh viễn"
+                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all disabled:opacity-40"
+                        >
+                          <span className={`material-symbols-outlined text-lg ${isDeleting ? "animate-spin" : ""}`}>
+                            {isDeleting ? "refresh" : "delete_forever"}
+                          </span>
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

@@ -200,9 +200,7 @@ function ImportFormContent() {
       });
 
       if (res.ok) {
-        if (folderId) {
-          router.push(`/${locale}/admin/exam-bank/${folderId}`);
-        } else if (isBank) {
+        if (folderId || isBank) {
           router.push(`/${locale}/admin/exam-bank`);
         } else {
           router.push(`/${locale}/admin/dashboard`);

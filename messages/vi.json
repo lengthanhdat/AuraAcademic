@@ -90,6 +90,10 @@
       "mode_manual": "Tạo thủ công",
       "ai_active": "AI đang hoạt động"
     },
+    "warning": {
+      "title": "Cảnh báo hệ thống biên soạn",
+      "text": "AI không chính xác 100%, yêu cầu giáo viên kiểm tra kỹ lại câu hỏi và đáp án trước khi công bố."
+    },
     "upload": {
       "title_ai": "Tải tài liệu để AI tự động tạo câu hỏi",
       "title_import": "Tải lên file DOCX/PDF để trích xuất câu hỏi",

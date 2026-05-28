@@ -90,6 +90,10 @@
       "mode_manual": "Manual Creation",
       "ai_active": "AI is active"
     },
+    "warning": {
+      "title": "System Editing Warning",
+      "text": "AI is not 100% accurate. Instructors are requested to carefully check questions and answers before publishing."
+    },
     "upload": {
       "title_ai": "Upload document for AI to automatically generate questions",
       "title_import": "Upload DOCX/PDF to extract questions",

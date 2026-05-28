@@ -5,11 +5,13 @@ import { useTranslations } from "next-intl";
 import useSWR from "swr";
 import { authFetcher, getStoredUser } from "@/hooks/useAuthFetch";
 import { StatCardSkeleton, TableRowSkeleton } from "@/components/ui/Skeleton";
+import Link from "next/link";
+import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
 const API_BASE = "http://localhost:8088/api";
 
 // ─── Verification Banner ─────────────────────────────────────────────────────
-function VerificationBanner({ onVerifyClick }: { onVerifyClick: () => void }) {
+const VerificationBanner = ({ onVerifyClick }: { onVerifyClick: () => void }) => {
   const { data: verData } = useSWR(
     `${API_BASE}/users/me/verification`,
     authFetcher,
@@ -28,7 +30,7 @@ function VerificationBanner({ onVerifyClick }: { onVerifyClick: () => void }) {
       icon: "verified",
       iconColor: "text-amber-600",
       title: "Tài khoản đang ở chế độ dùng thử",
-      desc: "Tối đa 2 lớp học · Không truy cập Ngân hàng đề thi chung",
+      desc: "Tối đa 2 lớp học · Đã mở khóa quyền truy cập Ngân hàng đề thi chung",
       actionLabel: "Xác thực ngay →",
     },
     PENDING: {
@@ -91,6 +93,8 @@ export default function TeacherDashboard() {
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [examToShare, setExamToShare] = useState<any>(null);
+  const [shareGrade, setShareGrade] = useState("");
+  const [shareSubject, setShareSubject] = useState("");
   const [selectedFolderId, setSelectedFolderId] = useState("");
   const [isSharing, setIsSharing] = useState(false);
 
@@ -177,13 +181,15 @@ export default function TeacherDashboard() {
 
   const openShareModal = useCallback((exam: any) => {
     setExamToShare(exam);
+    setShareGrade(exam.grade || "");
+    setShareSubject(exam.subject || "");
     setIsShareModalOpen(true);
     setSelectedFolderId("");
   }, []);
 
   const handleShareToBank = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!examToShare || !selectedFolderId) return;
+    if (!examToShare) return;
 
     setIsSharing(true);
     try {
@@ -193,10 +199,12 @@ export default function TeacherDashboard() {
         id: undefined,
         title: examToShare.title,
         status: "PUBLISHED", // or PENDING if moderation is enabled
+        grade: shareGrade,
+        subject: shareSubject,
         isPractice: true,
         isBankItem: true,
         bankItem: true,
-        folderId: selectedFolderId
+        folderId: null
       };
 
       const res = await fetch(`${API_BASE}/exams`, {
@@ -210,7 +218,7 @@ export default function TeacherDashboard() {
 
       if (res.ok) {
         setIsShareModalOpen(false);
-        alert("Đã thêm thành công vào chuyên đề!");
+        alert("Đã đưa đề thi vào Ngân hàng thành công!");
         mutate();
       } else {
         alert("Lỗi khi thêm vào ngân hàng.");
@@ -321,203 +329,59 @@ export default function TeacherDashboard() {
         )}
       </div>
 
-      {/* Main Table Section */}
-      <section className="bg-white dark:bg-[#0A1F3E]/80 rounded-2xl shadow-sm border border-outline-variant/10 dark:border-cyan-950/40 overflow-hidden flex flex-col">
-        <div className="p-6 flex items-center justify-between border-b border-surface-container-high bg-white dark:bg-[#0A1F3E]">
-          <div>
-            <h4 className="text-lg font-extrabold text-on-surface dark:text-slate-200 font-headline">{t('table.title')}</h4>
-            <p className="text-xs text-on-surface-variant dark:text-slate-400 font-medium mt-0.5">{t('table.subtitle')}</p>
-          </div>
-          <div className="flex gap-2">
-            <button className="p-2 hover:bg-surface-container-low dark:hover:bg-cyan-950/30 rounded-lg transition-colors duration-200">
-              <span className="material-symbols-outlined text-on-surface-variant dark:text-slate-400">filter_list</span>
-            </button>
-            <button className="p-2 hover:bg-surface-container-low dark:hover:bg-cyan-950/30 rounded-lg transition-colors duration-200">
-              <span className="material-symbols-outlined text-on-surface-variant dark:text-slate-400">more_vert</span>
-            </button>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-surface-container-low dark:bg-cyan-950/30">
-                <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">{t('table.col_name')}</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">{t('table.col_time')}</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest text-center">{t('table.col_status')}</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest text-right">{t('table.col_action')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-surface-container dark:divide-cyan-950/40">
-              {isLoading ? (
-                <>
-                  <TableRowSkeleton cols={4} />
-                  <TableRowSkeleton cols={4} />
-                  <TableRowSkeleton cols={4} />
-                  <TableRowSkeleton cols={4} />
-                </>
-              ) : exams.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center text-on-surface-variant dark:text-slate-400/50">
-                      <span className="material-symbols-outlined text-5xl mb-2">folder_open</span>
-                      <p className="font-medium text-sm">{t('table.empty')}</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                exams.map((exam: any) => (
-                  <tr key={exam.id} className="hover:bg-surface-container-low dark:hover:bg-cyan-950/20 transition-colors duration-200 group">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold transition-colors duration-200 ${(exam.status === 'PUBLISHED' || exam.status === 'STARTED') ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
-                          {exam.title.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-bold text-on-surface dark:text-slate-200 text-sm">{exam.title}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <p className="text-[11px] text-on-surface-variant dark:text-slate-400">
-                              {exam.versions?.[0]?.questions?.length || 0} {t('table.questions')} • {exam.duration} {t('table.minutes')}
-                              {exam.versions?.length > 1 && ` • ${exam.versions.length} ${t('table.versions')}`}
-                            </p>
-                            {exam.status === 'PUBLISHED' && (
-                              <>
-                                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-black tracking-wider flex items-center gap-1">
-                                  <span className="material-symbols-outlined text-[10px]">key</span>
-                                  {exam.accessCode}
-                                </span>
-                                <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-black tracking-wider flex items-center gap-1">
-                                  <span className="material-symbols-outlined text-[10px]">groups</span>
-                                  {exam.submissionCount || 0} {t('table.submissions')}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      {exam.startTime ? (
-                        <>
-                          <p className="text-sm font-semibold text-on-surface dark:text-slate-200">
-                            {new Date(exam.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                            {" - "}
-                            {new Date(exam.startTime).toLocaleDateString(undefined)}
-                          </p>
-                          <p className="text-[11px] text-on-surface-variant dark:text-slate-400">{t('table.start_at_publish')}</p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-sm font-semibold text-on-surface dark:text-slate-200">{t('table.time_unknown')}</p>
-                          <p className="text-[11px] text-on-surface-variant dark:text-slate-400">{t('table.time_not_set')}</p>
-                        </>
-                      )}
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      {(() => {
-                        if (exam.status === 'PUBLISHED' || exam.status === 'STARTED') {
-                          if (exam.startTime) {
-                            const endTime = exam.startTime + (exam.duration * 60 * 1000);
-                            if (Date.now() > endTime) {
-                              return (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-black uppercase tracking-wider">
-                                  {t('status.finished')}
-                                </span>
-                              );
-                            }
-                          }
-                          
-                          if (exam.status === 'PUBLISHED') {
-                            return (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-black uppercase tracking-wider">
-                                <span className="material-symbols-outlined text-[12px]">schedule</span>
-                                {t('status.published')}
-                              </span>
-                            );
-                          }
+      {/* Full-width container: Quick Actions */}
+      <div className="w-full space-y-5 pb-12">
+        {/* Quick action cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button
+            onClick={() => router.push("/teacher/exams?mode=ai")}
+            className="group bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 text-left hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(0,198,255,0.08)] transition-all duration-300 active:scale-[0.98]"
+          >
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <span className="material-symbols-outlined text-blue-600 dark:text-cyan-400" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+            </div>
+            <p className="font-extrabold text-on-surface dark:text-slate-100 text-sm">AI Tạo Đề</p>
+            <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 font-medium">Upload tài liệu, AI biên soạn câu hỏi</p>
+          </button>
 
-                          return (
-                            <div className="flex flex-col items-center gap-1">
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 text-[10px] font-black uppercase tracking-wider">
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                {t('status.live')}
-                              </span>
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600">
-                                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-ping inline-block"></span>
-                                {(activeCountMap[exam.accessCode] ?? 0)} {t('status.active_students')}
-                              </span>
-                            </div>
-                          );
-                        } else if (exam.status === 'FINISHED') {
-                          return (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 text-[10px] font-black uppercase tracking-wider">
-                              <span className="material-symbols-outlined text-[12px]">lock</span>
-                              {t('status.closed')}
-                            </span>
-                          );
-                        } else if (exam.status === 'COMPLETED') {
-                          return (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-black uppercase tracking-wider">
-                              <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                              {t('status.finished')}
-                            </span>
-                          );
-                        } else {
-                          return (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-black uppercase tracking-wider">
-                              {t('status.draft')}
-                            </span>
-                          );
-                        }
-                      })()}
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => viewExam(exam)}
-                          className="p-2 text-slate-500 hover:text-[#0C2E5E] hover:bg-[#0C2E5E]/5 rounded-xl transition-all duration-200"
-                          title={t('actions.view')}
-                        >
-                          <span className="material-symbols-outlined text-xl">visibility</span>
-                        </button>
-                        <button
-                          onClick={() => editExam(exam)}
-                          disabled={exam.status !== 'DRAFT'}
-                          className={`p-2 rounded-lg transition-all duration-200 ${
-                            exam.status === 'DRAFT' 
-                              ? "text-on-surface-variant dark:text-slate-400 hover:text-[#00355f] hover:bg-blue-50" 
-                              : "text-slate-200 cursor-not-allowed opacity-50"
-                          }`}
-                          title={exam.status === 'DRAFT' ? t('actions.edit') : "Chỉ có thể chỉnh sửa bản nháp"}
-                        >
-                          <span className="material-symbols-outlined text-xl">edit</span>
-                        </button>
-                        <button
-                          onClick={() => deleteExam(exam.id)}
-                          className="p-2 text-on-surface-variant dark:text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
-                          title={t('actions.delete')}
-                        >
-                          <span className="material-symbols-outlined text-xl">delete</span>
-                        </button>
-                        <button
-                          onClick={() => openShareModal(exam)}
-                          className="p-2 text-on-surface-variant dark:text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all duration-200"
-                          title="Đưa vào Ngân hàng đề"
-                        >
-                          <span className="material-symbols-outlined text-xl">publish</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <button
+            onClick={() => router.push("/teacher/exams?mode=manual")}
+            className="group bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 text-left hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(0,198,255,0.08)] transition-all duration-300 active:scale-[0.98]"
+          >
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>edit_document</span>
+            </div>
+            <p className="font-extrabold text-on-surface dark:text-slate-100 text-sm">Nhập Tay</p>
+            <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 font-medium">Tự soạn từng câu hỏi chi tiết</p>
+          </button>
 
-      <div className="grid grid-cols-1 gap-6 pb-12">
-        <div className="bg-white/80 dark:bg-[#0A1F3E]/80 p-6 rounded-2xl flex justify-center items-center gap-4 shadow-sm border border-outline-variant/10 text-on-surface-variant dark:text-slate-400/50">
-          {t('notifications.empty')}
+          <button
+            onClick={() => router.push("/teacher/exams/import")}
+            className="group bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 text-left hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(0,198,255,0.08)] transition-all duration-300 active:scale-[0.98]"
+          >
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400" style={{ fontVariationSettings: "'FILL' 1" }}>upload_file</span>
+            </div>
+            <p className="font-extrabold text-on-surface dark:text-slate-100 text-sm">Import File</p>
+            <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 font-medium">Tải lên file đề thi có sẵn</p>
+          </button>
+
+          <button
+            onClick={() => router.push("/teacher/exam-bank")}
+            className="group bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 text-left hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(0,198,255,0.08)] transition-all duration-300 active:scale-[0.98]"
+          >
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500/10 to-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400" style={{ fontVariationSettings: "'FILL' 1" }}>library_books</span>
+            </div>
+            <p className="font-extrabold text-on-surface dark:text-slate-100 text-sm">Ngân Hàng Đề</p>
+            <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 font-medium">Kho đề thi của cộng đồng</p>
+          </button>
+        </div>
+
+        {/* Notification placeholder */}
+        <div className="bg-white/80 dark:bg-[#0A1F3E]/80 p-5 rounded-2xl flex items-center gap-3 shadow-sm border border-outline-variant/10 text-on-surface-variant dark:text-slate-400/50">
+          <span className="material-symbols-outlined opacity-40">notifications_none</span>
+          <span className="text-sm">{t('notifications.empty')}</span>
         </div>
       </div>
 
@@ -539,21 +403,53 @@ export default function TeacherDashboard() {
                 <p className="font-bold text-on-surface dark:text-slate-200 mt-1 line-clamp-1">{examToShare?.title}</p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">
-                  Chọn Chuyên Đề <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={selectedFolderId}
-                  onChange={(e) => setSelectedFolderId(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/60 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/40 outline-none text-on-surface dark:text-slate-200 font-medium"
-                >
-                  <option value="" disabled>-- Chọn chuyên đề do Admin tạo --</option>
-                  {folders.map((folder: any) => (
-                    <option key={folder.id} value={folder.id}>{folder.name}</option>
-                  ))}
-                </select>
+              <div className="space-y-4 bg-blue-50/50 dark:bg-cyan-950/15 p-4 rounded-2xl border border-blue-100/50 dark:border-cyan-950/40">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  Vui lòng chọn cấp bậc và môn học để phân loại đề thi trong Ngân hàng đề thi. Học sinh sẽ tìm thấy đề thi này khi lọc theo các tiêu chí dưới đây.
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Cấp bậc *</label>
+                    <select
+                      value={shareGrade}
+                      onChange={e => {
+                        setShareGrade(e.target.value);
+                        setShareSubject("");
+                      }}
+                      required
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#0A1F3E] text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/50 outline-none"
+                    >
+                      <option value="">-- Chọn --</option>
+                      <optgroup label="Phổ Thông (K-12)">
+                        {EDUCATION_HIERARCHY.filter(l => l.type === "K12").map(l => (
+                          <option key={l.id} value={l.name}>{l.name}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Đại Học & Cao Đẳng">
+                        {EDUCATION_HIERARCHY.filter(l => l.type === "UNIVERSITY").map(l => (
+                          <option key={l.id} value={l.name}>{l.name}</option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Môn học *</label>
+                    <select
+                      value={shareSubject}
+                      onChange={e => setShareSubject(e.target.value)}
+                      required
+                      disabled={!shareGrade}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#0A1F3E] text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/50 outline-none disabled:opacity-50"
+                    >
+                      <option value="">-- Chọn --</option>
+                      {EDUCATION_HIERARCHY.find(l => l.name === shareGrade)?.subjects.map(s => (
+                        <option key={s.id} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4 flex items-center justify-end gap-3">
@@ -567,7 +463,7 @@ export default function TeacherDashboard() {
                 </button>
                 <button
                   type="submit"
-                  disabled={!selectedFolderId || isSharing}
+                  disabled={isSharing}
                   className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
                   {isSharing ? (

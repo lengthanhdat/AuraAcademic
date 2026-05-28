@@ -1,6 +1,6 @@
 "use client";
 
-import { Link, usePathname } from "@/navigation";
+import { Link, usePathname, useRouter } from "@/navigation";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -11,6 +11,7 @@ interface SidebarProps {
 
 export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const t = useTranslations('Sidebar');
 
@@ -24,6 +25,7 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
   const menuItems = [
     { label: t("menu.dashboard"), icon: "dashboard", href: "/teacher/dashboard" },
     { label: t("menu.exams"), icon: "magic_button", href: "/teacher/exams" },
+    { label: "Kỳ thi của tôi", icon: "assignment", href: "/teacher/my-exams" },
     { label: "Lớp học", icon: "school", href: "/teacher/classrooms" },
     { label: "Ngân hàng đề", icon: "local_library", href: "/teacher/exam-bank" },
     { label: t("menu.materials"), icon: "menu_book", href: "/teacher/materials" },
@@ -129,6 +131,7 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
               </Link>
             );
           })}
+
         </nav>
 
 

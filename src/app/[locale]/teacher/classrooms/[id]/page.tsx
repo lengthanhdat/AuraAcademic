@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "@/navigation";
 import { toast } from "sonner";
 import { classroomApi } from "@/lib/classroomApi";
@@ -10,7 +10,8 @@ import SockJS from "sockjs-client";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare, BarChart3,
   Radio, CheckCircle, XCircle, Mail, Send, FileText,
-  Clock, Award, Copy, RefreshCw, Trophy, Plus, Link, Trash2, Shield, Shuffle
+  Clock, Award, Copy, RefreshCw, Trophy, Plus, Trash2, Shield, Shuffle,
+  Link
 } from "lucide-react";
 
 type Tab = "stream" | "members" | "materials" | "chat" | "gradebook" | "exams";
@@ -38,11 +39,17 @@ export default function TeacherClassroomDetailPage() {
   const [chatMsgs, setChatMsgs] = useState<ClassroomMsg[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [wsConnected, setWsConnected] = useState(false);
-  const [showCreateExamModal, setShowCreateExamModal] = useState(false);
-  const [showLinkExamModal, setShowLinkExamModal] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stompRef = useRef<Client | null>(null);
   const userRef = useRef<any>(null);
+  const searchParams = useSearchParams();
+
+  // Auto-activate tab from URL query param (e.g. ?tab=exams after returning from exam builder)
+  useEffect(() => {
+    const urlTab = searchParams.get("tab") as Tab | null;
+    if (urlTab) setTab(urlTab);
+  }, [searchParams]);
 
   useEffect(() => {
     try {
@@ -512,13 +519,13 @@ export default function TeacherClassroomDetailPage() {
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowLinkExamModal(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-750 text-cyan-600 dark:text-cyan-400 rounded-xl text-sm font-bold transition-all shadow-sm"
+                  onClick={() => setIsLinkModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all border border-slate-200 dark:border-slate-700/60 shadow-sm"
                 >
-                  <Link className="w-4 h-4" /> Giao từ Kho đề
+                  <Plus className="w-4 h-4" /> Thêm từ Kho lưu trữ
                 </button>
                 <button
-                  onClick={() => setShowCreateExamModal(true)}
+                  onClick={() => router.push(`/teacher/exams?classroomId=${classroomId}&mode=ai`)}
                   className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_12px_rgba(0,198,255,0.25)]"
                 >
                   <Plus className="w-4 h-4" /> Tạo đề thi mới
@@ -526,11 +533,42 @@ export default function TeacherClassroomDetailPage() {
               </div>
             </div>
 
+            {/* Guide Section */}
+            <div className="bg-slate-100/30 dark:bg-cyan-950/20 border border-slate-250 dark:border-cyan-950/40 rounded-2xl p-5 shadow-sm space-y-3.5">
+              <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                <span className="material-symbols-outlined text-lg">lightbulb</span>
+                <h4 className="text-xs font-extrabold uppercase tracking-widest">💡 Hướng dẫn giao bài thi cho Lớp học</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {/* Workflow 1 */}
+                <div className="bg-white dark:bg-[#0A1F3E]/60 p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/20 space-y-2">
+                  <div className="flex items-center gap-2 font-black text-slate-700 dark:text-slate-200">
+                    <span className="w-5 h-5 rounded-full bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 flex items-center justify-center text-[10px]">1</span>
+                    Tạo mới & Giao trực tiếp (Khuyên dùng)
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
+                    Nhấp nút <strong className="text-cyan-600 dark:text-cyan-400">"Tạo đề thi mới"</strong> phía trên. Sau khi thiết kế câu hỏi bằng AI hoặc Nhập tay, đề thi sẽ tự động liên kết vào lớp này ngay khi bấm Lưu.
+                  </p>
+                </div>
+
+                {/* Workflow 2 */}
+                <div className="bg-white dark:bg-[#0A1F3E]/60 p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/20 space-y-2">
+                  <div className="flex items-center gap-2 font-black text-slate-700 dark:text-slate-200">
+                    <span className="w-5 h-5 rounded-full bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 flex items-center justify-center text-[10px]">2</span>
+                    Giao bài thi đã có từ "Kỳ thi của tôi"
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
+                    Vào trang <a href="/teacher/my-exams" className="text-cyan-600 dark:text-cyan-400 font-black hover:underline">Kỳ thi của tôi</a> ở menu trái. Bấm <strong className="text-cyan-600 dark:text-cyan-400">Chỉnh sửa</strong> (hình bút) của đề thi đã có, tại mục Lớp học ở cột bên phải chọn lớp <strong className="text-cyan-600 dark:text-cyan-400">"{classroom?.name}"</strong> rồi bấm Lưu.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {(!exams || exams.length === 0) ? (
               <div className="text-center text-slate-400 dark:text-slate-500 py-20 border border-dashed border-slate-200 dark:border-cyan-950/60 rounded-3xl bg-white dark:bg-[#0A1F3E]/20">
                 <Trophy className="w-12 h-12 mx-auto mb-3 opacity-20 animate-pulse" />
                 <p className="font-bold text-slate-500 dark:text-slate-400">Lớp học chưa có bài kiểm tra nào</p>
-                <p className="text-xs mt-1 text-slate-400 dark:text-slate-500">Hãy tạo đề thi mới hoặc gán bài thi từ Kho đề sẵn có để học sinh tham gia!</p>
+                <p className="text-xs mt-1 text-slate-400 dark:text-slate-500">Hãy tạo đề thi mới để học sinh tham gia!</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -669,26 +707,18 @@ export default function TeacherClassroomDetailPage() {
         )}
 
         {/* MODAL MỚI CHO BÀI THI */}
-        <CreateClassroomExamModal
-          isOpen={showCreateExamModal}
-          onClose={() => setShowCreateExamModal(false)}
+        <LinkExamFromRepositoryModal
+          isOpen={isLinkModalOpen}
+          onClose={() => setIsLinkModalOpen(false)}
           classroomId={classroomId}
           onSuccess={fetchData}
         />
-
-        <LinkExamFromBankModal
-          isOpen={showLinkExamModal}
-          onClose={() => setShowLinkExamModal(false)}
-          classroomId={classroomId}
-          onSuccess={fetchData}
-        />
-
       </div>
     </div>
   );
 }
 
-// ── LinkExamFromBankModal Component ──
+// ── LinkExamFromRepositoryModal Component ──
 interface LinkExamModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -696,28 +726,35 @@ interface LinkExamModalProps {
   onSuccess: () => void;
 }
 
-function LinkExamFromBankModal({ isOpen, onClose, classroomId, onSuccess }: LinkExamModalProps) {
-  const [bankItems, setBankItems] = useState<any[]>([]);
+function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }: LinkExamModalProps) {
+  const [exams, setExams] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      fetchBankExams();
+      fetchRepositoryExams();
     }
   }, [isOpen]);
 
-  const fetchBankExams = async () => {
+  const fetchRepositoryExams = async () => {
     setLoading(true);
     try {
       const u = localStorage.getItem("user");
       if (u) {
         const user = JSON.parse(u);
-        const data = await classroomApi.getTeacherBankExams(user.id);
-        setBankItems(data);
+        const res = await fetch(`http://localhost:8088/api/exams/teacher/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setExams(data.filter((exam: any) => !exam.isPractice && !exam.isBankItem));
+        }
       }
     } catch (e: any) {
-      toast.error("Không thể tải ngân hàng đề: " + e.message);
+      toast.error("Không thể tải kho lưu trữ: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -736,7 +773,7 @@ function LinkExamFromBankModal({ isOpen, onClose, classroomId, onSuccess }: Link
 
   if (!isOpen) return null;
 
-  const filtered = bankItems.filter(item =>
+  const filtered = exams.filter(item =>
     item.title?.toLowerCase().includes(search.toLowerCase()) ||
     item.subject?.toLowerCase().includes(search.toLowerCase())
   );
@@ -746,7 +783,7 @@ function LinkExamFromBankModal({ isOpen, onClose, classroomId, onSuccess }: Link
       <div className="bg-slate-900 border border-slate-700/60 rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
         <div className="p-6 border-b border-slate-800 flex justify-between items-center shrink-0">
           <h3 className="text-white font-bold text-lg flex items-center gap-2">
-            <Link className="w-5 h-5 text-cyan-400" /> Giao đề thi từ Kho đề
+            <Trophy className="w-5 h-5 text-cyan-400" /> Giao đề thi từ Kỳ thi của tôi
           </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-sm">
             Đóng
@@ -756,7 +793,7 @@ function LinkExamFromBankModal({ isOpen, onClose, classroomId, onSuccess }: Link
         <div className="p-4 bg-slate-950 shrink-0">
           <input
             type="text"
-            placeholder="Tìm kiếm đề thi..."
+            placeholder="Tìm kiếm đề thi từ Kỳ thi của tôi..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500 transition-all"
@@ -769,14 +806,14 @@ function LinkExamFromBankModal({ isOpen, onClose, classroomId, onSuccess }: Link
               <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-slate-500 text-center py-10 text-sm">Không tìm thấy đề thi nào trong Ngân hàng đề của bạn.</p>
+            <p className="text-slate-500 text-center py-10 text-sm">Không tìm thấy đề thi nào trong Kỳ thi của tôi.</p>
           ) : (
             filtered.map((exam) => (
               <div key={exam.id} className="bg-slate-800/40 border border-slate-700/40 rounded-xl p-4 flex items-center justify-between gap-4">
                 <div>
                   <h4 className="text-white font-semibold text-sm">{exam.title}</h4>
                   <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
-                    <span>{exam.questions?.length || 0} câu hỏi</span>
+                    <span>{exam.versions?.[0]?.questions?.length || exam.questionCount || 0} câu hỏi</span>
                     <span>•</span>
                     <span>{exam.duration} phút</span>
                     {exam.subject && (

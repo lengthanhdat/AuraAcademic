@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { SmartMarkdown } from "@/components/ui/SmartMarkdown";
+import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
 type Option = { id: string; text: string; isCorrect: boolean };
 type Question = { id: string; type: string; text: string; imageUrl?: string; options: Option[] };
@@ -39,6 +40,8 @@ function ExamBuilderContent() {
   // --- Prompt mode states ---
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("MEDIUM");
+  const [grade, setGrade] = useState("");
+  const [subject, setSubject] = useState("");
   const [language, setLanguage] = useState("vi");
   const [generatingMode, setGeneratingMode] = useState<"file" | "prompt">("file");
   const [aiSubMode, setAiSubMode] = useState<"file" | "prompt">("file");
@@ -90,6 +93,9 @@ function ExamBuilderContent() {
     else if (mode === "manual") setCreationMode("manual");
     else if (mode === "ai") setCreationMode("ai");
   }, [searchParams]);
+
+  // classroomId từ URL — nếu có thì sau lưu quấy lại lớp học
+  const classroomId = searchParams.get("classroomId");
 
   // 1c. Fallback: Khôi phục từ LocalStorage khi không có URL param
   useEffect(() => {
@@ -405,9 +411,14 @@ function ExamBuilderContent() {
 
       const payload = {
         title, duration, shuffle, aiProctoring, difficulty,
+        grade: grade || null,
+        subject: subject || null,
         teacherId: user.id, teacherName: user.fullName,
         status: status === "WAITING" ? "PUBLISHED" : status,
         scheduledStartTime: scheduledStartTime ? new Date(scheduledStartTime).getTime() : null,
+        classroomId: classroomId || null,
+        isPractice: false,
+        isBankItem: false,
         versions, extractedImages
       };
 
@@ -433,6 +444,10 @@ function ExamBuilderContent() {
           // Công bố đề → vào thẳng trang phòng thi để chia sẻ mã và bắt đầu
           router.push(`/teacher/exam-room/${savedExam.id}`);
           toast.success(t('toast.publish_success'));
+        } else if (classroomId) {
+          // Lưu bản nháp từ lớp học → quay lại lớp học
+          router.push(`/teacher/classrooms/${classroomId}?tab=exams`);
+          toast.success("Bài thi đã được tạo và gắn vào lớp!");
         } else {
           router.push("/teacher/dashboard");
           toast.success(t('toast.draft_success'));
@@ -633,6 +648,19 @@ function ExamBuilderContent() {
               <span className="material-symbols-outlined text-[16px] animate-pulse">auto_awesome</span>
               AI đang hoạt động
             </div>
+          </div>
+        </div>
+
+        {/* Warning Banner */}
+        <div className="bg-gradient-to-r from-amber-50/80 to-orange-50/80 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200/60 dark:border-amber-900/30 rounded-2xl p-4 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+            <span className="material-symbols-outlined text-[22px] animate-pulse">warning</span>
+          </div>
+          <div className="flex-1 py-0.5">
+            <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300">{t('warning.title')}</h4>
+            <p className="text-xs text-amber-800/90 dark:text-amber-400/90 mt-0.5 leading-relaxed font-semibold">
+              {t('warning.text')}
+            </p>
           </div>
         </div>
 
@@ -1037,6 +1065,49 @@ function ExamBuilderContent() {
                 <option value="HARD">🔴 Khó</option>
                 <option value="EXPERT">🟣 Chuyên gia</option>
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Cấp bậc</label>
+                <select
+                  value={grade}
+                  onChange={e => {
+                    setGrade(e.target.value);
+                    setSubject(""); // Reset subject when grade changes
+                  }}
+                  className="w-full px-3 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer text-sm"
+                  style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em' }}
+                >
+                  <option value="">-- Chọn Cấp Bậc --</option>
+                  <optgroup label="Phổ Thông (K-12)">
+                    {EDUCATION_HIERARCHY.filter(l => l.type === "K12").map(l => (
+                      <option key={l.id} value={l.name}>{l.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Đại Học & Cao Đẳng">
+                    {EDUCATION_HIERARCHY.filter(l => l.type === "UNIVERSITY").map(l => (
+                      <option key={l.id} value={l.name}>{l.name}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Môn học</label>
+                <select
+                  value={subject}
+                  onChange={e => setSubject(e.target.value)}
+                  disabled={!grade}
+                  className="w-full px-3 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer text-sm disabled:opacity-50"
+                  style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em' }}
+                >
+                  <option value="">-- Chọn Môn --</option>
+                  {EDUCATION_HIERARCHY.find(l => l.name === grade)?.subjects.map(s => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-4 pt-4">

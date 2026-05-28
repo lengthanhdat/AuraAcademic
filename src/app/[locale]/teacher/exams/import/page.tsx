@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { ALL_SUBJECTS } from "@/lib/curriculum";
+import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 import { API_BASE } from "@/lib/api";
 import { useLocale } from "next-intl";
 
@@ -51,7 +51,8 @@ function ImportFormContent() {
   // Exam creation state
   const [examTitle, setExamTitle] = useState("");
   const [duration, setDuration] = useState(45);
-  const [subject, setSubject] = useState("Toán học");
+  const [grade, setGrade] = useState("");
+  const [subject, setSubject] = useState("");
   const [addToBank, setAddToBank] = useState(isBank || !!folderId);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -184,7 +185,8 @@ function ImportFormContent() {
         ],
         extractedImages: [],
         folderId: folderId || null,
-        subject: subject,
+        grade: grade || null,
+        subject: subject || null,
         isPractice: addToBank, // Thay vì isBank || folderId
         isBankItem: addToBank,
       };
@@ -200,9 +202,7 @@ function ImportFormContent() {
       });
 
       if (res.ok) {
-        if (folderId) {
-          router.push(`/${locale}/teacher/exam-bank/${folderId}`);
-        } else if (isBank) {
+        if (folderId || isBank) {
           router.push(`/${locale}/teacher/exam-bank`);
         } else {
           router.push(`/${locale}/teacher/dashboard`);
@@ -497,17 +497,45 @@ function ImportFormContent() {
               />
             </div>
 
-            <div>
-              <label className="text-sm font-bold text-slate-500 block mb-2">Môn học</label>
-              <select
-                value={subject}
-                onChange={e => setSubject(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-semibold"
-              >
-                {ALL_SUBJECTS.map((sub: string) => (
-                  <option key={sub} value={sub}>{sub}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-bold text-slate-500 block mb-2">Cấp bậc</label>
+                <select
+                  value={grade}
+                  onChange={e => {
+                    setGrade(e.target.value);
+                    setSubject("");
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-semibold bg-white"
+                >
+                  <option value="">-- Chọn Cấp Bậc --</option>
+                  <optgroup label="Phổ Thông (K-12)">
+                    {EDUCATION_HIERARCHY.filter(l => l.type === "K12").map(l => (
+                      <option key={l.id} value={l.name}>{l.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Đại Học & Cao Đẳng">
+                    {EDUCATION_HIERARCHY.filter(l => l.type === "UNIVERSITY").map(l => (
+                      <option key={l.id} value={l.name}>{l.name}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-bold text-slate-500 block mb-2">Môn học</label>
+                <select
+                  value={subject}
+                  onChange={e => setSubject(e.target.value)}
+                  disabled={!grade}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-semibold bg-white disabled:opacity-50"
+                >
+                  <option value="">-- Chọn Môn --</option>
+                  {EDUCATION_HIERARCHY.find(l => l.name === grade)?.subjects.map(s => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
