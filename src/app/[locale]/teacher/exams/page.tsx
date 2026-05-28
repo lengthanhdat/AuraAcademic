@@ -239,7 +239,7 @@ function ExamBuilderContent() {
         } else if (job.status === "FAILED") {
           clearInterval(pollingRef.current!);
           setError(job.errorMessage || "AI gặp lỗi khi xử lý tài liệu này.");
-          toast.error(t('toast.ai_failed') + + job.errorMessage);
+          toast.error(t('toast.ai_failed') + (job.errorMessage || "AI gặp lỗi khi xử lý tài liệu này."));
           setStep("upload");
         }
       } catch (err) {
