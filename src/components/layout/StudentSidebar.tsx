@@ -52,9 +52,9 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
         <div className={`relative flex items-center mb-6 shrink-0 ${isCollapsed ? "justify-center px-2" : "justify-center px-6 w-full"}`}>
           <Link href="/student/dashboard" className="group flex flex-col items-center justify-center transition-all duration-300">
             {isCollapsed ? (
-              /* Mini Logo glowing badge when collapsed */
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#0E3E7A] flex items-center justify-center text-white shadow-lg shadow-[#0C2E5E]/15 dark:shadow-[#00C6FF]/10 hover:scale-105 transition-all">
-                <span className="material-symbols-outlined text-2xl text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              <div className="w-12 h-12 flex items-center justify-center hover:scale-105 transition-all">
+                <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain dark:hidden" />
+                <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain hidden dark:block" />
               </div>
             ) : (
               /* Center and scale up the vertical logo in a premium card */

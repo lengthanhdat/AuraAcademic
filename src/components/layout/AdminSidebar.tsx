@@ -81,9 +81,9 @@ export function AdminSidebar({ isCollapsed = false, onClose }: SidebarProps) {
         <div className={`relative flex items-center mb-6 border-b border-slate-200/40 dark:border-cyan-950/40 pb-5 ${isCollapsed ? "justify-center px-2" : "justify-center px-6 w-full"}`}>
           <Link href="/admin/dashboard" className="group flex flex-col items-center justify-center transition-all duration-300">
             {isCollapsed ? (
-              /* Glowing Shield/Lock badge in Navy for collapsed Admin */
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#0E3E7A] dark:from-[#0A1F3E] dark:to-[#0E3E7A] shadow-lg shadow-[#0C2E5E]/20 dark:shadow-[#00C6FF]/10 flex items-center justify-center text-white hover:scale-105 transition-all">
-                <span className="material-symbols-outlined text-[22px] text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+              <div className="w-11 h-11 flex items-center justify-center hover:scale-105 transition-all">
+                <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain dark:hidden" />
+                <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain hidden dark:block" />
               </div>
             ) : (
               /* Center and scale up the vertical logo in a premium card */

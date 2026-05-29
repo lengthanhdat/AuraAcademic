@@ -11,7 +11,140 @@ import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
 const API_BASE = "http://localhost:8088/api";
 
-// ─── Share to Bank Modal ─────────────────────────────────────────────────────
+// ─── Exam Detail Modal ─────────────────────────────────────────────────
+const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
+
+const ExamDetailModal = ({
+  isOpen,
+  onClose,
+  exam,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  exam: any;
+}) => {
+  const questions = exam?.versions?.[0]?.questions || [];
+
+  if (!isOpen || !exam) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-[#071829] border border-slate-200 dark:border-cyan-900/40 rounded-[2rem] w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between p-7 pb-4 border-b border-slate-100 dark:border-cyan-950/40 shrink-0">
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Nội dung đề thi</p>
+            <h3 className="font-extrabold text-xl text-slate-900 dark:text-slate-100 tracking-tight">{exam.title}</h3>
+            <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 font-medium">
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">help</span>
+                {questions.length} câu hỏi
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">schedule</span>
+                {exam.duration} phút
+              </span>
+              {exam.difficulty && (
+                <>
+                  <span>•</span>
+                  <span>{
+                    exam.difficulty === "EASY" ? "🟢 Dễ" :
+                    exam.difficulty === "MEDIUM" ? "🟡 Trung bình" :
+                    exam.difficulty === "HARD" ? "🔴 Khó" : "🟣 Chuyên gia"
+                  }</span>
+                </>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-cyan-950/40 transition-all shrink-0 ml-4"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        {/* Question List */}
+        <div className="overflow-y-auto p-7 pt-5 space-y-5">
+          {questions.length === 0 ? (
+            <div className="py-12 text-center">
+              <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2 block">article</span>
+              <p className="text-sm text-slate-400">Chưa có câu hỏi nào trong đề thi này.</p>
+            </div>
+          ) : (
+            questions.map((q: any, idx: number) => {
+              const correctIdx = q.options?.findIndex((o: any) => o.isCorrect ?? o.correct);
+              return (
+                <div
+                  key={q.id || idx}
+                  className="bg-slate-50 dark:bg-cyan-950/20 border border-slate-200/60 dark:border-cyan-950/30 rounded-2xl p-5 space-y-3"
+                >
+                  {/* Question header */}
+                  <div className="flex items-start gap-3">
+                    <span className="shrink-0 w-7 h-7 rounded-xl bg-[#0C2E5E] dark:bg-cyan-900/60 text-white text-[11px] font-black flex items-center justify-center">
+                      {idx + 1}
+                    </span>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
+                      {q.text || <em className="text-slate-400">Không có nội dung</em>}
+                    </p>
+                  </div>
+
+                  {/* Options */}
+                  {q.options?.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-10">
+                      {q.options.map((opt: any, oIdx: number) => {
+                        const isCorrect = opt.isCorrect ?? opt.correct;
+                        return (
+                          <div
+                            key={opt.id || oIdx}
+                            className={`flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                              isCorrect
+                                ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-300"
+                                : "bg-white dark:bg-cyan-950/20 border-slate-200 dark:border-cyan-950/30 text-slate-600 dark:text-slate-400"
+                            }`}
+                          >
+                            <span className={`shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center ${
+                              isCorrect
+                                ? "bg-emerald-500 text-white"
+                                : "bg-slate-200 dark:bg-cyan-950/50 text-slate-500 dark:text-slate-400"
+                            }`}>
+                              {OPTION_LABELS[oIdx] || oIdx + 1}
+                            </span>
+                            <span className="leading-relaxed">{opt.text || "(Trống)"}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-7 pt-4 border-t border-slate-100 dark:border-cyan-950/40 flex justify-between items-center shrink-0">
+          <p className="text-[10px] text-slate-400 font-medium">
+            ✓ Đáp án đúng được highlight màu xanh lá
+          </p>
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-slate-100 dark:bg-cyan-950/40 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-cyan-950/60 transition-all"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 const ShareToBankModal = ({
   isOpen,
   onClose,
@@ -218,6 +351,7 @@ export default function TeacherMyExamsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [examToShare, setExamToShare] = useState<any>(null);
+  const [examToView, setExamToView] = useState<any>(null);
 
   // Fetch teacher exams
   const { data: exams = [], isLoading, mutate } = useSWR(
@@ -572,13 +706,22 @@ export default function TeacherMyExamsPage() {
                         </button>
                       )}
 
-                      {/* Go inside exam proctoring / preview */}
+                      {/* View detail */}
                       <button
-                        onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
+                        onClick={() => setExamToView(exam)}
                         className="p-1.5 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-50 dark:hover:bg-cyan-950/30 rounded-lg transition-colors"
-                        title="Vào phòng thi"
+                        title="Xem nội dung đề thi"
                       >
                         <span className="material-symbols-outlined text-lg">visibility</span>
+                      </button>
+
+                      {/* Go inside exam proctoring */}
+                      <button
+                        onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
+                        className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-cyan-950/30 rounded-lg transition-colors"
+                        title="Vào phòng thi"
+                      >
+                        <span className="material-symbols-outlined text-lg">meeting_room</span>
                       </button>
 
                       {/* Edit Exam */}
@@ -607,7 +750,7 @@ export default function TeacherMyExamsPage() {
         )}
       </div>
 
-      {/* Share Modal Container */}
+      {/* Share Modal */}
       <ShareToBankModal
         isOpen={isShareModalOpen}
         onClose={() => {
@@ -616,6 +759,13 @@ export default function TeacherMyExamsPage() {
         }}
         exam={examToShare}
         onSuccess={mutate}
+      />
+
+      {/* Exam Detail Modal */}
+      <ExamDetailModal
+        isOpen={!!examToView}
+        onClose={() => setExamToView(null)}
+        exam={examToView}
       />
     </main>
   );

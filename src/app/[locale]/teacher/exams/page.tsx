@@ -831,7 +831,7 @@ function ExamBuilderContent() {
                 {file ? file.name : t('upload.title')}
               </h3>
               <p className="text-sm text-slate-400 mt-2 font-medium max-w-md mx-auto">{t('upload.hint')}</p>
-              
+
               <div className="mt-4 flex items-center justify-center gap-4">
                 <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400">
                   <span className="w-2 h-2 rounded-full bg-red-400"></span> PDF
@@ -847,7 +847,7 @@ function ExamBuilderContent() {
               <button className="mt-6 px-6 py-2.5 bg-white dark:bg-[#0A1F3E] text-blue-700 border border-blue-200 shadow-sm font-bold text-sm rounded-xl hover:bg-blue-50 transition-all">
                 {t('upload.btn_choose')}
               </button>
-              
+
               <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
 
               {file && !questions.length && (
@@ -1051,11 +1051,11 @@ function ExamBuilderContent() {
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300"
               />
             </div>
-            
+
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Độ khó tổng thể</label>
-              <select 
-                value={difficulty} 
+              <select
+                value={difficulty}
                 onChange={e => setDifficulty(e.target.value)}
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
                 style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
@@ -1149,9 +1149,9 @@ function ExamBuilderContent() {
             <div className="flex justify-between text-sm">
               <span className="text-slate-500 dark:text-slate-400 font-medium">{t('sidebar.difficulty')}</span>
               <span className="font-bold text-blue-900 dark:text-[#00C6FF]">
-                {difficulty === "EASY" ? "Dễ" : 
-                 difficulty === "MEDIUM" ? "Trung bình" : 
-                 difficulty === "HARD" ? "Khó" : "Chuyên gia"}
+                {difficulty === "EASY" ? "Dễ" :
+                  difficulty === "MEDIUM" ? "Trung bình" :
+                    difficulty === "HARD" ? "Khó" : "Chuyên gia"}
               </span>
             </div>
           </div>
