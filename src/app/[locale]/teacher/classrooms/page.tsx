@@ -49,33 +49,47 @@ export default function TeacherClassroomsPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+    <main className="p-8 space-y-8 max-w-6xl mx-auto w-full pb-16">
+      {/* Header Banner */}
+      <section className="bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] p-8 rounded-[2rem] shadow-lg relative overflow-hidden text-white flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-in fade-in duration-300">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="material-symbols-outlined text-4xl text-white">school</span>
+          </div>
+          <h2 className="font-headline font-extrabold text-4xl tracking-tight mb-2">
             Quản lý Lớp học
-          </h1>
-          <p className="text-slate-400 mt-2">Theo dõi và quản lý học sinh theo từng không gian riêng biệt.</p>
+          </h2>
+          <p className="text-white/80 max-w-lg leading-relaxed text-sm">
+            Theo dõi và quản lý học sinh, duyệt danh sách thành viên và kiểm soát không gian học tập riêng biệt cho từng lớp học.
+          </p>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(0,198,255,0.3)] hover:shadow-[0_0_25px_rgba(0,198,255,0.5)]"
-        >
-          <Plus className="w-5 h-5" />
-          Tạo lớp mới
-        </button>
-      </div>
+        <div className="flex items-center gap-3 shrink-0 relative z-10">
+          <button 
+            onClick={() => setShowModal(true)}
+            className="px-5 py-3 bg-white text-[#0C2E5E] font-black rounded-xl text-xs shadow-xl transition-all hover:scale-105 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Tạo lớp học mới
+          </button>
+        </div>
+      </section>
 
       {isLoading ? (
-        <div className="text-center text-slate-400 py-12">Đang tải...</div>
+        <div className="text-center text-slate-400 py-12 flex flex-col items-center justify-center gap-3">
+          <span className="w-8 h-8 rounded-full border-4 border-cyan-500 border-t-transparent animate-spin" />
+          <span className="text-sm font-semibold">Đang tải danh sách lớp học...</span>
+        </div>
       ) : classrooms.length === 0 ? (
-        <div className="text-center text-slate-400 py-12 border border-slate-700/50 rounded-2xl bg-slate-800/20 backdrop-blur-sm">
-          Chưa có lớp học nào. Hãy tạo một lớp học đầu tiên!
+        <div className="text-center text-slate-400 py-16 border border-slate-200 dark:border-cyan-950/40 rounded-[2rem] bg-white dark:bg-[#0A1F3E]/60 shadow-sm flex flex-col items-center justify-center">
+          <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-3">school</span>
+          <h4 className="font-bold text-base text-slate-700 dark:text-slate-300">Chưa có lớp học nào</h4>
+          <p className="text-xs text-slate-400 max-w-xs mt-1">Hãy bắt đầu tạo lớp học đầu tiên của bạn để kết nối với học sinh.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {classrooms.map((cls) => (
-            <div key={cls.id} className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-500/50 dark:hover:border-cyan-500/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden">
+            <div key={cls.id} className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-[2rem] p-6 transition-all duration-300 hover:border-[#00C6FF]/50 dark:hover:border-[#00C6FF]/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-500 group-hover:scale-125" />
               
               <Link href={`/teacher/classrooms/${cls.id}`}>
@@ -117,28 +131,30 @@ export default function TeacherClassroomsPage() {
 
       {/* Modal tạo lớp */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <h2 className="text-2xl font-bold text-white mb-6">Tạo lớp học mới</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
+            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200 mb-2">Tạo lớp học mới</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">Tạo lớp học mới để quản lý học sinh và giao bài thi chuyên biệt.</p>
             <form onSubmit={handleCreate}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">Tên lớp học <span className="text-red-400">*</span></label>
-                  <input required value={newClassName} onChange={e => setNewClassName(e.target.value)} type="text" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all" placeholder="Ví dụ: Lớp Toán 12A1" />
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Tên lớp học <span className="text-red-400">*</span></label>
+                  <input required value={newClassName} onChange={e => setNewClassName(e.target.value)} type="text" className="w-full bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-white focus:outline-none focus:border-[#00C6FF] focus:ring-1 focus:ring-[#00C6FF] transition-all" placeholder="Ví dụ: Lớp Toán 12A1" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">Mô tả ngắn</label>
-                  <textarea value={newClassDesc} onChange={e => setNewClassDesc(e.target.value)} rows={3} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all resize-none" placeholder="Mô tả mục đích lớp học..."></textarea>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Mô tả ngắn</label>
+                  <textarea value={newClassDesc} onChange={e => setNewClassDesc(e.target.value)} rows={3} className="w-full bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-white focus:outline-none focus:border-[#00C6FF] focus:ring-1 focus:ring-[#00C6FF] transition-all resize-none" placeholder="Mô tả mục đích lớp học..."></textarea>
                 </div>
               </div>
-              <div className="mt-8 flex gap-3 justify-end">
-                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2 rounded-xl text-slate-300 hover:bg-slate-800 transition-colors font-medium">Hủy</button>
-                <button type="submit" className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_10px_rgba(0,198,255,0.3)]">Tạo ngay</button>
+              <div className="mt-8 flex gap-3 justify-end border-t border-slate-100 dark:border-cyan-950/30 pt-6">
+                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 bg-slate-100 dark:bg-cyan-950/30 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-cyan-950/60 transition-colors">Hủy</button>
+                <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl text-xs font-black shadow-md hover:opacity-95 transition-all">Tạo ngay</button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

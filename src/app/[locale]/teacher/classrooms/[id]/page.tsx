@@ -547,7 +547,7 @@ export default function TeacherClassroomDetailPage() {
                     Tạo mới & Giao trực tiếp (Khuyên dùng)
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
-                    Nhấp nút <strong className="text-cyan-600 dark:text-cyan-400">"Tạo đề thi mới"</strong> phía trên. Sau khi thiết kế câu hỏi bằng AI hoặc Nhập tay, đề thi sẽ tự động liên kết vào lớp này ngay khi bấm Lưu.
+                    Nhấp nút <strong className="text-cyan-600 dark:text-cyan-400">&quot;Tạo đề thi mới&quot;</strong> phía trên. Sau khi thiết kế câu hỏi bằng AI hoặc Nhập tay, đề thi sẽ tự động liên kết vào lớp này ngay khi bấm Lưu.
                   </p>
                 </div>
 
@@ -555,10 +555,10 @@ export default function TeacherClassroomDetailPage() {
                 <div className="bg-white dark:bg-[#0A1F3E]/60 p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/20 space-y-2">
                   <div className="flex items-center gap-2 font-black text-slate-700 dark:text-slate-200">
                     <span className="w-5 h-5 rounded-full bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 flex items-center justify-center text-[10px]">2</span>
-                    Giao bài thi đã có từ "Kỳ thi của tôi"
+                    Giao bài thi đã có từ &quot;Kỳ thi của tôi&quot;
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
-                    Vào trang <a href="/teacher/my-exams" className="text-cyan-600 dark:text-cyan-400 font-black hover:underline">Kỳ thi của tôi</a> ở menu trái. Bấm <strong className="text-cyan-600 dark:text-cyan-400">Chỉnh sửa</strong> (hình bút) của đề thi đã có, tại mục Lớp học ở cột bên phải chọn lớp <strong className="text-cyan-600 dark:text-cyan-400">"{classroom?.name}"</strong> rồi bấm Lưu.
+                    Vào trang <a href="/teacher/my-exams" className="text-cyan-600 dark:text-cyan-400 font-black hover:underline">Kỳ thi của tôi</a> ở menu trái. Bấm <strong className="text-cyan-600 dark:text-cyan-400">Chỉnh sửa</strong> (hình bút) của đề thi đã có, tại mục Lớp học ở cột bên phải chọn lớp <strong className="text-cyan-600 dark:text-cyan-400">&quot;{classroom?.name}&quot;</strong> rồi bấm Lưu.
                   </p>
                 </div>
               </div>

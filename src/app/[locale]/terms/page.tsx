@@ -48,7 +48,7 @@ export default function TermsAndConditions() {
               </h2>
               <div className="pl-11 text-slate-600 leading-relaxed font-medium space-y-4">
                 <p>
-                  Bằng việc truy cập, đăng ký tài khoản hoặc sử dụng hệ thống thi trực tuyến và giám sát AI <strong className="text-slate-800">Digital Proctor (Aura Academic)</strong> ("Dịch vụ"), bạn đồng ý tuân thủ một cách hợp pháp các Điều khoản và Điều kiện ("Điều khoản") này. Nếu bạn không đồng ý với bất kỳ phần nào của Điều khoản, vui lòng không sử dụng Dịch vụ.
+                  Bằng việc truy cập, đăng ký tài khoản hoặc sử dụng hệ thống thi trực tuyến và giám sát AI <strong className="text-slate-800">Digital Proctor (Aura Academic)</strong> (&quot;Dịch vụ&quot;), bạn đồng ý tuân thủ một cách hợp pháp các Điều khoản và Điều kiện (&quot;Điều khoản&quot;) này. Nếu bạn không đồng ý với bất kỳ phần nào của Điều khoản, vui lòng không sử dụng Dịch vụ.
                 </p>
               </div>
             </section>

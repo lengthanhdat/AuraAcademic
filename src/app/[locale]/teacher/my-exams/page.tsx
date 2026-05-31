@@ -508,24 +508,24 @@ export default function TeacherMyExamsPage() {
           Array.from({ length: 5 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : (
           <>
-            <div className="bg-white dark:bg-[#0A1F3E] p-5 rounded-2xl border border-slate-200/50 dark:border-cyan-950/40">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tổng kỳ thi</p>
-              <p className="text-3xl font-black mt-1 text-on-surface dark:text-slate-100 font-headline">{stats.total}</p>
+            <div className="bg-white dark:bg-[#0A1F3E]/60 p-5 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 hover:shadow-md transition-all">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tổng kỳ thi</p>
+              <p className="text-3xl font-black mt-1 text-slate-800 dark:text-slate-100 font-headline">{stats.total}</p>
             </div>
-            <div className="bg-white dark:bg-[#0A1F3E] p-5 rounded-2xl border border-slate-200/50 dark:border-cyan-950/40 border-l-4 border-l-emerald-500">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-emerald-500">Đang diễn ra (LIVE)</p>
+            <div className="bg-white dark:bg-[#0A1F3E]/60 p-5 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 border-l-4 border-l-emerald-500 hover:shadow-md transition-all">
+              <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Đang diễn ra (LIVE)</p>
               <p className="text-3xl font-black mt-1 text-emerald-600 dark:text-emerald-400 font-headline">{stats.live}</p>
             </div>
-            <div className="bg-white dark:bg-[#0A1F3E] p-5 rounded-2xl border border-slate-200/50 dark:border-cyan-950/40 border-l-4 border-l-blue-500">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-blue-500">Sẵn sàng (Scheduled)</p>
+            <div className="bg-white dark:bg-[#0A1F3E]/60 p-5 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 border-l-4 border-l-blue-500 hover:shadow-md transition-all">
+              <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Sẵn sàng (Scheduled)</p>
               <p className="text-3xl font-black mt-1 text-blue-600 dark:text-blue-400 font-headline">{stats.ready}</p>
             </div>
-            <div className="bg-white dark:bg-[#0A1F3E] p-5 rounded-2xl border border-slate-200/50 dark:border-cyan-950/40 border-l-4 border-l-amber-500">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-amber-500">Đang soạn (Draft)</p>
+            <div className="bg-white dark:bg-[#0A1F3E]/60 p-5 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 border-l-4 border-l-amber-500 hover:shadow-md transition-all">
+              <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Đang soạn (Draft)</p>
               <p className="text-3xl font-black mt-1 text-amber-600 dark:text-amber-400 font-headline">{stats.draft}</p>
             </div>
-            <div className="bg-white dark:bg-[#0A1F3E] p-5 rounded-2xl border border-slate-200/50 dark:border-cyan-950/40 border-l-4 border-l-slate-400">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-slate-400">Đã kết thúc</p>
+            <div className="bg-white dark:bg-[#0A1F3E]/60 p-5 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 border-l-4 border-l-slate-400 hover:shadow-md transition-all">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Đã kết thúc</p>
               <p className="text-3xl font-black mt-1 text-slate-500 dark:text-slate-300 font-headline">{stats.completed}</p>
             </div>
           </>
@@ -533,7 +533,7 @@ export default function TeacherMyExamsPage() {
       </div>
 
       {/* Toolbar & Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/50 dark:border-cyan-950/40 p-4 rounded-2xl">
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/60 dark:border-cyan-950/40 p-4 rounded-2xl shadow-sm">
         <div className="relative w-full md:max-w-xs shrink-0">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
           <input
@@ -541,7 +541,7 @@ export default function TeacherMyExamsPage() {
             placeholder="Tìm đề thi, mã phòng..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-cyan-950/30 border border-slate-200/60 dark:border-cyan-950/40 rounded-xl text-xs font-semibold outline-none focus:border-[#00C6FF] dark:text-slate-200"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-cyan-950/30 border border-slate-200/60 dark:border-cyan-950/40 rounded-xl text-xs font-semibold outline-none focus:border-[#00C6FF] dark:text-slate-200"
           />
         </div>
 
@@ -556,10 +556,10 @@ export default function TeacherMyExamsPage() {
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all border ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all border ${
                 statusFilter === tab.id
-                  ? "bg-[#0C2E5E] dark:bg-cyan-950 text-white border-[#0C2E5E]"
-                  : "bg-white dark:bg-[#0A1F3E] text-slate-500 dark:text-slate-400 border-slate-200/60 dark:border-cyan-950/40 hover:bg-slate-50"
+                  ? "bg-[#0C2E5E] dark:bg-cyan-950 text-white border-[#0C2E5E] shadow-md shadow-blue-500/10"
+                  : "bg-white dark:bg-[#0A1F3E]/80 text-slate-500 dark:text-slate-400 border-slate-200/60 dark:border-cyan-950/40 hover:bg-slate-50"
               }`}
             >
               {tab.label}
@@ -575,7 +575,7 @@ export default function TeacherMyExamsPage() {
             {[1, 2, 3].map((i) => <TableRowSkeleton key={i} />)}
           </div>
         ) : filteredExams.length === 0 ? (
-          <div className="bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/50 dark:border-cyan-950/40 rounded-2xl py-16 flex flex-col items-center justify-center text-center">
+          <div className="bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/50 dark:border-cyan-950/40 rounded-[2rem] py-16 flex flex-col items-center justify-center text-center">
             <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-3">folder_open</span>
             <h4 className="font-bold text-base text-slate-700 dark:text-slate-300">Không tìm thấy kỳ thi nào</h4>
             <p className="text-xs text-slate-400 max-w-xs mt-1">
@@ -583,7 +583,7 @@ export default function TeacherMyExamsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredExams.map((exam: any) => {
               const isLive = exam.status === "STARTED";
               const isPublished = exam.status === "PUBLISHED";
@@ -594,31 +594,33 @@ export default function TeacherMyExamsPage() {
               return (
                 <div
                   key={exam.id}
-                  className="bg-white dark:bg-[#0A1F3E] border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(12,46,94,0.03)] transition-all duration-300 relative group flex flex-col justify-between min-h-[170px]"
+                  className="bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-[2rem] p-6 hover:border-[#00C6FF]/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 transition-all duration-300 relative group flex flex-col justify-between min-h-[180px] overflow-hidden"
                 >
-                  <div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-500 group-hover:scale-125 pointer-events-none" />
+                  
+                  <div className="relative z-10">
                     {/* Top Row: Badges & Access Code */}
                     <div className="flex items-center justify-between gap-2 mb-3">
                       <div>
                         {isLive && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/20">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             ĐANG DIỄN RA
                           </span>
                         )}
                         {isPublished && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-[10px] font-black uppercase">
-                            <span className="material-symbols-outlined text-[10px]">schedule</span>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-wider border border-blue-500/20">
+                            <span className="material-symbols-outlined text-[12px]">schedule</span>
                             SẴN SÀNG
                           </span>
                         )}
                         {isDraft && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
                             BẢN NHÁP
                           </span>
                         )}
                         {isFinished && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider border border-slate-500/20">
                             ĐÃ KẾT THÚC
                           </span>
                         )}
@@ -628,7 +630,7 @@ export default function TeacherMyExamsPage() {
                         <button
                           onClick={() => copyAccessCode(exam.accessCode)}
                           title="Click để sao chép"
-                          className="px-2.5 py-1 bg-slate-50 dark:bg-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-lg text-xs font-black text-blue-700 dark:text-[#00C6FF] flex items-center gap-1.5 tracking-wider active:scale-95 transition-transform"
+                          className="px-3 py-1 bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-100/50 dark:border-cyan-900/30 rounded-lg text-xs font-mono font-black text-cyan-600 dark:text-[#00C6FF] flex items-center gap-1.5 tracking-widest active:scale-95 transition-transform"
                         >
                           <span className="material-symbols-outlined text-xs">key</span>
                           {exam.accessCode}
@@ -637,17 +639,17 @@ export default function TeacherMyExamsPage() {
                     </div>
 
                     {/* Title & Subject info */}
-                    <h3 className="font-extrabold text-base text-on-surface dark:text-slate-100 tracking-tight line-clamp-1 leading-snug">
+                    <h3 className="font-extrabold text-lg text-slate-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-1 leading-snug">
                       {exam.title}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap text-xs text-on-surface-variant dark:text-slate-400 font-medium">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap text-xs text-slate-500 dark:text-slate-400 font-semibold">
                       <span>{exam.versions?.[0]?.questions?.length || 0} câu hỏi</span>
                       <span>•</span>
                       <span>{exam.duration} phút</span>
                       {(exam.grade || exam.subject) && (
                         <>
                           <span>•</span>
-                          <span className="text-[#00C6FF] font-bold">
+                          <span className="text-[#00C6FF] font-black uppercase tracking-wider bg-cyan-500/5 px-2 py-0.5 rounded">
                             {exam.grade} {exam.subject ? `- ${exam.subject}` : ""}
                           </span>
                         </>
@@ -656,7 +658,7 @@ export default function TeacherMyExamsPage() {
                   </div>
 
                   {/* Bottom Row: Active live count & Action panel */}
-                  <div className="flex items-end justify-between gap-4 border-t border-slate-100 dark:border-cyan-950/30 pt-3.5 mt-4">
+                  <div className="flex items-end justify-between gap-4 border-t border-slate-100 dark:border-cyan-950/30 pt-4 mt-5 relative z-10">
                     {/* Live status indicators */}
                     <div>
                       {isLive ? (
@@ -676,7 +678,7 @@ export default function TeacherMyExamsPage() {
                       {isLive && (
                         <button
                           onClick={() => closeExam(exam.id)}
-                          className="px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 rounded-xl text-xs font-extrabold transition-colors"
+                          className="px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 rounded-xl text-xs font-extrabold transition-colors border border-red-200/30 dark:border-red-950/50"
                           title="Đóng phòng thi"
                         >
                           Đóng phòng
@@ -685,7 +687,7 @@ export default function TeacherMyExamsPage() {
                       {isFinished && (
                         <button
                           onClick={() => reopenExam(exam.id)}
-                          className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-extrabold transition-colors"
+                          className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-extrabold transition-colors border border-blue-200/30 dark:border-blue-950/50"
                           title="Mở lại phòng thi"
                         >
                           Mở lại
@@ -699,7 +701,7 @@ export default function TeacherMyExamsPage() {
                             setExamToShare(exam);
                             setIsShareModalOpen(true);
                           }}
-                          className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-slate-50 dark:hover:bg-cyan-950/30 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
                           title="Chia sẻ vào Ngân hàng đề"
                         >
                           <span className="material-symbols-outlined text-lg">share</span>
@@ -709,7 +711,7 @@ export default function TeacherMyExamsPage() {
                       {/* View detail */}
                       <button
                         onClick={() => setExamToView(exam)}
-                        className="p-1.5 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-50 dark:hover:bg-cyan-950/30 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
                         title="Xem nội dung đề thi"
                       >
                         <span className="material-symbols-outlined text-lg">visibility</span>
@@ -718,7 +720,7 @@ export default function TeacherMyExamsPage() {
                       {/* Go inside exam proctoring */}
                       <button
                         onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
-                        className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-cyan-950/30 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
                         title="Vào phòng thi"
                       >
                         <span className="material-symbols-outlined text-lg">meeting_room</span>
@@ -727,7 +729,7 @@ export default function TeacherMyExamsPage() {
                       {/* Edit Exam */}
                       <button
                         onClick={() => router.push(`/teacher/exams?edit=${exam.id}`)}
-                        className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-cyan-950/30 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
                         title="Chỉnh sửa đề thi"
                       >
                         <span className="material-symbols-outlined text-lg">edit</span>
@@ -736,7 +738,7 @@ export default function TeacherMyExamsPage() {
                       {/* Delete */}
                       <button
                         onClick={() => deleteExam(exam.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-50 dark:hover:bg-cyan-950/30 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
                         title="Xóa đề thi vĩnh viễn"
                       >
                         <span className="material-symbols-outlined text-lg">delete</span>

@@ -810,11 +810,55 @@ export default function CreateBankItemPage({ params }: { params: { locale: strin
                         )}
 
                         {question.imageUrl && (
-                          <img
-                            src={question.imageUrl}
-                            alt={`Hình ảnh câu ${index + 1}`}
-                            className="max-h-56 rounded-xl border border-slate-200 dark:border-cyan-950/40 object-contain mt-3"
-                          />
+                          <div className="relative inline-block">
+                            {/* Image preview */}
+                            <img
+                              src={question.imageUrl}
+                              alt={`Hình ảnh câu ${index + 1}`}
+                              className="max-h-56 rounded-xl border border-slate-200 dark:border-cyan-950/40 object-contain mt-3"
+                            />
+                            {/* Inline replace button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*';
+                                input.onchange = async (e) => {
+                                  const file = (e.target as HTMLInputElement).files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = () => {
+                                    const base64 = reader.result as string;
+                                    // Update the question's imageUrl with the new base64 data
+                                    setQuestions((prev) =>
+                                      prev.map((q) => (q.id === question.id ? { ...q, imageUrl: base64 } : q)),
+                                    );
+                                  };
+                                  reader.readAsDataURL(file);
+                                };
+                                input.click();
+                              }}
+                              className="absolute top-2 right-10 bg-white/80 dark:bg-gray-800/80 rounded-full p-1 shadow-sm hover:bg-white dark:hover:bg-gray-700 transition"
+                              aria-label="Thay ảnh câu hỏi"
+                            >
+                              <span className="material-symbols-outlined text-sm text-indigo-600 dark:text-indigo-300">edit</span>
+                            </button>
+                            {/* Delete image button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // Remove imageUrl from the question
+                                setQuestions((prev) =>
+                                  prev.map((q) => (q.id === question.id ? { ...q, imageUrl: null } : q)),
+                                );
+                              }}
+                              className="absolute top-2 right-2 bg-red-600/80 dark:bg-red-800/80 rounded-full p-1 shadow-sm hover:bg-red-600 dark:hover:bg-red-700 transition"
+                              aria-label="Xóa ảnh câu hỏi"
+                            >
+                              <span className="material-symbols-outlined text-sm text-white">delete</span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

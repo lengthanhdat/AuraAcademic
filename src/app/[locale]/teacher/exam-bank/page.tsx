@@ -496,7 +496,7 @@ export default function TeacherExamBankPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {filtered.map((exam: any) => {
               const diff = exam.difficulty ? DIFFICULTY_CONFIG[exam.difficulty] : null;
               const isRemoving = removingId === exam.id;
@@ -504,38 +504,38 @@ export default function TeacherExamBankPage() {
               return (
                 <div
                   key={exam.id}
-                  className="group flex gap-4 p-4 bg-white dark:bg-[#0A1F3E]/80 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 shadow-sm hover:shadow-md transition-all"
+                  className="group flex gap-4 p-5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl shadow-sm hover:shadow-md hover:border-[#00C6FF]/40 transition-all items-center"
                 >
                   {/* Icon */}
-                  <div className="w-14 h-14 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-indigo-500 text-2xl">quiz</span>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center shrink-0 shadow-sm">
+                    <span className="material-symbols-outlined text-white text-xl">quiz</span>
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                       {diff && (
-                        <span className={`px-1.5 py-0.5 text-[10px] font-black rounded-md ${diff.cls}`}>
+                        <span className={`px-2 py-0.5 text-[9px] font-black rounded uppercase tracking-wider ${diff.cls}`}>
                           {diff.label}
                         </span>
                       )}
                       {exam.subject && (
-                        <span className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-bold rounded-md">
+                        <span className="px-2 py-0.5 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-600 dark:text-[#00C6FF] text-[9px] font-black uppercase tracking-wider rounded border border-cyan-100/30 dark:border-cyan-950/50">
                           {exam.subject}
                         </span>
                       )}
                       {exam.questionCount > 0 && (
-                        <span className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-bold rounded-md">
-                          {exam.questionCount} câu
+                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[9px] font-bold rounded">
+                          {exam.questionCount} câu hỏi
                         </span>
                       )}
                       {exam.duration > 0 && (
-                        <span className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-bold rounded-md">
+                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[9px] font-bold rounded">
                           {exam.duration} phút
                         </span>
                       )}
                     </div>
-                    <h3 className="font-bold text-on-surface dark:text-slate-100 text-sm leading-snug line-clamp-1">
+                    <h3 className="font-extrabold text-slate-800 dark:text-white text-base leading-snug line-clamp-1 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                       {exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}
                     </h3>
                   </div>
@@ -547,7 +547,7 @@ export default function TeacherExamBankPage() {
                         router.push(`/${locale}/teacher/exams/${exam.id}`)
                       }
                       title="Xem chi tiết"
-                      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"
+                      className="p-2 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
                     >
                       <span className="material-symbols-outlined text-lg">visibility</span>
                     </button>
@@ -557,7 +557,7 @@ export default function TeacherExamBankPage() {
                           onClick={() => handleRemoveExam(exam.id)}
                           disabled={isRemoving || isDeleting}
                           title="Gỡ khỏi ngân hàng đề thi"
-                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-orange-50 dark:hover:bg-orange-900/30 text-slate-400 hover:text-orange-500 transition-all disabled:opacity-40"
+                          className="p-2 text-slate-400 hover:text-orange-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all disabled:opacity-40"
                         >
                           <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
                             {isRemoving ? "refresh" : "link_off"}
@@ -567,7 +567,7 @@ export default function TeacherExamBankPage() {
                           onClick={() => handleDeleteExam(exam.id)}
                           disabled={isRemoving || isDeleting}
                           title="Xoá vĩnh viễn"
-                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all disabled:opacity-40"
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all disabled:opacity-40"
                         >
                           <span className={`material-symbols-outlined text-lg ${isDeleting ? "animate-spin" : ""}`}>
                             {isDeleting ? "refresh" : "delete_forever"}

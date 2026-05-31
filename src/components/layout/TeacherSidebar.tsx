@@ -25,6 +25,7 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
   const menuItems = [
     { label: t("menu.dashboard"), icon: "dashboard", href: "/teacher/dashboard" },
     { label: t("menu.exams"), icon: "magic_button", href: "/teacher/exams" },
+    { label: "Kho đề của tôi", icon: "folder_special", href: "/teacher/exam-templates" },
     { label: "Kỳ thi của tôi", icon: "assignment", href: "/teacher/my-exams" },
     { label: "Lớp học", icon: "school", href: "/teacher/classrooms" },
     { label: "Ngân hàng đề", icon: "local_library", href: "/teacher/exam-bank" },

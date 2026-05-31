@@ -11,8 +11,6 @@ export default function ExamBankFolderPage({ params }: { params: { locale: strin
   const router = useRouter();
   const locale = useLocale();
 
-  const [cloneTarget, setCloneTarget] = useState<any>(null);
-  const [isCloning, setIsCloning] = useState(false);
   const [currentTeacherId, setCurrentTeacherId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,49 +62,6 @@ export default function ExamBankFolderPage({ params }: { params: { locale: strin
       else alert("Có lỗi xảy ra khi xóa.");
     } catch {
       alert("Lỗi kết nối.");
-    }
-  };
-
-  const handleCloneToLive = (item: any) => {
-    setCloneTarget(item);
-  };
-
-  const executeClone = async () => {
-    if (!cloneTarget) return;
-    setIsCloning(true);
-    try {
-      const payload = {
-        title: `${cloneTarget.title} (Live)`,
-        duration: cloneTarget.duration || 60,
-        shuffle: cloneTarget.shuffle ?? true,
-        aiProctoring: cloneTarget.aiProctoring ?? false,
-        teacherId: cloneTarget.teacherId,
-        teacherName: cloneTarget.teacherName,
-        status: "DRAFT",
-        difficulty: cloneTarget.difficulty || "MEDIUM",
-        versions: cloneTarget.versions,
-        extractedImages: cloneTarget.extractedImages,
-        isPractice: false,
-        isBankItem: false,
-        folderId: null
-      };
-
-      const res = await fetch(`${API_BASE}/exams`, {
-        method: "POST",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        setCloneTarget(null);
-        router.push(`/${locale}/teacher/dashboard`);
-      } else {
-        alert("Có lỗi xảy ra khi nhân bản kỳ thi.");
-      }
-    } catch {
-      alert("Lỗi kết nối.");
-    } finally {
-      setIsCloning(false);
     }
   };
 
@@ -219,14 +174,6 @@ export default function ExamBankFolderPage({ params }: { params: { locale: strin
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      <button
-                        onClick={() => handleCloneToLive(item)}
-                        title="Tạo kỳ thi (Live) từ đề này"
-                        className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-cyan-950/40 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center"
-                      >
-                        <span className="material-symbols-outlined text-lg">content_copy</span>
-                      </button>
-                      
                       {item.teacherId === currentTeacherId && (
                         <>
                           <button
@@ -260,71 +207,6 @@ export default function ExamBankFolderPage({ params }: { params: { locale: strin
           )}
         </div>
       </ScrollReveal>
-
-      {/* Custom Clone Modal */}
-      {cloneTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => !isCloning && setCloneTarget(null)}></div>
-          
-          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200/50 dark:border-cyan-950/50">
-            {/* Header */}
-            <div className="px-6 py-6 border-b border-slate-100 dark:border-cyan-950/40 bg-slate-50/50 dark:bg-cyan-950/10">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-blue-600 text-2xl">rocket_launch</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-on-surface dark:text-slate-200">Tạo Kỳ Thi Mới</h3>
-                  <p className="text-sm text-on-surface-variant dark:text-slate-400 font-medium">Nhân bản sang luồng thi chính thức</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="px-6 py-6 space-y-4">
-              <div className="bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-4 border border-blue-100 dark:border-blue-900/30">
-                <p className="text-sm text-blue-800 dark:text-blue-300">
-                  Hệ thống sẽ tạo ra một bản sao của đề <strong>&quot;{cloneTarget.title}&quot;</strong>.
-                </p>
-                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                  Bản sao này sẽ nằm ở <strong>Bảng Điều Khiển</strong> và hoàn toàn độc lập. Bạn có thể cài đặt giờ thi, mật khẩu, và giám sát trên bản sao mà không ảnh hưởng tới đề gốc trong Ngân hàng đề.
-                </p>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-5 border-t border-slate-100 dark:border-cyan-950/40 bg-slate-50 dark:bg-[#0A1F3E] flex gap-3">
-              <button
-                onClick={() => setCloneTarget(null)}
-                disabled={isCloning}
-                className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-cyan-950/40 transition-colors disabled:opacity-50"
-              >
-                Hủy Bỏ
-              </button>
-              <button
-                onClick={executeClone}
-                disabled={isCloning}
-                className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
-              >
-                {isCloning ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Đang tạo...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-sm">check_circle</span>
-                    Xác Nhận Tạo
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

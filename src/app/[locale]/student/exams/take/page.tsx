@@ -759,11 +759,11 @@ export default function TakeExam() {
                       // Chế độ xem kết quả
                       if (opt.isCorrect) {
                         optionClass = 'border-green-500 bg-green-50 shadow-sm';
-                        textClass = 'font-bold text-green-700';
+                        textClass = 'text-green-700';
                         showIcon = <span className="material-symbols-outlined text-green-600">check_circle</span>;
                       } else if (answers[q.id] === opt.id && !opt.isCorrect) {
                         optionClass = 'border-red-500 bg-red-50 shadow-sm';
-                        textClass = 'font-bold text-red-700';
+                        textClass = 'text-red-700';
                         showIcon = <span className="material-symbols-outlined text-red-600">cancel</span>;
                       } else {
                         optionClass = 'border-slate-100 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 opacity-60';
@@ -772,7 +772,7 @@ export default function TakeExam() {
                       // Chế độ làm bài
                       if (answers[q.id] === opt.id) {
                         optionClass = 'border-[#00355f] bg-[#00355f]/10 dark:bg-[#00C6FF]/10 text-[#00355f] dark:text-[#00C6FF] shadow-sm';
-                        textClass = 'font-bold text-[#00355f] dark:text-[#00C6FF]';
+                        textClass = 'text-[#00355f] dark:text-[#00C6FF]';
                       }
                     }
 

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback, useMemo, Suspense } from "rea
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SmartMarkdown } from "@/components/ui/SmartMarkdown";
 import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
@@ -15,6 +15,7 @@ type Step = "upload" | "generating" | "review" | "preview";
 function ExamBuilderContent() {
   const router = useRouter();
   const t = useTranslations('TeacherExams');
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -33,6 +34,7 @@ function ExamBuilderContent() {
   const [extractedImages, setExtractedImages] = useState<string[]>([]);
   const [versionCount, setVersionCount] = useState<number | "">("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiCommand, setAiCommand] = useState("");
@@ -391,6 +393,62 @@ function ExamBuilderContent() {
     }
   };
 
+  const handleSaveTemplate = async () => {
+    setIsSaving(true);
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const versions = [{
+        versionCode: "101",
+        questions: [...questions]
+      }];
+
+      const payload = {
+        title,
+        duration: 0,
+        shuffle: false,
+        aiProctoring: false,
+        difficulty,
+        grade: grade || null,
+        subject: subject || null,
+        teacherId: user.id,
+        teacherName: user.fullName,
+        status: "DRAFT",
+        isTemplate: true,
+        isPractice: false,
+        isBankItem: false,
+        versions,
+        extractedImages
+      };
+
+      const url = editingId
+        ? `http://localhost:8088/api/exams/${editingId}`
+        : "http://localhost:8088/api/exams";
+
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        clearPersistedState();
+        toast.success("Lưu đề thi vào Kho đề thành công!");
+        router.push(`/${locale}/teacher/exam-templates`);
+      } else {
+        toast.error("Lỗi khi lưu đề thi.");
+      }
+    } catch (e) {
+      toast.error("Lỗi kết nối.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleSave = async (status: string) => {
     if (!title.trim()) { toast.error(t('toast.invalid_title')); return; }
     if (!duration || duration <= 0) { toast.error(t('toast.invalid_duration')); return; }
@@ -598,9 +656,8 @@ function ExamBuilderContent() {
   );
 
   return (
-    <main className="flex-1 flex overflow-hidden bg-[#F8FAFC] dark:bg-[#051329]">
-      {/* LEFT COLUMN: Content */}
-      <div className="flex-1 overflow-y-auto p-8 space-y-8">
+    <main className="flex-1 overflow-y-auto bg-[#F8FAFC] dark:bg-[#051329] p-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         {/* Breadcrumbs & Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -643,7 +700,15 @@ function ExamBuilderContent() {
             </div>
 
           </div>
-          <div className="flex flex-col gap-2 items-end">
+          <div className="flex items-center gap-3 shrink-0">
+            {questions.length > 0 && (
+              <button
+                onClick={() => setIsSaveModalOpen(true)}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-95 text-white text-xs font-black rounded-xl shadow-md transition-all hover:scale-105"
+              >
+                Lưu vào Kho đề
+              </button>
+            )}
             <div className="flex items-center gap-2 px-4 py-2 bg-[#4c2b00] text-[#FFD700] rounded-full text-xs font-bold shadow-sm border border-[#FFD700]/20">
               <span className="material-symbols-outlined text-[16px] animate-pulse">auto_awesome</span>
               AI đang hoạt động
@@ -1001,179 +1066,120 @@ function ExamBuilderContent() {
         )}
       </div>
 
-      {/* RIGHT COLUMN: Sidebar */}
-      <div className="w-80 bg-white dark:bg-[#0A1F3E] border-l border-slate-200 dark:border-cyan-950/40 dark:border-cyan-950/40 p-8 overflow-y-auto space-y-8 shrink-0 shadow-2xl shadow-slate-200/50">
-        <div>
-          <h2 className="text-xl font-black text-slate-800 dark:text-[#E2E8F0] mb-6">{t('sidebar.title')}</h2>
+      {isSaveModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
+            
+            <h3 className="font-headline font-black text-xl text-slate-800 dark:text-slate-200 mb-2">
+              Lưu đề thi vào Kho đề
+            </h3>
+            <p className="text-xs text-slate-400 mb-6 font-medium">
+              Thiết lập các thông tin cơ bản cho đề thi mẫu trước khi lưu vào Kho đề cá nhân.
+            </p>
 
-          <div className="space-y-6">
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('sidebar.label_title')}</label>
-              <input
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder={t('sidebar.placeholder_title')}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-semibold text-slate-700 dark:text-slate-300"
-              />
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('sidebar.label_duration')}</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={duration}
-                  onChange={e => setDuration(e.target.value === "" ? "" : Number(e.target.value))}
-                  placeholder={t('sidebar.placeholder_duration')}
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">MINS</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('sidebar.label_versions')}</label>
-              <input
-                type="number"
-                value={versionCount}
-                onChange={e => setVersionCount(e.target.value === "" ? "" : Number(e.target.value))}
-                placeholder={t('sidebar.placeholder_versions')}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300"
-              />
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Bắt đầu tự động (Tùy chọn)</label>
-              <input
-                type="datetime-local"
-                value={scheduledStartTime}
-                onChange={e => setScheduledStartTime(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300"
-              />
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Độ khó tổng thể</label>
-              <select
-                value={difficulty}
-                onChange={e => setDifficulty(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
-                style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
-              >
-                <option value="EASY">🟢 Dễ</option>
-                <option value="MEDIUM">🟡 Trung bình</option>
-                <option value="HARD">🔴 Khó</option>
-                <option value="EXPERT">🟣 Chuyên gia</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Cấp bậc</label>
-                <select
-                  value={grade}
-                  onChange={e => {
-                    setGrade(e.target.value);
-                    setSubject(""); // Reset subject when grade changes
-                  }}
-                  className="w-full px-3 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer text-sm"
-                  style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em' }}
-                >
-                  <option value="">-- Chọn Cấp Bậc --</option>
-                  <optgroup label="Phổ Thông (K-12)">
-                    {EDUCATION_HIERARCHY.filter(l => l.type === "K12").map(l => (
-                      <option key={l.id} value={l.name}>{l.name}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Đại Học & Cao Đẳng">
-                    {EDUCATION_HIERARCHY.filter(l => l.type === "UNIVERSITY").map(l => (
-                      <option key={l.id} value={l.name}>{l.name}</option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Môn học</label>
-                <select
-                  value={subject}
-                  onChange={e => setSubject(e.target.value)}
-                  disabled={!grade}
-                  className="w-full px-3 py-3 bg-slate-50 rounded-xl border border-transparent focus:bg-white dark:bg-[#0A1F3E] focus:border-blue-200 outline-none transition-all font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer text-sm disabled:opacity-50"
-                  style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em' }}
-                >
-                  <option value="">-- Chọn Môn --</option>
-                  {EDUCATION_HIERARCHY.find(l => l.name === grade)?.subjects.map(s => (
-                    <option key={s.id} value={s.name}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-2xl border border-transparent hover:border-slate-100 dark:border-cyan-950/30 transition-all">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">shuffle</span>
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{t('sidebar.shuffle')}</span>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input checked={shuffle} onChange={e => setShuffle(e.target.checked)} className="sr-only peer" type="checkbox" />
-                  <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-[#0A1F3E] after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                  Tên đề thi *
                 </label>
+                <input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Nhập tên đề thi..."
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none"
+                />
               </div>
 
-              <div className="p-4 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 rounded-2xl border border-transparent hover:border-slate-100 dark:border-cyan-950/30 transition-all">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">visibility</span>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">AI Proctoring</span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input checked={aiProctoring} onChange={e => setAiProctoring(e.target.checked)} className="sr-only peer" type="checkbox" />
-                    <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-[#0A1F3E] after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                    Cấp bậc *
                   </label>
+                  <select
+                    required
+                    value={grade}
+                    onChange={(e) => {
+                      setGrade(e.target.value);
+                      setSubject("");
+                    }}
+                    className="w-full px-3 py-2.5 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none"
+                  >
+                    <option value="">Chọn cấp bậc</option>
+                    {EDUCATION_HIERARCHY.map((l) => (
+                      <option key={l.id} value={l.name}>
+                        {l.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <p className="text-[10px] text-slate-400 leading-relaxed font-medium">{t('sidebar.ai_proctoring_desc')}</p>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                    Môn học *
+                  </label>
+                  <select
+                    required
+                    disabled={!grade}
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none disabled:opacity-55"
+                  >
+                    <option value="">Chọn môn</option>
+                    {(grade ? EDUCATION_HIERARCHY.find((l) => l.name === grade)?.subjects.map((s) => s.name) || [] : []).map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                  Độ khó mặc định *
+                </label>
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none"
+                >
+                  <option value="EASY">🟢 Dễ</option>
+                  <option value="MEDIUM">🟡 Trung bình</option>
+                  <option value="HARD">🔴 Khó</option>
+                  <option value="EXPERT">🟣 Chuyên gia</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-cyan-950/40 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsSaveModalOpen(false)}
+                  className="flex-1 py-2.5 bg-slate-100 dark:bg-cyan-950/30 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!title.trim() || !grade || !subject) {
+                      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc (*)");
+                      return;
+                    }
+                    setIsSaveModalOpen(false);
+                    await handleSaveTemplate();
+                  }}
+                  disabled={isSaving}
+                  className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-95 text-white text-xs font-black rounded-xl shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isSaving ? "Đang lưu..." : "Lưu đề thi"}
+                </button>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="pt-8 border-t border-slate-100 dark:border-cyan-950/30">
-          <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">{t('sidebar.summary')}</h4>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">{t('sidebar.total_questions')}</span>
-              <span className="font-bold text-blue-900 dark:text-[#00C6FF]">{questions.length} câu</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">{t('sidebar.difficulty')}</span>
-              <span className="font-bold text-blue-900 dark:text-[#00C6FF]">
-                {difficulty === "EASY" ? "Dễ" :
-                  difficulty === "MEDIUM" ? "Trung bình" :
-                    difficulty === "HARD" ? "Khó" : "Chuyên gia"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3 pt-4">
-          <button
-            onClick={() => handleSave("WAITING")}
-            disabled={isSaving || !questions.length}
-            className="w-full py-4 bg-blue-900 text-white rounded-2xl font-bold text-sm shadow-xl shadow-blue-900/20 hover:bg-blue-800 active:scale-95 transition-all disabled:opacity-50"
-          >
-            {isSaving ? t('sidebar.btn_processing') : t('sidebar.btn_publish')}
-          </button>
-          <button
-            onClick={() => handleSave("DRAFT")}
-            disabled={isSaving || !questions.length}
-            className="w-full py-4 bg-white dark:bg-[#0A1F3E] border-2 border-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 transition-all disabled:opacity-50"
-          >
-            Lưu bản nháp
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Floating AI Action Button */}
       <div className="fixed bottom-8 right-8 z-50">

@@ -34,18 +34,28 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
 
   const fetchMyExams = async () => {
     setLoading(true);
+    setError("");
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`${API_BASE}/exams/teacher/${user.id}`, {
+      if (!user.id || !token) {
+        setError("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+        return;
+      }
+      const res = await fetch(`${API_BASE}/exams/teacher/${user.id}/templates`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
-        setExams(data || []);
+        // Lọc các đề thi mẫu chưa được công khai vào ngân hàng (isPractice và isBankItem đều false)
+        const unshared = (data || []).filter((exam: any) => !exam.isPractice && !exam.isBankItem);
+        setExams(unshared);
+      } else {
+        setError(`Không thể tải dữ liệu từ máy chủ (Mã lỗi: ${res.status})`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(`Lỗi kết nối: ${err.message || err}`);
     } finally {
       setLoading(false);
     }
