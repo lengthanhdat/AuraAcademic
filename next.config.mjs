@@ -9,7 +9,7 @@ const nextConfig = {
 
   // Tree-shake heavy icon/component libraries
   experimental: {
-    optimizePackageImports: ['lucide-react', 'sonner', '@stomp/stompjs'],
+    optimizePackageImports: ['lucide-react', 'sonner', '@stomp/stompjs', 'recharts', 'date-fns', 'katex'],
   },
 
   // Image optimization
