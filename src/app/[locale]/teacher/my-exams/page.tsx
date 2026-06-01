@@ -5,11 +5,72 @@ import { useTranslations } from "next-intl";
 import useSWR from "swr";
 import { authFetcher, getStoredUser } from "@/hooks/useAuthFetch";
 import { StatCardSkeleton, TableRowSkeleton } from "@/components/ui/Skeleton";
-import Link from "next/link";
 import { toast } from "sonner";
-import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
+import { useAlert } from "@/components/ui/AlertProvider";
 
 const API_BASE = "http://localhost:8088/api";
+
+// ─── Exam Countdown Component ───────────────────────────────────────────────
+function ExamCountdown({
+  startTime,
+  duration,
+  status,
+  scheduledStartTime,
+}: {
+  startTime?: number;
+  duration: number;
+  status: string;
+  scheduledStartTime?: number;
+}) {
+  const [timeLeftStr, setTimeLeftStr] = useState("");
+
+  useEffect(() => {
+    if (status === "STARTED" && startTime) {
+      const interval = setInterval(() => {
+        const endTime = startTime + duration * 60 * 1000;
+        const diff = endTime - Date.now();
+        if (diff <= 0) {
+          setTimeLeftStr("Hết giờ làm bài");
+          clearInterval(interval);
+        } else {
+          const minutes = Math.floor(diff / 60000);
+          const seconds = Math.floor((diff % 60000) / 1000);
+          setTimeLeftStr(`Còn lại: ${minutes}:${seconds.toString().padStart(2, "0")}`);
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    } else if (status === "PUBLISHED" && scheduledStartTime) {
+      const interval = setInterval(() => {
+        const diff = scheduledStartTime - Date.now();
+        if (diff <= 0) {
+          setTimeLeftStr("Đang bắt đầu...");
+          clearInterval(interval);
+        } else {
+          const hours = Math.floor(diff / 3600000);
+          const minutes = Math.floor((diff % 3600000) / 60000);
+          const seconds = Math.floor((diff % 60000) / 1000);
+          if (hours > 0) {
+            setTimeLeftStr(`Bắt đầu sau: ${hours}h ${minutes}m`);
+          } else {
+            setTimeLeftStr(`Bắt đầu sau: ${minutes}m ${seconds}s`);
+          }
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setTimeLeftStr("");
+    }
+  }, [startTime, duration, status, scheduledStartTime]);
+
+  if (!timeLeftStr) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-[#00C6FF] text-[11px] font-extrabold border border-cyan-500/20">
+      <span className="material-symbols-outlined text-[14px] animate-pulse">alarm</span>
+      {timeLeftStr}
+    </span>
+  );
+}
 
 // ─── Exam Detail Modal ─────────────────────────────────────────────────
 const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
@@ -29,7 +90,7 @@ const ExamDetailModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
@@ -51,16 +112,6 @@ const ExamDetailModal = ({
                 <span className="material-symbols-outlined text-sm">schedule</span>
                 {exam.duration} phút
               </span>
-              {exam.difficulty && (
-                <>
-                  <span>•</span>
-                  <span>{
-                    exam.difficulty === "EASY" ? "🟢 Dễ" :
-                    exam.difficulty === "MEDIUM" ? "🟡 Trung bình" :
-                    exam.difficulty === "HARD" ? "🔴 Khó" : "🟣 Chuyên gia"
-                  }</span>
-                </>
-              )}
             </div>
           </div>
           <button
@@ -80,7 +131,6 @@ const ExamDetailModal = ({
             </div>
           ) : (
             questions.map((q: any, idx: number) => {
-              const correctIdx = q.options?.findIndex((o: any) => o.isCorrect ?? o.correct);
               return (
                 <div
                   key={q.id || idx}
@@ -145,212 +195,16 @@ const ExamDetailModal = ({
     </div>
   );
 };
-const ShareToBankModal = ({
-  isOpen,
-  onClose,
-  exam,
-  onSuccess
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  exam: any;
-  onSuccess: () => void;
-}) => {
-  const user = useMemo(() => getStoredUser(), []);
-  const [grade, setGrade] = useState(exam?.grade || "");
-  const [subject, setSubject] = useState(exam?.subject || "");
-  const [selectedFolderId, setSelectedFolderId] = useState("");
-  const [isSharing, setIsSharing] = useState(false);
-
-  const { data: folders = [] } = useSWR(
-    user?.id ? `${API_BASE}/exam-bank/teacher/${user.id}/folders` : null,
-    authFetcher,
-    { revalidateOnFocus: false }
-  );
-
-  useEffect(() => {
-    if (exam) {
-      setGrade(exam.grade || "");
-      setSubject(exam.subject || "");
-    }
-  }, [exam]);
-
-  const handleShare = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!exam || !grade || !subject) return;
-
-    setIsSharing(true);
-    try {
-      const payload = {
-        ...exam,
-        id: undefined,
-        title: exam.title,
-        grade,
-        subject,
-        folderId: selectedFolderId || null,
-        isPractice: true,
-        isBankItem: true,
-        teacherId: user?.id,
-        teacherName: user?.fullName || "Giáo viên",
-        status: "PUBLISHED",
-        accessCode: null,
-      };
-
-      const res = await fetch(`${API_BASE}/exam-bank/exams`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        alert("Đã đưa đề thi vào Ngân hàng thành công!");
-        onSuccess();
-        onClose();
-      } else {
-        alert("Lỗi khi đưa đề thi vào Ngân hàng.");
-      }
-    } catch {
-      alert("Lỗi kết nối.");
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
-  if (!isOpen || !exam) return null;
-
-  const subjects = grade
-    ? EDUCATION_HIERARCHY.find((l) => l.name === grade)?.subjects.map((s) => s.name) || []
-    : [];
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
-        
-        <h3 className="font-headline font-black text-xl text-on-surface dark:text-slate-200 mb-2">
-          Đưa đề thi vào Ngân hàng
-        </h3>
-        <p className="text-xs text-on-surface-variant dark:text-slate-400 mb-6">
-          Đề thi của bạn sẽ được chia sẻ vào Ngân hàng luyện tập để học sinh có thể ôn tập.
-        </p>
-
-        <form onSubmit={handleShare} className="space-y-4">
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-              Tên đề thi
-            </label>
-            <input
-              type="text"
-              readOnly
-              value={exam.title}
-              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-semibold text-slate-500 outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                Cấp bậc *
-              </label>
-              <select
-                required
-                value={grade}
-                onChange={(e) => {
-                  setGrade(e.target.value);
-                  setSubject("");
-                }}
-                className="w-full px-3 py-2.5 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none"
-              >
-                <option value="">Chọn cấp bậc</option>
-                {EDUCATION_HIERARCHY.map((l) => (
-                  <option key={l.id} value={l.name}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                Môn học *
-              </label>
-              <select
-                required
-                disabled={!grade}
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                className="w-full px-3 py-2.5 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none disabled:opacity-55"
-              >
-                <option value="">Chọn môn</option>
-                {subjects.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-              Thư mục lưu trữ (Tùy chọn)
-            </label>
-            <select
-              value={selectedFolderId}
-              onChange={(e) => setSelectedFolderId(e.target.value)}
-              className="w-full px-3 py-2.5 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none"
-            >
-              <option value="">Không phân thư mục</option>
-              {folders.map((f: any) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-cyan-950/40 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 bg-slate-100 dark:bg-cyan-950/30 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={isSharing || !grade || !subject}
-              className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-95 text-white text-xs font-black rounded-xl shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isSharing ? (
-                <>
-                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  Đang chia sẻ...
-                </>
-              ) : (
-                "Chia sẻ ngay"
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 // ─── Main Page Component ─────────────────────────────────────────────────────
 export default function TeacherMyExamsPage() {
   const router = useRouter();
   const t = useTranslations("Dashboard");
   const user = useMemo(() => getStoredUser(), []);
+  const { showAlert } = useAlert();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [examToShare, setExamToShare] = useState<any>(null);
   const [examToView, setExamToView] = useState<any>(null);
 
   // Fetch teacher exams
@@ -359,6 +213,23 @@ export default function TeacherMyExamsPage() {
     authFetcher,
     { revalidateOnFocus: false, dedupingInterval: 5000 }
   );
+
+  // Fetch classrooms for mapping ID to Name
+  const { data: classrooms = [] } = useSWR(
+    user?.id ? `${API_BASE}/classrooms/teacher` : null,
+    authFetcher,
+    { revalidateOnFocus: false }
+  );
+
+  const classroomMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    classrooms.forEach((c: any) => {
+      if (c.id && c.name) {
+        map[c.id] = c.name;
+      }
+    });
+    return map;
+  }, [classrooms]);
 
   // Active student counts polling for LIVE exams
   const liveExams = useMemo(() =>
@@ -399,62 +270,127 @@ export default function TeacherMyExamsPage() {
   const stats = useMemo(() => {
     const total = exams.length;
     const live = exams.filter((e: any) => e.status === "STARTED").length;
-    const ready = exams.filter((e: any) => e.status === "PUBLISHED").length;
+    const ready = exams.filter((e: any) => e.status === "PUBLISHED" || e.status === "WAITING").length;
     const draft = exams.filter((e: any) => e.status === "DRAFT").length;
     const completed = exams.filter((e: any) => e.status === "FINISHED" || e.status === "COMPLETED").length;
     return { total, live, ready, draft, completed };
   }, [exams]);
 
   // Actions
+  const startExam = useCallback(
+    async (id: string) => {
+      showAlert({
+        title: "Bắt đầu kỳ thi",
+        message: "Bạn có chắc chắn muốn bắt đầu buổi thi này ngay bây giờ?",
+        type: "confirm",
+        confirmText: "Bắt đầu",
+        cancelText: "Hủy",
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`${API_BASE}/exams/${id}/start`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+            });
+            if (res.ok) {
+              toast.success("Kỳ thi đã được bắt đầu!");
+              mutate();
+            } else {
+              toast.error("Không thể kích hoạt kỳ thi.");
+            }
+          } catch {
+            toast.error("Lỗi kết nối.");
+          }
+        }
+      });
+    },
+    [mutate, showAlert]
+  );
+
   const deleteExam = useCallback(
     async (id: string) => {
-      if (!confirm(t("actions.delete_confirm"))) return;
-      try {
-        const res = await fetch(`${API_BASE}/exams/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        });
-        if (res.ok) {
-          mutate((prev: any[]) => prev?.filter((e) => e.id !== id), false);
-          toast.success("Xóa đề thi thành công.");
+      showAlert({
+        title: "Xác nhận xóa",
+        message: t("actions.delete_confirm"),
+        type: "confirm",
+        confirmText: "Xóa",
+        cancelText: "Hủy",
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`${API_BASE}/exams/${id}`, {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+            });
+            if (res.ok) {
+              mutate((prev: any[]) => prev?.filter((e) => e.id !== id), false);
+              toast.success("Xóa kỳ thi thành công.");
+            } else {
+              toast.error(t("actions.delete_error"));
+            }
+          } catch {
+            toast.error(t("actions.delete_error"));
+          }
         }
-      } catch {
-        alert(t("actions.delete_error"));
-      }
+      });
     },
-    [t, mutate]
+    [t, mutate, showAlert]
   );
 
   const closeExam = useCallback(
     async (id: string) => {
-      if (!confirm(t("actions.close_confirm"))) return;
-      try {
-        const res = await fetch(`${API_BASE}/exams/${id}/close`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        });
-        if (res.ok) mutate();
-      } catch {
-        alert(t("actions.close_error"));
-      }
+      showAlert({
+        title: "Đóng phòng thi",
+        message: t("actions.close_confirm"),
+        type: "confirm",
+        confirmText: "Đóng phòng",
+        cancelText: "Hủy",
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`${API_BASE}/exams/${id}/close`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+            });
+            if (res.ok) {
+              toast.success("Đã đóng phòng thi thành công.");
+              mutate();
+            } else {
+              toast.error(t("actions.close_error"));
+            }
+          } catch {
+            toast.error(t("actions.close_error"));
+          }
+        }
+      });
     },
-    [t, mutate]
+    [t, mutate, showAlert]
   );
 
   const reopenExam = useCallback(
     async (id: string) => {
-      if (!confirm(t("actions.reopen_confirm"))) return;
-      try {
-        const res = await fetch(`${API_BASE}/exams/${id}/reopen`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        });
-        if (res.ok) mutate();
-      } catch {
-        alert(t("actions.reopen_error"));
-      }
+      showAlert({
+        title: "Mở lại phòng thi",
+        message: t("actions.reopen_confirm"),
+        type: "confirm",
+        confirmText: "Mở lại",
+        cancelText: "Hủy",
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`${API_BASE}/exams/${id}/reopen`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+            });
+            if (res.ok) {
+              toast.success("Đã mở lại phòng thi thành công.");
+              mutate();
+            } else {
+              toast.error(t("actions.reopen_error"));
+            }
+          } catch {
+            toast.error(t("actions.reopen_error"));
+          }
+        }
+      });
     },
-    [t, mutate]
+    [t, mutate, showAlert]
   );
 
   const filteredExams = useMemo(() => {
@@ -464,7 +400,7 @@ export default function TeacherMyExamsPage() {
       
       if (statusFilter === "ALL") return matchSearch;
       if (statusFilter === "LIVE") return matchSearch && exam.status === "STARTED";
-      if (statusFilter === "READY") return matchSearch && exam.status === "PUBLISHED";
+      if (statusFilter === "READY") return matchSearch && (exam.status === "PUBLISHED" || exam.status === "WAITING");
       if (statusFilter === "DRAFT") return matchSearch && exam.status === "DRAFT";
       if (statusFilter === "COMPLETED") return matchSearch && (exam.status === "FINISHED" || exam.status === "COMPLETED");
       return matchSearch;
@@ -473,31 +409,31 @@ export default function TeacherMyExamsPage() {
 
   const copyAccessCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    alert("Đã sao chép mã phòng thi: " + code);
+    toast.success("Đã sao chép mã phòng thi: " + code);
   };
 
   return (
     <main className="p-8 space-y-8 max-w-6xl mx-auto w-full pb-16">
       {/* Header Banner */}
-      <section className="bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] p-8 rounded-[2rem] shadow-lg relative overflow-hidden text-white flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-in fade-in duration-300">
+      <section className="bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] p-8 rounded-[2rem] shadow-xl relative overflow-hidden text-white flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-in fade-in duration-300">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-3">
-            <span className="material-symbols-outlined text-4xl text-white">assignment</span>
+            <span className="material-symbols-outlined text-4xl text-white">podcasts</span>
           </div>
           <h2 className="font-headline font-extrabold text-4xl tracking-tight mb-2">
-            Kỳ thi của tôi
+            Phòng thi & Giám sát
           </h2>
           <p className="text-white/80 max-w-lg leading-relaxed text-sm">
-            Quản lý toàn bộ danh sách kỳ thi và đề thi do bạn biên soạn. Xem thống kê, giám sát phòng thi trực tuyến và đưa đề thi vào Ngân hàng chung.
+            Bảng điều khiển giám sát phòng thi trực tuyến thời gian thực. Theo dõi học sinh tham gia, kiểm soát đóng/mở phòng và phân tích báo cáo bài thi.
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0 relative z-10">
           <button
             onClick={() => router.push("/teacher/exams?mode=ai")}
-            className="px-5 py-3 bg-white text-[#0C2E5E] font-black rounded-xl text-xs shadow-xl transition-all hover:scale-105"
+            className="px-5 py-3 bg-white text-[#0C2E5E] font-black rounded-xl text-xs shadow-xl transition-all hover:scale-105 hover:shadow-2xl active:scale-95"
           >
-            Tạo đề thi mới
+            Thiết kế đề thi mới
           </button>
         </div>
       </section>
@@ -509,7 +445,7 @@ export default function TeacherMyExamsPage() {
         ) : (
           <>
             <div className="bg-white dark:bg-[#0A1F3E]/60 p-5 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 hover:shadow-md transition-all">
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tổng kỳ thi</p>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tổng phòng thi</p>
               <p className="text-3xl font-black mt-1 text-slate-800 dark:text-slate-100 font-headline">{stats.total}</p>
             </div>
             <div className="bg-white dark:bg-[#0A1F3E]/60 p-5 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 border-l-4 border-l-emerald-500 hover:shadow-md transition-all">
@@ -538,7 +474,7 @@ export default function TeacherMyExamsPage() {
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
           <input
             type="text"
-            placeholder="Tìm đề thi, mã phòng..."
+            placeholder="Tìm kỳ thi, mã phòng..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-cyan-950/30 border border-slate-200/60 dark:border-cyan-950/40 rounded-xl text-xs font-semibold outline-none focus:border-[#00C6FF] dark:text-slate-200"
@@ -551,7 +487,7 @@ export default function TeacherMyExamsPage() {
             { id: "LIVE", label: "Đang diễn ra" },
             { id: "READY", label: "Sẵn sàng" },
             { id: "DRAFT", label: "Bản nháp" },
-            { id: "COMPLETED", label: "Đã đóng" }
+            { id: "COMPLETED", label: "Đã kết thúc" }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -577,51 +513,65 @@ export default function TeacherMyExamsPage() {
         ) : filteredExams.length === 0 ? (
           <div className="bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/50 dark:border-cyan-950/40 rounded-[2rem] py-16 flex flex-col items-center justify-center text-center">
             <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-3">folder_open</span>
-            <h4 className="font-bold text-base text-slate-700 dark:text-slate-300">Không tìm thấy kỳ thi nào</h4>
+            <h4 className="font-bold text-base text-slate-700 dark:text-slate-300">Không tìm thấy phòng thi nào</h4>
             <p className="text-xs text-slate-400 max-w-xs mt-1">
-              Bạn chưa tạo đề thi nào phù hợp với bộ lọc tìm kiếm hiện tại. Hãy tạo đề thi mới ngay!
+              Bạn chưa có kỳ thi nào phù hợp với bộ lọc tìm kiếm hiện tại. Hãy thiết kế đề và lên lịch thi mới!
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredExams.map((exam: any) => {
               const isLive = exam.status === "STARTED";
-              const isPublished = exam.status === "PUBLISHED";
+              const isPublished = exam.status === "PUBLISHED" || exam.status === "WAITING";
               const isDraft = exam.status === "DRAFT";
               const isFinished = exam.status === "FINISHED" || exam.status === "COMPLETED";
               const activeCount = activeCountMap[exam.accessCode] || 0;
+              const classroomName = exam.classroomId ? classroomMap[exam.classroomId] : null;
 
               return (
                 <div
                   key={exam.id}
-                  className="bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-[2rem] p-6 hover:border-[#00C6FF]/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 transition-all duration-300 relative group flex flex-col justify-between min-h-[180px] overflow-hidden"
+                  className={`bg-white dark:bg-[#0A1F3E]/60 border rounded-[2rem] p-6 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-0.5 transition-all duration-300 relative flex flex-col justify-between min-h-[220px] overflow-hidden ${
+                    isLive
+                      ? "border-emerald-500/50 dark:border-emerald-500/30 shadow-[0_4px_20px_rgba(16,185,129,0.08)]"
+                      : "border-slate-200/80 dark:border-cyan-950/40"
+                  }`}
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-500 group-hover:scale-125 pointer-events-none" />
+                  {/* Subtle blur background effect */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
                   
-                  <div className="relative z-10">
-                    {/* Top Row: Badges & Access Code */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div>
+                  <div className="relative z-10 space-y-4">
+                    {/* Top Row: Status Tag, Time Tracker, Access Code */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         {isLive && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/20">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/20">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             ĐANG DIỄN RA
                           </span>
                         )}
                         {isPublished && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-wider border border-blue-500/20">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-wider border border-blue-500/20">
                             <span className="material-symbols-outlined text-[12px]">schedule</span>
                             SẴN SÀNG
                           </span>
                         )}
                         {isDraft && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
                             BẢN NHÁP
                           </span>
                         )}
                         {isFinished && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider border border-slate-500/20">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider border border-slate-500/20">
                             ĐÃ KẾT THÚC
+                          </span>
+                        )}
+
+                        {/* AI Proctoring status */}
+                        {exam.aiProctoring && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-[10px] font-black border border-cyan-500/25">
+                            <span className="material-symbols-outlined text-[12px] animate-pulse">videocam</span>
+                            GIÁM SÁT AI
                           </span>
                         )}
                       </div>
@@ -629,8 +579,8 @@ export default function TeacherMyExamsPage() {
                       {exam.accessCode && (
                         <button
                           onClick={() => copyAccessCode(exam.accessCode)}
-                          title="Click để sao chép"
-                          className="px-3 py-1 bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-100/50 dark:border-cyan-900/30 rounded-lg text-xs font-mono font-black text-cyan-600 dark:text-[#00C6FF] flex items-center gap-1.5 tracking-widest active:scale-95 transition-transform"
+                          title="Click để sao chép mã"
+                          className="px-3 py-1 bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-100 dark:border-cyan-900/30 rounded-lg text-xs font-mono font-black text-cyan-600 dark:text-[#00C6FF] flex items-center gap-1.5 tracking-widest active:scale-95 transition-transform shrink-0"
                         >
                           <span className="material-symbols-outlined text-xs">key</span>
                           {exam.accessCode}
@@ -638,33 +588,66 @@ export default function TeacherMyExamsPage() {
                       )}
                     </div>
 
-                    {/* Title & Subject info */}
-                    <h3 className="font-extrabold text-lg text-slate-800 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-1 leading-snug">
-                      {exam.title}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-2 flex-wrap text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                      <span>{exam.versions?.[0]?.questions?.length || 0} câu hỏi</span>
-                      <span>•</span>
-                      <span>{exam.duration} phút</span>
-                      {(exam.grade || exam.subject) && (
-                        <>
-                          <span>•</span>
-                          <span className="text-[#00C6FF] font-black uppercase tracking-wider bg-cyan-500/5 px-2 py-0.5 rounded">
-                            {exam.grade} {exam.subject ? `- ${exam.subject}` : ""}
+                    {/* Title & Subject and Classroom badges */}
+                    <div>
+                      <h3 className="font-extrabold text-lg text-slate-800 dark:text-white leading-snug group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-1">
+                        {exam.title}
+                      </h3>
+                      
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {classroomName ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-extrabold text-indigo-600 dark:text-cyan-400 bg-indigo-50 dark:bg-[#0C2E5E]/40 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-cyan-900/30">
+                            <span className="material-symbols-outlined text-sm">school</span>
+                            Lớp: {classroomName}
                           </span>
-                        </>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-extrabold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/40 px-2.5 py-1 rounded-lg">
+                            <span className="material-symbols-outlined text-sm">public</span>
+                            Thi tự do
+                          </span>
+                        )}
+                        
+                        <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">•</span>
+                        
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                          {exam.versions?.[0]?.questions?.length || 0} câu hỏi / {exam.duration} phút
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Time Tracker / Countdown / Date Scheduled */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <ExamCountdown
+                        startTime={exam.startTime}
+                        duration={exam.duration}
+                        status={exam.status}
+                        scheduledStartTime={exam.scheduledStartTime}
+                      />
+                      {exam.scheduledStartTime && !isLive && !isFinished && (
+                        <p className="text-xs font-bold text-blue-500 dark:text-blue-400">
+                          📅 Lên lịch: {new Date(exam.scheduledStartTime).toLocaleString("vi-VN")}
+                        </p>
+                      )}
+                      {!exam.scheduledStartTime && isPublished && (
+                        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+                          Chờ bắt đầu thủ công
+                        </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Bottom Row: Active live count & Action panel */}
-                  <div className="flex items-end justify-between gap-4 border-t border-slate-100 dark:border-cyan-950/30 pt-4 mt-5 relative z-10">
-                    {/* Live status indicators */}
+                  {/* Bottom Row: Counter & Direct actions */}
+                  <div className="flex items-center justify-between gap-4 border-t border-slate-100 dark:border-cyan-950/30 pt-4 mt-5 relative z-10">
                     <div>
                       {isLive ? (
                         <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                           <span className="material-symbols-outlined text-xs">groups</span>
-                          {activeCount} học sinh đang thi
+                          {activeCount} học sinh đang làm bài
+                        </p>
+                      ) : isFinished ? (
+                        <p className="text-[11px] font-bold text-[#00C6FF] flex items-center gap-1">
+                          <span className="material-symbols-outlined text-xs">how_to_reg</span>
+                          {exam.submissionCount ?? 0} lượt nộp bài
                         </p>
                       ) : (
                         <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
@@ -673,76 +656,118 @@ export default function TeacherMyExamsPage() {
                       )}
                     </div>
 
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-1.5">
-                      {isLive && (
-                        <button
-                          onClick={() => closeExam(exam.id)}
-                          className="px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 rounded-xl text-xs font-extrabold transition-colors border border-red-200/30 dark:border-red-950/50"
-                          title="Đóng phòng thi"
-                        >
-                          Đóng phòng
-                        </button>
-                      )}
-                      {isFinished && (
-                        <button
-                          onClick={() => reopenExam(exam.id)}
-                          className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-extrabold transition-colors border border-blue-200/30 dark:border-blue-950/50"
-                          title="Mở lại phòng thi"
-                        >
-                          Mở lại
-                        </button>
-                      )}
-                      
-                      {/* Share to Bank button for non-draft exams */}
-                      {!isDraft && (
-                        <button
-                          onClick={() => {
-                            setExamToShare(exam);
-                            setIsShareModalOpen(true);
-                          }}
-                          className="p-2 text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
-                          title="Chia sẻ vào Ngân hàng đề"
-                        >
-                          <span className="material-symbols-outlined text-lg">share</span>
-                        </button>
-                      )}
-
-                      {/* View detail */}
+                    {/* Action buttons - Prominent and Direct */}
+                    <div className="flex items-center gap-2">
+                      {/* View details - always available */}
                       <button
                         onClick={() => setExamToView(exam)}
-                        className="p-2 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
+                        className="p-2 text-slate-400 hover:text-cyan-600 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
                         title="Xem nội dung đề thi"
                       >
                         <span className="material-symbols-outlined text-lg">visibility</span>
                       </button>
 
-                      {/* Go inside exam proctoring */}
-                      <button
-                        onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
-                        className="p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
-                        title="Vào phòng thi"
-                      >
-                        <span className="material-symbols-outlined text-lg">meeting_room</span>
-                      </button>
+                      {isLive && (
+                        <>
+                          <button
+                            onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                          >
+                            <span className="material-symbols-outlined text-sm">meeting_room</span>
+                            Vào giám sát
+                          </button>
+                          <button
+                            onClick={() => closeExam(exam.id)}
+                            className="px-3 py-2 border border-red-500/20 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 rounded-xl text-xs font-black transition-all"
+                            title="Kết thúc buổi thi lập tức"
+                          >
+                            Đóng phòng
+                          </button>
+                        </>
+                      )}
 
-                      {/* Edit Exam */}
-                      <button
-                        onClick={() => router.push(`/teacher/exams?edit=${exam.id}`)}
-                        className="p-2 text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
-                        title="Chỉnh sửa đề thi"
-                      >
-                        <span className="material-symbols-outlined text-lg">edit</span>
-                      </button>
+                      {isPublished && (
+                        <>
+                          <button
+                            onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                          >
+                            <span className="material-symbols-outlined text-sm">meeting_room</span>
+                            Vào phòng chờ
+                          </button>
+                          <button
+                            onClick={() => startExam(exam.id)}
+                            className="px-3 py-2 border border-blue-500/20 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black transition-all"
+                            title="Kích hoạt bắt đầu thi lập tức"
+                          >
+                            Bắt đầu ngay
+                          </button>
+                          <button
+                            onClick={() => router.push(`/teacher/exams?edit=${exam.id}`)}
+                            className="p-2 text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
+                            title="Chỉnh sửa kỳ thi"
+                          >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          <button
+                            onClick={() => deleteExam(exam.id)}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
+                            title="Xóa kỳ thi"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </>
+                      )}
 
-                      {/* Delete */}
-                      <button
-                        onClick={() => deleteExam(exam.id)}
-                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-colors"
-                        title="Xóa đề thi vĩnh viễn"
-                      >
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                      </button>
+                      {isFinished && (
+                        <>
+                          <button
+                            onClick={() => router.push(`/teacher/exams/results/${exam.accessCode}`)}
+                            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                          >
+                            <span className="material-symbols-outlined text-sm">assignment_turned_in</span>
+                            Xem kết quả
+                          </button>
+                          <button
+                            onClick={() => reopenExam(exam.id)}
+                            className="px-3 py-2 border border-slate-200 dark:border-cyan-950/50 bg-slate-50 hover:bg-slate-100 dark:bg-cyan-950/30 dark:hover:bg-cyan-950/50 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-black transition-all"
+                          >
+                            Mở lại
+                          </button>
+                          <button
+                            onClick={() => deleteExam(exam.id)}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
+                            title="Xóa kỳ thi vĩnh viễn"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </>
+                      )}
+
+                      {isDraft && (
+                        <>
+                          <button
+                            onClick={() => startExam(exam.id)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95"
+                          >
+                            Bắt đầu thi
+                          </button>
+                          <button
+                            onClick={() => router.push(`/teacher/exams?edit=${exam.id}`)}
+                            className="p-2 text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
+                            title="Chỉnh sửa kỳ thi"
+                          >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          <button
+                            onClick={() => deleteExam(exam.id)}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
+                            title="Xóa kỳ thi"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -751,17 +776,6 @@ export default function TeacherMyExamsPage() {
           </div>
         )}
       </div>
-
-      {/* Share Modal */}
-      <ShareToBankModal
-        isOpen={isShareModalOpen}
-        onClose={() => {
-          setIsShareModalOpen(false);
-          setExamToShare(null);
-        }}
-        exam={examToShare}
-        onSuccess={mutate}
-      />
 
       {/* Exam Detail Modal */}
       <ExamDetailModal

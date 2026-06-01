@@ -5,6 +5,8 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { memo } from "react";
 
+import { preprocessMarkdownTables } from "@/lib/markdownUtils";
+
 interface SmartMarkdownProps {
   content: string;
   className?: string;
@@ -29,19 +31,21 @@ function SmartMarkdownInner({ content, className }: SmartMarkdownProps) {
     return <span className={className}>{content}</span>;
   }
 
+  const preprocessed = preprocessMarkdownTables(content);
+
   // Slow path: text with Markdown/LaTeX — use full renderer
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeKatex]}
       components={{
-        table: ({ node, ...props }) => <div className="overflow-x-auto my-2"><table className="text-sm border-collapse w-full" {...props} /></div>,
-        th: ({ node, ...props }) => <th className="border border-slate-300 bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 px-3 py-1.5 text-left font-bold" {...props} />,
-        td: ({ node, ...props }) => <td className="border border-slate-200 dark:border-cyan-950/40 px-3 py-1.5" {...props} />,
+        table: ({ node, ...props }) => <div className="overflow-x-auto my-2"><table className="text-sm border-collapse w-full text-center" {...props} /></div>,
+        th: ({ node, ...props }) => <th className="border border-slate-300 bg-slate-100/50 dark:bg-cyan-950/50 dark:text-slate-300 px-3 py-2 text-center font-bold" {...props} />,
+        td: ({ node, ...props }) => <td className="border border-slate-200 dark:border-cyan-950/40 px-3 py-2 text-center" {...props} />,
         p: ({ node, ...props }) => <span {...props} />,
       }}
     >
-      {content}
+      {preprocessed}
     </ReactMarkdown>
   );
 }

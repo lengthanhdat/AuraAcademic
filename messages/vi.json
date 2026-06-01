@@ -41,7 +41,7 @@
       "manage_classes": "Quản lý danh sách lớp"
     },
     "table": {
-      "title": "Kỳ thi của tôi",
+      "title": "Quản lý kỳ thi",
       "subtitle": "Danh sách các bài thi gần đây nhất",
       "col_name": "Tên bài thi",
       "col_time": "Thời gian",

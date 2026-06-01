@@ -26,11 +26,10 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
     { label: t("menu.dashboard"), icon: "dashboard", href: "/teacher/dashboard" },
     { label: t("menu.exams"), icon: "magic_button", href: "/teacher/exams" },
     { label: "Kho đề của tôi", icon: "folder_special", href: "/teacher/exam-templates" },
-    { label: "Kỳ thi của tôi", icon: "assignment", href: "/teacher/my-exams" },
+    { label: "Quản lý kỳ thi", icon: "assignment", href: "/teacher/my-exams" },
     { label: "Lớp học", icon: "school", href: "/teacher/classrooms" },
     { label: "Ngân hàng đề", icon: "local_library", href: "/teacher/exam-bank" },
     { label: t("menu.materials"), icon: "menu_book", href: "/teacher/materials" },
-    { label: t("menu.monitoring"), icon: "videocam", href: "/teacher/monitoring" },
     { label: t("menu.reports"), icon: "assessment", href: "/teacher/reports" },
   ];
 

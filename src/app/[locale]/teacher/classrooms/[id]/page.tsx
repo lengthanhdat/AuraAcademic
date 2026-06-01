@@ -628,10 +628,17 @@ export default function TeacherClassroomDetailPage() {
                 <div className="bg-white dark:bg-[#0A1F3E]/60 p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/20 space-y-2">
                   <div className="flex items-center gap-2 font-black text-slate-700 dark:text-slate-200">
                     <span className="w-5 h-5 rounded-full bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 flex items-center justify-center text-[10px]">2</span>
+<<<<<<< HEAD
                     Giao bài thi đã có từ "Kỳ thi của tôi"
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
                     Nhấp nút <strong className="text-cyan-600 dark:text-cyan-400">"Thêm từ Kho lưu trữ"</strong> phía trên. Danh sách các bài thi bạn đã tạo sẽ hiện ra để bạn có thể chọn và giao trực tiếp cho lớp một cách nhanh chóng.
+=======
+                    Giao bài thi đã có từ &quot;Quản lý kỳ thi&quot;
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
+                    Vào trang <a href="/teacher/my-exams" className="text-cyan-600 dark:text-cyan-400 font-black hover:underline">Quản lý kỳ thi</a> ở menu trái. Bấm <strong className="text-cyan-600 dark:text-cyan-400">Chỉnh sửa</strong> (hình bút) của đề thi đã có, tại mục Lớp học ở cột bên phải chọn lớp <strong className="text-cyan-600 dark:text-cyan-400">&quot;{classroom?.name}&quot;</strong> rồi bấm Lưu.
+>>>>>>> f8696da62f16bf3a463b1beca7588c5776d8a283
                   </p>
                 </div>
               </div>
@@ -879,7 +886,7 @@ function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }
       <div className="bg-slate-900 border border-slate-700/60 rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
         <div className="p-6 border-b border-slate-800 flex justify-between items-center shrink-0">
           <h3 className="text-white font-bold text-lg flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-cyan-400" /> Giao đề thi từ Kỳ thi của tôi
+            <Trophy className="w-5 h-5 text-cyan-400" /> Giao đề thi từ Quản lý kỳ thi
           </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-sm">
             Đóng
@@ -889,7 +896,7 @@ function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }
         <div className="p-4 bg-slate-950 shrink-0">
           <input
             type="text"
-            placeholder="Tìm kiếm đề thi từ Kỳ thi của tôi..."
+            placeholder="Tìm kiếm đề thi từ Quản lý kỳ thi..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500 transition-all"
@@ -902,7 +909,7 @@ function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }
               <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-slate-500 text-center py-10 text-sm">Không tìm thấy đề thi nào trong Kỳ thi của tôi.</p>
+            <p className="text-slate-500 text-center py-10 text-sm">Không tìm thấy đề thi nào trong Quản lý kỳ thi.</p>
           ) : (
             filtered.map((exam) => (
               <div key={exam.id} className="bg-slate-800/40 border border-slate-700/40 rounded-xl p-4 flex items-center justify-between gap-4">

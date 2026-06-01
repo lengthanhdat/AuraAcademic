@@ -9,6 +9,8 @@ import rehypeKatex from "rehype-katex";
 import { useProctoring, VIOLATION_LABELS } from "@/hooks/useProctoring";
 import { useTranslations } from "next-intl";
 import { useBrowserProctoring, BROWSER_VIOLATION_LABELS } from "@/hooks/useBrowserProctoring";
+import KatexStyles from "@/components/KatexStyles";
+import { preprocessMarkdownTables } from "@/lib/markdownUtils";
 
 
 export default function TakeExam() {
@@ -143,6 +145,9 @@ export default function TakeExam() {
   });
   // --------------------------
 
+  // Thời điểm kết thúc thi (tính từ startTime + duration) — dùng ref để tránh drift
+  const examEndTimeRef = useRef<number | null>(null);
+
   useEffect(() => {
     const storedExam = sessionStorage.getItem("currentExam");
     if (storedExam) {
@@ -153,21 +158,24 @@ export default function TakeExam() {
       const roomStartTime = data.startTime; 
       
       if (roomStartTime) {
-        const durationInSeconds = (data.duration || 60) * 60;
-        const elapsedSeconds = Math.floor((Date.now() - roomStartTime) / 1000);
-        const remaining = durationInSeconds - elapsedSeconds;
+        const durationMs = (data.duration || 60) * 60 * 1000;
+        const endTime = roomStartTime + durationMs;
+        examEndTimeRef.current = endTime;
+        const remainingMs = endTime - Date.now();
 
-        if (remaining <= 0) {
+        if (remainingMs <= 0) {
           // Thời gian đã hết trước khi học sinh mở trang — chuyển hướng về dashboard với thông báo
           sessionStorage.removeItem("currentExam");
           alert(t("time_expired_alert"));
           router.push("/student/dashboard");
           return;
         } else {
-          setTimeLeft(remaining);
+          setTimeLeft(Math.floor(remainingMs / 1000));
         }
       } else {
         // Fallback nếu Backend chưa có startTime (dành cho các đề cũ)
+        const durationMs = (data.duration || 60) * 60 * 1000;
+        examEndTimeRef.current = Date.now() + durationMs;
         setTimeLeft((data.duration || 60) * 60);
       }
     } else {
@@ -175,41 +183,60 @@ export default function TakeExam() {
     }
   }, []);
 
-  // Đếm ngược thời gian và tự động nộp bài
+  // Đếm ngược dựa trên timestamp thực (chống drift khi tab bị throttle/background)
   useEffect(() => {
-    // Chưa có dữ liệu hoặc đã nộp bài rồi => không chạy đồng hồ
     if (timeLeft === null || submissionResult) return;
-    // Chỉ bắt đầu nộp bài khi timeLeft về 0 SAU KHI đã được set giá trị dương
     if (timeLeft <= 0) {
       handleAutoSubmit();
       return;
     }
-    const timer = setInterval(() => {
-      setTimeLeft(prev => (prev !== null && prev > 0) ? prev - 1 : 0);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
 
-  // Gửi heartbeat mỗi 30 giây khi đang làm bài
+    const timer = setInterval(() => {
+      if (examEndTimeRef.current) {
+        const remaining = Math.floor((examEndTimeRef.current - Date.now()) / 1000);
+        if (remaining <= 0) {
+          setTimeLeft(0);
+        } else {
+          setTimeLeft(remaining);
+        }
+      }
+    }, 500); // Poll 2 lần/giây để bắt chính xác giây cuối, tránh miss do tab throttle
+
+    return () => clearInterval(timer);
+  }, [timeLeft === null, (timeLeft ?? 1) <= 0, submissionResult]);
+
+  // Gửi heartbeat mỗi 15 giây + kiểm tra trạng thái phòng thi từ Backend
   useEffect(() => {
     if (!accessCode || !examVersion || submissionResult) return;
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!user.id) return;
 
-    const sendHeartbeat = () => {
-      const token = localStorage.getItem("accessToken");
-      fetch(`http://localhost:8088/api/exams/${accessCode}/heartbeat`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ studentId: user.id, status: "EXAM" })
-      }).catch(() => {}); // Bỏ qua lỗi mạng, không ảnh hưởng bài thi
+    const sendHeartbeat = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(`http://localhost:8088/api/exams/${accessCode}/heartbeat`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ studentId: user.id, status: "EXAM" })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // CRITICAL: Nếu Backend trả về trạng thái FINISHED/COMPLETED → ép nộp bài ngay
+          if (data.status === "FINISHED" || data.status === "COMPLETED") {
+            console.warn("[Heartbeat] Phòng thi đã kết thúc từ server, tự động nộp bài.");
+            handleAutoSubmit();
+          }
+        }
+      } catch {
+        // Bỏ qua lỗi mạng, không ảnh hưởng bài thi
+      }
     };
 
     sendHeartbeat(); // Gửi ngay khi vào thi
-    const interval = setInterval(sendHeartbeat, 30000); // Gửi lại mỗi 30 giây
+    const interval = setInterval(sendHeartbeat, 15000); // Gửi lại mỗi 15 giây (giảm từ 30s xuống 15s)
     return () => clearInterval(interval);
   }, [accessCode, examVersion, submissionResult]);
 
@@ -249,19 +276,20 @@ export default function TakeExam() {
         return null;
       }
       if (!part.trim()) return null;
+      const preprocessedPart = preprocessMarkdownTables(part);
       return (
         <ReactMarkdown 
           key={i} 
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[rehypeKatex]}
           components={{
-            table: ({node, ...props}) => <div className="overflow-x-auto my-3"><table className="border-collapse w-full text-sm" {...props} /></div>,
-            th: ({node, ...props}) => <th className="border border-slate-300 bg-blue-50 px-3 py-2 text-left font-bold text-slate-700" {...props} />,
-            td: ({node, ...props}) => <td className="border border-slate-300 px-3 py-2 text-slate-600" {...props} />,
+            table: ({node, ...props}) => <div className="overflow-x-auto my-3"><table className="border-collapse w-full text-sm text-center" {...props} /></div>,
+            th: ({node, ...props}) => <th className="border border-slate-300 bg-blue-50 px-3 py-2 text-center font-bold text-slate-700" {...props} />,
+            td: ({node, ...props}) => <td className="border border-slate-300 px-3 py-2 text-center text-slate-600" {...props} />,
             p: ({node, ...props}) => <p className="my-1 leading-relaxed inline" {...props} />
           }}
         >
-          {part}
+          {preprocessedPart}
         </ReactMarkdown>
       );
     });
@@ -591,7 +619,7 @@ export default function TakeExam() {
       )}
       {/* Sticky Header with Timer */}
       <header className="sticky top-0 bg-white dark:bg-[#0A1F3E] border-b border-slate-200 z-50 px-8 py-4 shadow-sm">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-blue-50 rounded-lg text-blue-700">
               <span className="material-symbols-outlined">assignment</span>
@@ -731,8 +759,8 @@ export default function TakeExam() {
           </div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto mt-8 px-4 flex flex-col lg:flex-row gap-8 items-start">
-          <div className="flex-1 space-y-8">
+        <div className="max-w-7xl mx-auto mt-8 px-4 flex flex-col lg:flex-row gap-8 items-start w-full">
+          <div className="flex-1 min-w-0 space-y-8">
           {examVersion.questions.map((q: any, idx: number) => {
             const isCorrectAnswer = q.options.find((o: any) => o.isCorrect)?.id;
             const studentAnswer = answers[q.id];
@@ -791,13 +819,18 @@ export default function TakeExam() {
                               className="w-5 h-5 accent-[#00355f]" 
                             />
                           )}
-                           <div className={`text-base inline-block flex-1 ${textClass}`}>
-                             <ReactMarkdown 
+                           <div className={`text-base flex-1 min-w-0 ${textClass}`}>
+                            <ReactMarkdown 
                                remarkPlugins={[remarkGfm, remarkMath]} 
                                rehypePlugins={[rehypeKatex]}
-                               components={{ p: ({node, ...props}) => <span {...props} /> }}
+                               components={{ 
+                                 p: ({node, ...props}) => <span {...props} />,
+                                 table: ({node, ...props}) => <div className="overflow-x-auto my-1"><table className="border-collapse w-full text-sm text-center" {...props} /></div>,
+                                 th: ({node, ...props}) => <th className="border border-slate-300 bg-blue-50 px-2 py-1 text-center font-bold text-slate-700" {...props} />,
+                                 td: ({node, ...props}) => <td className="border border-slate-300 px-2 py-1 text-center text-slate-600" {...props} />
+                               }}
                              >
-                               {opt.text}
+                               {preprocessMarkdownTables(opt.text)}
                              </ReactMarkdown>
                            </div>
                         </div>
@@ -913,6 +946,7 @@ export default function TakeExam() {
         </div>
       </div>
       )}
+      <KatexStyles />
     </main>
   );
 }
