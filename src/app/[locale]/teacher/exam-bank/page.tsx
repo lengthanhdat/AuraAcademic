@@ -151,6 +151,7 @@ export default function TeacherExamBankPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("Tất cả");
   const [selectedSubject, setSelectedSubject] = useState("Tất cả");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("Tất cả");
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
@@ -260,7 +261,8 @@ export default function TeacherExamBankPage() {
     const matchSearch = item.title?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchGrade = selectedGrade === "Tất cả" || item.grade === selectedGrade;
     const matchSubject = selectedSubject === "Tất cả" || item.subject === selectedSubject;
-    return matchSearch && matchGrade && matchSubject;
+    const matchDifficulty = selectedDifficulty === "Tất cả" || item.difficulty === selectedDifficulty;
+    return matchSearch && matchGrade && matchSubject && matchDifficulty;
   });
 
   const availableSubjects = selectedGrade === "Tất cả" 
@@ -382,9 +384,67 @@ export default function TeacherExamBankPage() {
         onSuccess={mutate}
       />
 
+      {/* ─── Statistics & Analysis ─────────────────────────── */}
+      {!showLoading && items.length > 0 && (
+        <ScrollReveal variant="fade-up" duration={600} delay={40}>
+          <section className="grid md:grid-cols-2 gap-4">
+            {/* Phân bố độ khó */}
+            <div className="bg-white dark:bg-[#0A1F3E]/70 border border-slate-200/70 dark:border-cyan-950/40 rounded-2xl p-5 shadow-sm">
+              <h2 className="text-sm font-extrabold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-indigo-500 text-[18px]">bar_chart</span>
+                Phân tích Độ khó Đề thi
+              </h2>
+              <div className="space-y-3">
+                {[
+                  { key: 'EASY', label: 'Dễ', color: 'bg-emerald-500' },
+                  { key: 'MEDIUM', label: 'Trung bình', color: 'bg-amber-500' },
+                  { key: 'HARD', label: 'Khó', color: 'bg-red-500' },
+                  { key: 'EXPERT', label: 'Chuyên gia', color: 'bg-purple-500' }
+                ].map((diff) => {
+                  const count = items.filter((e: any) => e.difficulty === diff.key).length;
+                  const percent = Math.round((count / Math.max(items.length, 1)) * 100);
+                  return (
+                    <div key={diff.key} className="flex items-center gap-3">
+                      <span className="text-xs font-bold w-20 text-slate-500">{diff.label}</span>
+                      <div className="flex-1 h-2.5 bg-slate-100 dark:bg-cyan-950/40 rounded-full overflow-hidden flex">
+                        <div className={`h-full ${diff.color} rounded-full transition-all duration-1000`} style={{ width: `${percent}%` }} />
+                      </div>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 w-12 text-right">{count} đề</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Top môn học */}
+            <div className="bg-white dark:bg-[#0A1F3E]/70 border border-slate-200/70 dark:border-cyan-950/40 rounded-2xl p-5 shadow-sm">
+              <h2 className="text-sm font-extrabold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-sky-500 text-[18px]">pie_chart</span>
+                Top 4 Môn học phổ biến nhất
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {(() => {
+                  const subCount: Record<string, number> = {};
+                  items.forEach((e: any) => { if (e.subject) subCount[e.subject] = (subCount[e.subject] || 0) + 1; });
+                  const top = Object.entries(subCount).sort((a, b) => b[1] - a[1]).slice(0, 4);
+                  return top.length > 0 ? top.map(([sub, count]) => (
+                    <div key={sub} className="bg-slate-50 dark:bg-cyan-950/20 rounded-xl p-3 border border-slate-100 dark:border-cyan-950/30 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 line-clamp-1">{sub}</span>
+                      <span className="text-[10px] font-black text-sky-600 bg-sky-100 dark:bg-sky-900/30 px-2 py-0.5 rounded-md">{count} đề</span>
+                    </div>
+                  )) : (
+                    <div className="col-span-2 text-xs text-slate-400 text-center py-4">Chưa có dữ liệu phân loại môn học</div>
+                  );
+                })()}
+              </div>
+            </div>
+          </section>
+        </ScrollReveal>
+      )}
+
       <ScrollReveal variant="fade-up" duration={600} delay={80}>
         <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-cyan-950/40 dark:bg-[#0A1F3E]/70">
-          <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_240px_240px_auto_auto] xl:items-center">
+          <div className="grid gap-3 xl:grid-cols-[minmax(200px,1fr)_180px_180px_180px_auto_auto] xl:items-center">
           <div className="relative w-full">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
             <input
@@ -432,6 +492,22 @@ export default function TeacherExamBankPage() {
                 {availableSubjects.map((sub: string) => (
                   <option key={sub} value={sub}>{sub}</option>
                 ))}
+              </select>
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
+            </div>
+
+            <div className="relative w-full">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-orange-500 text-lg">bar_chart</span>
+              <select
+                value={selectedDifficulty}
+                onChange={(e) => setSelectedDifficulty(e.target.value)}
+                className="h-12 w-full pl-10 pr-9 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
+              >
+                <option value="Tất cả">Tất cả độ khó</option>
+                <option value="EASY">Dễ</option>
+                <option value="MEDIUM">Trung bình</option>
+                <option value="HARD">Khó</option>
+                <option value="EXPERT">Chuyên gia</option>
               </select>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
             </div>

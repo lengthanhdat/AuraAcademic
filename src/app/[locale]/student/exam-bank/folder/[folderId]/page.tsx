@@ -111,11 +111,24 @@ export default function StudentExamBankFolderPage({ params }: { params: { locale
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
-                      "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                      "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
                     },
                   });
                   if (res.ok) {
+                    const data = await res.json();
                     mutateUser(); // Refresh user to get updated favorites
+                    
+                    // Sync to localStorage so other pages update immediately
+                    const storedUser = localStorage.getItem("user");
+                    if (storedUser) {
+                      const parsed = JSON.parse(storedUser);
+                      const currentFavs = parsed.favoritePracticeIds || [];
+                      parsed.favoritePracticeIds = data.isFavorite 
+                        ? [...currentFavs, item.id]
+                        : currentFavs.filter((id: string) => id !== item.id);
+                      localStorage.setItem("user", JSON.stringify(parsed));
+                      window.dispatchEvent(new Event("user-updated"));
+                    }
                   }
                 } catch (error) {
                   console.error("Lỗi cập nhật yêu thích", error);

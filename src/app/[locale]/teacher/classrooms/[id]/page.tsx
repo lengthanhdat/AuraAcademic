@@ -5,13 +5,14 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "@/navigation";
 import { toast } from "sonner";
 import { classroomApi } from "@/lib/classroomApi";
+import ExamConfigDrawer from "@/components/ExamConfigDrawer";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare, BarChart3,
   Radio, CheckCircle, XCircle, Mail, Send, FileText,
   Clock, Award, Copy, RefreshCw, Trophy, Plus, Trash2, Shield, Shuffle,
-  Link
+  Link, Eye, DoorOpen, Pencil, KeyRound
 } from "lucide-react";
 
 type Tab = "stream" | "members" | "chat" | "gradebook" | "exams";
@@ -40,7 +41,8 @@ export default function TeacherClassroomDetailPage() {
   const [chatInput, setChatInput] = useState("");
   const [wsConnected, setWsConnected] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-  const [examStats, setExamStats] = useState<Record<string, number[]>>({});
+  const [examStats, setExamStats] = useState<Record<string, any[]>>({});
+  const [gradebookSort, setGradebookSort] = useState<"name_asc" | "name_desc" | "score_asc" | "score_desc" | "correct_asc" | "correct_desc" | "submitted_asc" | "submitted_desc" | "time_asc" | "time_desc">("score_desc");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stompRef = useRef<Client | null>(null);
   const userRef = useRef<any>(null);
@@ -56,18 +58,7 @@ export default function TeacherClassroomDetailPage() {
           });
           if (r.ok) {
             const results = await r.json();
-            const dist = new Array(11).fill(0);
-            results.forEach((res: any) => {
-               const maxScore = res.maxScore || 10;
-               const scaledScore = (res.score / maxScore) * 10;
-               let rounded = Math.round(scaledScore);
-               if (rounded < 0) rounded = 0;
-               if (rounded > 10) rounded = 10;
-               dist[rounded]++;
-            });
-            const maxCount = Math.max(...dist, 1);
-            const heights = dist.map(c => (c / maxCount) * 100);
-            setExamStats(prev => ({ ...prev, [exam.id]: heights }));
+            setExamStats(prev => ({ ...prev, [exam.id]: Array.isArray(results) ? results : [] }));
           }
         } catch(e) {}
       });
@@ -267,6 +258,111 @@ export default function TeacherClassroomDetailPage() {
     { key: "chat",      label: "Thảo luận",  icon: <MessageSquare className="w-4 h-4" /> },
     { key: "gradebook", label: "Bảng điểm",  icon: <BarChart3 className="w-4 h-4" /> },
   ];
+
+  const getScore = (result: any) => {
+    const score = Number(result?.score);
+    if (!Number.isFinite(score)) return 0;
+    return Math.max(0, Math.min(10, score));
+  };
+
+  const buildScoreDistribution = (results: any[]) => {
+    const dist = new Array(11).fill(0);
+    results.forEach((result) => {
+      dist[Math.round(getScore(result))]++;
+    });
+    return dist;
+  };
+
+  const formatSubmittedAt = (result: any) => {
+    const raw = result?.submittedAt ?? result?.submitted_at ?? result?.submitTime ?? result?.createdAt;
+    if (raw === null || raw === undefined || raw === "") return "";
+
+    const date = typeof raw === "number" || /^\d+$/.test(String(raw))
+      ? new Date(Number(raw))
+      : new Date(raw);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  };
+
+  const formatDuration = (seconds?: number | null) => {
+    if (seconds === null || seconds === undefined || !Number.isFinite(Number(seconds))) return "--";
+    const total = Math.max(0, Math.floor(Number(seconds)));
+    const minutes = Math.floor(total / 60);
+    const remainingSeconds = total % 60;
+    return `${minutes}p ${String(remainingSeconds).padStart(2, "0")}s`;
+  };
+
+  const sortGradebookResults = (results: any[]) => {
+    return results.slice().sort((a: any, b: any) => {
+      if (gradebookSort === "name_asc") return String(a.studentName || "").localeCompare(String(b.studentName || ""), "vi");
+      if (gradebookSort === "name_desc") return String(b.studentName || "").localeCompare(String(a.studentName || ""), "vi");
+      if (gradebookSort === "score_desc") return getScore(b) - getScore(a);
+      if (gradebookSort === "score_asc") return getScore(a) - getScore(b);
+      if (gradebookSort === "correct_desc") return Number(b.correctAnswers || 0) - Number(a.correctAnswers || 0);
+      if (gradebookSort === "correct_asc") return Number(a.correctAnswers || 0) - Number(b.correctAnswers || 0);
+      if (gradebookSort === "submitted_desc") return Number(b.submittedAt || 0) - Number(a.submittedAt || 0);
+      if (gradebookSort === "submitted_asc") return Number(a.submittedAt || 0) - Number(b.submittedAt || 0);
+      if (gradebookSort === "time_asc") return Number(a.timeSpent ?? Number.MAX_SAFE_INTEGER) - Number(b.timeSpent ?? Number.MAX_SAFE_INTEGER);
+      return Number(b.timeSpent ?? -1) - Number(a.timeSpent ?? -1);
+    });
+  };
+
+  const toggleGradebookSort = (field: "name" | "score" | "correct" | "time" | "submitted") => {
+    const asc = `${field}_asc` as typeof gradebookSort;
+    const desc = `${field}_desc` as typeof gradebookSort;
+    setGradebookSort(prev => prev === desc ? asc : desc);
+  };
+
+  const sortArrow = (field: "name" | "score" | "correct" | "time" | "submitted") => {
+    if (!gradebookSort.startsWith(field)) return "unfold_more";
+    return gradebookSort.endsWith("_asc") ? "arrow_upward" : "arrow_downward";
+  };
+
+  const toCsvCell = (value: unknown) => {
+    const text = String(value ?? "");
+    return `"${text.replace(/"/g, '""')}"`;
+  };
+
+  const toFileNamePart = (value: unknown) => {
+    return String(value ?? "")
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/\s/g, "_") || "khong_ro";
+  };
+
+  const formatFileTimestamp = () => {
+    const date = new Date();
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+  };
+
+  const exportGradebookCsv = (exam: any, results: any[]) => {
+    try {
+      let csv = "Họ tên,Điểm,Số câu đúng,Tổng số câu,Thời gian làm bài,Thời gian nộp\n";
+      results.forEach((res: any) => {
+        csv += [
+          toCsvCell(res.studentName || "Ẩn danh"),
+          toCsvCell(getScore(res).toFixed(1)),
+          toCsvCell(res.correctAnswers ?? ""),
+          toCsvCell(res.totalQuestions ?? ""),
+          toCsvCell(formatDuration(res.timeSpent)),
+          toCsvCell(`\t${formatSubmittedAt(res)}`)
+        ].join(",") + "\n";
+      });
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${toFileNamePart(exam.title)}_${toFileNamePart(classroom?.name)}_${toFileNamePart(exam.accessCode)}_${formatFileTimestamp()}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (e: any) {
+      toast.error("Không thể xuất bảng điểm: " + e.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#060f1e] text-slate-800 dark:text-slate-100">
@@ -595,7 +691,7 @@ export default function TeacherClassroomDetailPage() {
                   onClick={() => setIsLinkModalOpen(true)}
                   className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all border border-slate-200 dark:border-slate-700/60 shadow-sm"
                 >
-                  <Plus className="w-4 h-4" /> Thêm từ Kho lưu trữ
+                  <Plus className="w-4 h-4" /> Thêm từ Kho đề
                 </button>
                 <button
                   onClick={() => router.push(`/teacher/exams?classroomId=${classroomId}&mode=ai`)}
@@ -620,7 +716,7 @@ export default function TeacherClassroomDetailPage() {
                     Tạo mới & Giao trực tiếp (Khuyên dùng)
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
-                    Nhấp nút <strong className="text-cyan-600 dark:text-cyan-400">&quot;Tạo đề thi mới&quot;</strong> phía trên. Sau khi thiết kế câu hỏi bằng AI hoặc Nhập tay, đề thi sẽ tự động liên kết vào lớp này ngay khi bấm Lưu.
+                    Nhấn <strong className="text-cyan-600 dark:text-cyan-400">&quot;Tạo đề thi mới&quot;</strong> để thiết kế đề bằng AI, nhập file hoặc nhập tay. Khi lưu, đề sẽ được gắn vào lớp này và có thể cấu hình thời gian, số mã đề, giám sát AI trước khi học sinh làm bài.
                   </p>
                 </div>
 
@@ -628,17 +724,10 @@ export default function TeacherClassroomDetailPage() {
                 <div className="bg-white dark:bg-[#0A1F3E]/60 p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/20 space-y-2">
                   <div className="flex items-center gap-2 font-black text-slate-700 dark:text-slate-200">
                     <span className="w-5 h-5 rounded-full bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 flex items-center justify-center text-[10px]">2</span>
-<<<<<<< HEAD
-                    Giao bài thi đã có từ "Kỳ thi của tôi"
+                    Giao bài thi đã có từ &quot;Kỳ thi của tôi&quot;
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
-                    Nhấp nút <strong className="text-cyan-600 dark:text-cyan-400">"Thêm từ Kho lưu trữ"</strong> phía trên. Danh sách các bài thi bạn đã tạo sẽ hiện ra để bạn có thể chọn và giao trực tiếp cho lớp một cách nhanh chóng.
-=======
-                    Giao bài thi đã có từ &quot;Quản lý kỳ thi&quot;
-                  </div>
-                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
-                    Vào trang <a href="/teacher/my-exams" className="text-cyan-600 dark:text-cyan-400 font-black hover:underline">Quản lý kỳ thi</a> ở menu trái. Bấm <strong className="text-cyan-600 dark:text-cyan-400">Chỉnh sửa</strong> (hình bút) của đề thi đã có, tại mục Lớp học ở cột bên phải chọn lớp <strong className="text-cyan-600 dark:text-cyan-400">&quot;{classroom?.name}&quot;</strong> rồi bấm Lưu.
->>>>>>> f8696da62f16bf3a463b1beca7588c5776d8a283
+                    Nhấn <strong className="text-cyan-600 dark:text-cyan-400">&quot;Thêm từ Kho đề&quot;</strong> để chọn đề mẫu đã lưu. Sau đó bấm <strong className="text-cyan-600 dark:text-cyan-400">&quot;Cấu hình&quot;</strong> để đặt thời gian làm bài, số mã đề, lịch bắt đầu và quyền xem đáp án trước khi giao.
                   </p>
                 </div>
               </div>
@@ -651,78 +740,138 @@ export default function TeacherClassroomDetailPage() {
                 <p className="text-xs mt-1 text-slate-400 dark:text-slate-500">Hãy tạo đề thi mới để học sinh tham gia!</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {exams.map((exam: any) => {
                   const isStarted = exam.status === "STARTED";
                   const isFinished = exam.status === "FINISHED" || exam.status === "COMPLETED";
+                  const questionCount = exam.questionCount || exam.versions?.[0]?.questions?.length || 0;
+                  const createdDate = exam.createdAt || exam.createdDate || exam.createdAtMillis;
+                  const createdLabel = createdDate ? new Date(createdDate).toLocaleDateString("vi-VN") : "--";
+                  const statusConfig = isStarted
+                    ? {
+                        label: "Đang thi",
+                        hint: "Phòng thi đang diễn ra",
+                        badge: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+                        icon: Radio
+                      }
+                    : isFinished
+                    ? {
+                        label: "Đã kết thúc",
+                        hint: "Bài thi đã đóng",
+                        badge: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+                        icon: CheckCircle
+                      }
+                    : {
+                        label: "Sẵn sàng",
+                        hint: "Chờ bắt đầu thủ công",
+                        badge: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30",
+                        icon: Clock
+                      };
+                  const StatusIcon = statusConfig.icon;
                   return (
-                    <div key={exam.id} className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-6 hover:border-cyan-500/20 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <h4 className="text-slate-850 dark:text-white font-extrabold text-lg truncate leading-tight">{exam.title}</h4>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                            isStarted
-                              ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-500/30"
-                              : isFinished
-                              ? "bg-slate-100 dark:bg-slate-700/40 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50"
-                              : "bg-cyan-50 dark:bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30"
-                          }`}>
-                            {isStarted ? "Đang thi" : isFinished ? "Đã kết thúc" : "Đang mở phòng chờ"}
-                          </span>
-                        </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-xs mt-1.5 line-clamp-2 leading-relaxed">{exam.description || "Chưa có mô tả chi tiết cho bài thi này."}</p>
-                        
-                        <div className="flex items-center gap-4 mt-4 text-xs font-semibold text-slate-500 dark:text-slate-400 flex-wrap">
-                          <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5 text-slate-400" /> {exam.questionCount || exam.versions?.[0]?.questions?.length || 0} câu hỏi</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-400" /> {exam.duration} phút</span>
-                          <span className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-transparent"><span className="text-slate-450">Mã phòng:</span> <span className="font-mono text-cyan-600 dark:text-cyan-450 font-black tracking-wider text-sm">{exam.accessCode}</span></span>
-                          <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5 text-slate-400" /> <span className="text-cyan-600 dark:text-cyan-400 font-extrabold">{exam.submissionCount || 0}</span> học sinh đã nộp</span>
-                          {exam.aiProctoring && <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-100 dark:border-transparent font-bold"><Shield className="w-3.5 h-3.5" /> AI Giám sát</span>}
-                        </div>
+                    <div key={exam.id} className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-[1.75rem] p-6 md:p-8 shadow-sm hover:shadow-lg hover:border-blue-200 dark:hover:border-cyan-800/70 transition-all">
+                      <div className="flex items-start justify-between gap-5">
+                        <span className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-black uppercase tracking-wider ${statusConfig.badge}`}>
+                          <StatusIcon className="w-4 h-4" />
+                          {statusConfig.label}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => exam.accessCode && navigator.clipboard.writeText(exam.accessCode)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-cyan-100 bg-cyan-50 px-4 py-2 text-xs font-black text-cyan-700 tracking-[0.18em] hover:bg-cyan-100 dark:bg-cyan-500/10 dark:border-cyan-500/20 dark:text-cyan-300"
+                          title="Sao chép mã phòng"
+                        >
+                          <KeyRound className="w-4 h-4 tracking-normal" />
+                          {exam.accessCode || "------"}
+                        </button>
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0 flex-wrap md:flex-nowrap">
-                        {!isFinished && !isStarted && (
+                      <div className="mt-7">
+                        <h4 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{exam.title}</h4>
+                        <div className="mt-4 flex items-center gap-3 text-sm font-bold text-slate-500 dark:text-slate-400 flex-wrap">
+                          <span className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-3 py-2 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+                            <BookOpen className="w-4 h-4" />
+                            Lớp: {classroom?.name}
+                          </span>
+                          <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          <span>{questionCount} câu hỏi / {exam.duration || 0} phút</span>
+                          {exam.aiProctoring && (
+                            <>
+                              <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                              <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300">
+                                <Shield className="w-4 h-4" />
+                                AI giám sát
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <p className="mt-5 text-sm font-bold text-slate-400 dark:text-slate-500">{statusConfig.hint}</p>
+                      </div>
+
+                      <div className="mt-8 border-t border-slate-100 dark:border-cyan-950/50 pt-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex items-center gap-8 text-xs font-semibold text-slate-400 dark:text-slate-500">
+                          <div>
+                            <p>Tạo ngày</p>
+                            <p className="mt-1 font-bold text-slate-500 dark:text-slate-400">{createdLabel}</p>
+                          </div>
                           <button
-                            onClick={() => handleStartExam(exam.id)}
-                            className="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)]"
-                          >
-                            Bắt đầu thi
-                          </button>
-                        )}
-                        {isStarted && (
-                          <>
-                            <button
-                              onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
-                              className="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(0,198,255,0.4)] flex items-center gap-2 animate-pulse hover:animate-none"
-                            >
-                              <Shield className="w-4 h-4 text-white" />
-                              Giám sát trực tiếp
-                            </button>
-                            <button
-                              onClick={() => handleCloseExam(exam.id)}
-                              className="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_12px_rgba(244,63,94,0.2)]"
-                            >
-                              Đóng phòng thi
-                            </button>
-                          </>
-                        )}
-                        {!isStarted && (
-                          <button
+                            type="button"
                             onClick={() => router.push(`/teacher/exams/results/${exam.accessCode}`)}
-                            className="w-full md:w-auto px-5 py-2.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all border border-slate-200 dark:border-slate-700/60 shadow-sm"
+                            className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-cyan-300 transition-colors"
+                            title="Xem kết quả"
                           >
-                            Xem kết quả
+                            <Eye className="w-6 h-6" />
                           </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteExam(exam.id)}
-                          className="w-full md:w-auto p-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-600 hover:text-white rounded-xl transition-all border border-rose-500/20 shadow-sm shrink-0 flex items-center justify-center gap-1.5 font-bold text-sm"
-                          title="Xóa bài thi khỏi lớp học"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="md:hidden">Xóa</span>
-                        </button>
+                        </div>
+
+                        <div className="flex items-center gap-3 flex-wrap justify-start lg:justify-end">
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
+                            className="min-w-[150px] inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-500 active:scale-[0.98] transition-all"
+                          >
+                            <DoorOpen className="w-5 h-5" />
+                            {isStarted ? "Vào giám sát" : "Vào phòng chờ"}
+                          </button>
+
+                          {!isFinished && !isStarted && (
+                            <button
+                              type="button"
+                              onClick={() => handleStartExam(exam.id)}
+                              className="min-w-[126px] rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-black text-blue-700 hover:bg-blue-100 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/20 active:scale-[0.98] transition-all"
+                            >
+                              Bắt đầu ngay
+                            </button>
+                          )}
+
+                          {isStarted && (
+                            <button
+                              type="button"
+                              onClick={() => handleCloseExam(exam.id)}
+                              className="min-w-[126px] rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-black text-rose-700 hover:bg-rose-100 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/20 active:scale-[0.98] transition-all"
+                            >
+                              Đóng phòng
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/teacher/exams?edit=${exam.id}&classroomId=${classroomId}`)}
+                            className="p-3 text-slate-400 hover:text-blue-600 dark:hover:text-cyan-300 transition-colors"
+                            title="Chỉnh sửa bài thi"
+                          >
+                            <Pencil className="w-5 h-5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteExam(exam.id)}
+                            className="p-3 text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 transition-colors"
+                            title="Xóa bài thi khỏi lớp học"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -734,7 +883,7 @@ export default function TeacherClassroomDetailPage() {
 
         {/* BẢNG ĐIỂM */}
         {tab === "gradebook" && (
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="max-w-5xl mx-auto space-y-6">
             <div className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
               <h3 className="text-slate-800 dark:text-white font-bold mb-6 flex items-center gap-2 uppercase tracking-wider text-sm">
                 <Award className="w-5 h-5 text-cyan-500" /> Phổ điểm Lớp học ({exams.length} bài thi)
@@ -745,61 +894,123 @@ export default function TeacherClassroomDetailPage() {
                   <p className="font-bold text-slate-500 dark:text-slate-400">Chưa có bài thi thống kê</p>
                   <p className="text-xs mt-1 text-slate-450">Các bài kiểm tra được gán vào lớp và học sinh nộp bài sẽ tự động hiển thị biểu đồ điểm số tại đây.</p>
                 </div>
-              ) : (
+            ) : (
                 <div className="space-y-6">
                   {exams.map((exam: any) => {
-                    const heights = examStats[exam.id] || Array.from({ length: 11 }, () => 0);
+                    const results = examStats[exam.id] || [];
+                    const distribution = buildScoreDistribution(results);
+                    const maxBucket = Math.max(...distribution, 1);
+                    const scores = results.map(getScore);
+                    const submittedCount = results.length;
+                    const averageScore = submittedCount ? scores.reduce((sum, score) => sum + score, 0) / submittedCount : 0;
+                    const highestScore = submittedCount ? Math.max(...scores) : 0;
+                    const lowestScore = submittedCount ? Math.min(...scores) : 0;
                     return (
-                      <div key={exam.id} className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/40 shadow-sm">
-                        <div className="flex items-center justify-between mb-4 border-b border-slate-200/50 pb-3">
-                          <h4 className="text-slate-800 dark:text-white font-bold text-base">{exam.title}</h4>
+                      <div key={exam.id} className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/40 shadow-sm space-y-5">
+                        <div className="flex items-center justify-between gap-4 border-b border-slate-200/50 pb-4">
+                          <div>
+                            <h4 className="text-slate-800 dark:text-white font-extrabold text-base">{exam.title}</h4>
+                            <p className="text-xs text-slate-400 mt-1">
+                              {exam.versions?.[0]?.questions?.length || exam.questionCount || 0} câu hỏi · {exam.duration || 0} phút
+                            </p>
+                          </div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={async () => {
-                                try {
-                                  const r = await fetch(`http://localhost:8088/api/exams/${exam.accessCode}/results`, {
-                                    headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
-                                  });
-                                  const results = await r.json();
-                                  let csv = "Họ tên,Email,Điểm,Thời gian nộp\n";
-                                  results.forEach((res: any) => {
-                                    csv += `${res.studentName || 'Ẩn danh'},${res.studentEmail || ''},${res.score}/${res.maxScore},${res.submittedAt ? new Date(res.submittedAt).toLocaleString('vi-VN') : ''}\n`;
-                                  });
-                                  const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
-                                  const link = document.createElement("a");
-                                  link.href = URL.createObjectURL(blob);
-                                  link.download = `BangDiem_${exam.title}.csv`;
-                                  link.click();
-                                } catch (e: any) { toast.error("Không thể xuất bảng điểm: " + e.message); }
-                              }}
+                              onClick={() => exportGradebookCsv(exam, results)}
+                              disabled={submittedCount === 0}
                               className="text-xs font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-100/50 dark:bg-cyan-500/20 px-3 py-1.5 rounded-lg border border-cyan-200 dark:border-cyan-500/30 hover:bg-cyan-100 dark:hover:bg-cyan-500/30 transition-colors"
                             >
                               Xuất CSV
                             </button>
                             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200/30">
-                              {exam.submissionCount || 0} lượt nộp
+                              {submittedCount} lượt nộp
                             </span>
                           </div>
                         </div>
-                        {/* SVG Bar Chart */}
-                        <div className="mt-2">
-                          <div className="flex items-end gap-1.5 h-20">
-                            {heights.map((h, i) => (
-                              <div key={i} className="flex-1 flex flex-col items-center gap-0.5 group/bar cursor-pointer">
-                                <div
-                                  className="w-full rounded-t bg-gradient-to-t from-cyan-600/80 to-cyan-400/80 group-hover/bar:from-cyan-500 group-hover/bar:to-cyan-300 transition-all"
-                                  style={{ height: `${h}%` }}
-                                />
+
+                        {submittedCount === 0 ? (
+                          <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-700 rounded-2xl">
+                            <Award className="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                            <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Chưa có học sinh nộp bài</p>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="rounded-2xl bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 p-4">
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Đã nộp</p>
+                                <p className="mt-1 text-2xl font-black text-slate-800 dark:text-white">{submittedCount}</p>
                               </div>
-                            ))}
-                          </div>
-                          <div className="flex mt-1">
-                            {Array.from({ length: 11 }, (_, i) => (
-                              <span key={i} className="flex-1 text-center text-[10px] text-slate-600">{i}</span>
-                            ))}
-                          </div>
-                          <p className="text-xs text-slate-500 text-center mt-1">Phân bố điểm (0–10)</p>
-                        </div>
+                              <div className="rounded-2xl bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 p-4">
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Trung bình</p>
+                                <p className="mt-1 text-2xl font-black text-cyan-600 dark:text-cyan-300">{averageScore.toFixed(1)}</p>
+                              </div>
+                              <div className="rounded-2xl bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 p-4">
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Cao nhất</p>
+                                <p className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-300">{highestScore.toFixed(1)}</p>
+                              </div>
+                              <div className="rounded-2xl bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 p-4">
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Thấp nhất</p>
+                                <p className="mt-1 text-2xl font-black text-rose-600 dark:text-rose-300">{lowestScore.toFixed(1)}</p>
+                              </div>
+                            </div>
+
+                            <div className="rounded-2xl bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 p-5">
+                              <div className="flex items-end gap-1.5 h-28">
+                                {distribution.map((count, i) => (
+                                  <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1 group/bar">
+                                    <span className="text-[10px] font-bold text-slate-400">{count}</span>
+                                    <div
+                                      className="w-full rounded-t bg-gradient-to-t from-cyan-600/80 to-cyan-400/80 group-hover/bar:from-cyan-500 group-hover/bar:to-cyan-300 transition-all min-h-[4px]"
+                                      style={{ height: `${(count / maxBucket) * 100}%` }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="flex mt-2">
+                                {Array.from({ length: 11 }, (_, i) => (
+                                  <span key={i} className="flex-1 text-center text-[10px] font-bold text-slate-500">{i}</span>
+                                ))}
+                              </div>
+                              <p className="text-xs text-slate-500 text-center mt-2">Số học sinh theo từng mốc điểm 0-10</p>
+                            </div>
+
+                            <div className="rounded-2xl bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 overflow-hidden">
+                              <div className="grid grid-cols-[1fr_90px_110px_120px_150px] gap-3 px-4 py-3 bg-slate-50 dark:bg-cyan-950/20 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                {[
+                                  { field: "name", label: "Học sinh" },
+                                  { field: "score", label: "Điểm" },
+                                  { field: "correct", label: "Số câu đúng" },
+                                  { field: "time", label: "Thời gian làm" },
+                                  { field: "submitted", label: "Nộp lúc" },
+                                ].map((item) => (
+                                  <button
+                                    key={item.field}
+                                    type="button"
+                                    onClick={() => toggleGradebookSort(item.field as "name" | "score" | "correct" | "time" | "submitted")}
+                                    className={`inline-flex items-center gap-1 text-left font-black uppercase tracking-wider transition-colors ${
+                                      gradebookSort.startsWith(item.field) ? "text-cyan-600 dark:text-cyan-300" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                                    }`}
+                                  >
+                                    {item.label}
+                                    <span className="material-symbols-outlined text-[15px] leading-none">{sortArrow(item.field as "name" | "score" | "correct" | "time" | "submitted")}</span>
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="divide-y divide-slate-100 dark:divide-cyan-950/30">
+                                {sortGradebookResults(results)
+                                  .map((res: any) => (
+                                    <div key={res.id || `${res.studentId}-${res.submittedAt}`} className="grid grid-cols-[1fr_90px_110px_120px_150px] gap-3 px-4 py-3 text-sm items-center">
+                                      <span className="font-bold text-slate-700 dark:text-slate-200 truncate">{res.studentName || "Ẩn danh"}</span>
+                                      <span className="font-black text-cyan-600 dark:text-cyan-300">{getScore(res).toFixed(1)}</span>
+                                      <span className="text-slate-500 dark:text-slate-400 font-semibold">{res.correctAnswers ?? 0}/{res.totalQuestions ?? "-"}</span>
+                                      <span className="text-xs text-slate-400 font-semibold">{formatDuration(res.timeSpent)}</span>
+                                      <span className="text-xs text-slate-400">{formatSubmittedAt(res) || "--"}</span>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     );
                   })}
@@ -814,6 +1025,7 @@ export default function TeacherClassroomDetailPage() {
           isOpen={isLinkModalOpen}
           onClose={() => setIsLinkModalOpen(false)}
           classroomId={classroomId}
+          classroomExams={exams || []}
           onSuccess={fetchData}
         />
       </div>
@@ -822,38 +1034,55 @@ export default function TeacherClassroomDetailPage() {
 }
 
 // ── LinkExamFromRepositoryModal Component ──
+const getRepositoryQuestionCount = (exam: any) => exam.questionCount || exam.versions?.[0]?.questions?.length || 0;
+const getRepositoryExamKey = (exam: any) => [
+  (exam.title || "").trim().toLowerCase(),
+  exam.duration || 0,
+  getRepositoryQuestionCount(exam),
+  (exam.subject || "").trim().toLowerCase()
+].join("|");
+
 interface LinkExamModalProps {
   isOpen: boolean;
   onClose: () => void;
   classroomId: string;
+  classroomExams: any[];
   onSuccess: () => void;
 }
 
-function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }: LinkExamModalProps) {
+function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, classroomExams, onSuccess }: LinkExamModalProps) {
   const [exams, setExams] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedExamForConfig, setSelectedExamForConfig] = useState<any>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchRepositoryExams();
-    }
-  }, [isOpen]);
-
-  const fetchRepositoryExams = async () => {
+  const fetchRepositoryExams = useCallback(async () => {
     setLoading(true);
     try {
       const u = localStorage.getItem("user");
       if (u) {
         const user = JSON.parse(u);
-        const res = await fetch(`http://localhost:8088/api/exams/teacher/${user.id}`, {
+        const res = await fetch(`http://localhost:8088/api/exams/teacher/${user.id}/templates`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`
           }
         });
         if (res.ok) {
           const data = await res.json();
-          setExams(data.filter((exam: any) => !exam.isPractice && !exam.isBankItem));
+          const assignedKeys = new Set(classroomExams.map(getRepositoryExamKey));
+          const unique = new Map<string, any>();
+
+          data.forEach((exam: any) => {
+            if (exam.isPractice || exam.isBankItem) return;
+            if (exam.classroomId === classroomId) return;
+
+            const key = getRepositoryExamKey(exam);
+            if (assignedKeys.has(key) || unique.has(key)) return;
+
+            unique.set(key, exam);
+          });
+
+          setExams(Array.from(unique.values()));
         }
       }
     } catch (e: any) {
@@ -861,18 +1090,13 @@ function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }
     } finally {
       setLoading(false);
     }
-  };
+  }, [classroomExams, classroomId]);
 
-  const handleLink = async (examId: string) => {
-    try {
-      await classroomApi.linkExamFromBank(classroomId, examId);
-      toast.success("Giao bài thi thành công!");
-      onSuccess();
-      onClose();
-    } catch (e: any) {
-      toast.error("Không thể giao bài thi: " + e.message);
+  useEffect(() => {
+    if (isOpen) {
+      fetchRepositoryExams();
     }
-  };
+  }, [isOpen, fetchRepositoryExams]);
 
   if (!isOpen) return null;
 
@@ -883,61 +1107,86 @@ function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700/60 rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-        <div className="p-6 border-b border-slate-800 flex justify-between items-center shrink-0">
-          <h3 className="text-white font-bold text-lg flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-cyan-400" /> Giao đề thi từ Quản lý kỳ thi
+      <div className="bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-[1.75rem] w-full max-w-2xl max-h-[86vh] flex flex-col overflow-hidden shadow-2xl">
+        <div className="p-6 border-b border-slate-100 dark:border-cyan-950/40 flex justify-between items-center shrink-0">
+          <h3 className="text-slate-900 dark:text-white font-extrabold text-lg flex items-center gap-3">
+            <span className="w-10 h-10 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 flex items-center justify-center">
+              <Trophy className="w-5 h-5" />
+            </span>
+            Giao đề thi từ Kho đề
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-sm">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors text-sm font-bold">
             Đóng
           </button>
         </div>
 
-        <div className="p-4 bg-slate-950 shrink-0">
-          <input
-            type="text"
-            placeholder="Tìm kiếm đề thi từ Quản lý kỳ thi..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500 transition-all"
-          />
+        <div className="p-5 bg-slate-50 dark:bg-[#071829] shrink-0">
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[22px]">search</span>
+            <input
+              type="text"
+              placeholder="Tìm kiếm đề thi từ Kho đề..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-2xl pl-12 pr-4 py-3.5 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:border-cyan-400 transition-all"
+            />
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {loading ? (
             <div className="flex justify-center py-10">
               <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-slate-500 text-center py-10 text-sm">Không tìm thấy đề thi nào trong Quản lý kỳ thi.</p>
+            <div className="text-center py-14 border border-dashed border-slate-200 dark:border-cyan-950/50 rounded-3xl">
+              <FileText className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+              <p className="text-slate-600 dark:text-slate-300 font-bold text-sm">Không còn đề phù hợp để giao</p>
+              <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Các đề đã có trong lớp sẽ không hiển thị lại để tránh giao trùng.</p>
+            </div>
           ) : (
             filtered.map((exam) => (
-              <div key={exam.id} className="bg-slate-800/40 border border-slate-700/40 rounded-xl p-4 flex items-center justify-between gap-4">
-                <div>
-                  <h4 className="text-white font-semibold text-sm">{exam.title}</h4>
-                  <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
-                    <span>{exam.versions?.[0]?.questions?.length || exam.questionCount || 0} câu hỏi</span>
-                    <span>•</span>
-                    <span>{exam.duration} phút</span>
+              <div key={exam.id} className="bg-white dark:bg-[#071829] border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-cyan-200 dark:hover:border-cyan-800/70 transition-all">
+                <div className="min-w-0">
+                  <h4 className="text-slate-900 dark:text-white font-extrabold text-base truncate">{exam.title}</h4>
+                  <div className="flex items-center gap-3 mt-2 text-xs font-bold text-slate-400 dark:text-slate-500 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" />
+                      {getRepositoryQuestionCount(exam)} câu hỏi
+                    </span>
+                    <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                    <span>{exam.duration || 0} phút</span>
                     {exam.subject && (
                       <>
-                        <span>•</span>
-                        <span className="text-cyan-400">{exam.subject}</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                        <span className="text-cyan-600 dark:text-cyan-300">{exam.subject}</span>
                       </>
                     )}
                   </div>
                 </div>
                 <button
-                  onClick={() => handleLink(exam.id)}
-                  className="px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500 text-cyan-400 hover:text-white border border-cyan-500/20 rounded-xl text-xs font-semibold transition-all shrink-0"
+                  onClick={() => setSelectedExamForConfig(exam)}
+                  className="px-5 py-2.5 bg-cyan-50 hover:bg-cyan-500 disabled:bg-slate-100 dark:bg-cyan-500/10 dark:hover:bg-cyan-500 text-cyan-700 hover:text-white disabled:text-slate-400 border border-cyan-200 dark:border-cyan-500/20 rounded-xl text-sm font-black transition-all shrink-0"
                 >
-                  Giao đề
+                  Cấu hình
                 </button>
               </div>
             ))
           )}
         </div>
       </div>
+      <ExamConfigDrawer
+        isOpen={!!selectedExamForConfig}
+        onClose={() => setSelectedExamForConfig(null)}
+        exam={selectedExamForConfig}
+        defaultClassroomId={classroomId}
+        lockClassroom
+        onSuccess={() => {
+          setSelectedExamForConfig(null);
+          onSuccess();
+          onClose();
+        }}
+      />
     </div>
   );
 }
@@ -962,6 +1211,7 @@ function CreateClassroomExamModal({ isOpen, onClose, classroomId, onSuccess }: C
   const [duration, setDuration] = useState(45);
   const [shuffle, setShuffle] = useState(true);
   const [aiProctoring, setAiProctoring] = useState(false);
+  const [allowReview, setAllowReview] = useState(true);
   const [questions, setQuestions] = useState<QuestionInput[]>([
     { content: "", options: ["", "", "", ""], correctAnswer: "" }
   ]);
@@ -1039,6 +1289,7 @@ function CreateClassroomExamModal({ isOpen, onClose, classroomId, onSuccess }: C
         duration,
         shuffle,
         aiProctoring,
+        allowReview,
         teacherId,
         teacherName,
         classroomId,
@@ -1079,6 +1330,9 @@ function CreateClassroomExamModal({ isOpen, onClose, classroomId, onSuccess }: C
       setTitle("");
       setDescription("");
       setDuration(45);
+      setShuffle(true);
+      setAiProctoring(false);
+      setAllowReview(true);
       setQuestions([{ content: "", options: ["", "", "", ""], correctAnswer: "" }]);
     } catch (err: any) {
       toast.error(err.message);
@@ -1130,7 +1384,7 @@ function CreateClassroomExamModal({ isOpen, onClose, classroomId, onSuccess }: C
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Thời gian làm bài (Phút)</label>
                 <input
@@ -1166,6 +1420,19 @@ function CreateClassroomExamModal({ isOpen, onClose, classroomId, onSuccess }: C
                 />
                 <label htmlFor="aiProctoring" className="text-sm text-slate-300 font-medium cursor-pointer flex items-center gap-1">
                   <Shield className="w-3.5 h-3.5 text-emerald-400" /> Giám sát AI
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2.5 pt-6">
+                <input
+                  type="checkbox"
+                  id="allowReview"
+                  checked={allowReview}
+                  onChange={e => setAllowReview(e.target.checked)}
+                  className="w-4 h-4 bg-slate-950 border-slate-700 rounded text-cyan-500 focus:ring-cyan-500"
+                />
+                <label htmlFor="allowReview" className="text-sm text-slate-300 font-medium cursor-pointer flex items-center gap-1">
+                  <CheckCircle className="w-3.5 h-3.5 text-sky-400" /> Xem đáp án
                 </label>
               </div>
             </div>

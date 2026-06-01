@@ -60,6 +60,8 @@ Xây dựng hệ thống trò chuyện trực tuyến thời gian thực (Realti
 | **UI-02** | Kết nối `@stomp/stompjs` và đồng bộ tin nhắn lên màn hình | `frontend-specialist` | Rò rỉ kết nối (Connection leaks) khi chuyển trang. ➡️ Tận dụng Hook Cleanup để tự ngắt socket khi unmount. | Nhắn tin và nhận phản hồi hiển thị tức thì lên bong bóng chat mà không cần F5. |
 | **UI-03** | Dựng Trung Tâm Chat Quản Trị (`admin/chat`) | `frontend-specialist` | Khó theo dõi nhiều người nhắn cùng lúc. ➡️ Thiết kế bố cục 2 cột: Cột trái ds hàng chờ, cột phải ô chat chi tiết. | Giao diện Admin phân chia rõ ràng, có nút Gạt bật/tắt "AI Tự Động Phản Hồi" trên thanh tiêu đề. |
 
+
+
 ---
 
 ## 🏁 PHASE X: KIỂM THỬ & NGHIỆM THU (VERIFICATION)

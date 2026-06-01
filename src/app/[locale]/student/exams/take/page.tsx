@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, memo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -12,6 +12,104 @@ import { useBrowserProctoring, BROWSER_VIOLATION_LABELS } from "@/hooks/useBrows
 import KatexStyles from "@/components/KatexStyles";
 import { preprocessMarkdownTables } from "@/lib/markdownUtils";
 
+
+const QuestionItem = memo(function QuestionItem({
+  q,
+  idx,
+  studentAnswer,
+  submissionResult,
+  handleSelect,
+  renderContentWithImages
+}: any) {
+  const isCorrectAnswer = q.options.find((o: any) => o.isCorrect)?.id;
+  const isStudentCorrect = studentAnswer === isCorrectAnswer;
+
+  return (
+    <div id={`question-${q.id}`} className={`bg-white dark:bg-[#0A1F3E] rounded-2xl p-8 shadow-sm border space-y-6 ${submissionResult ? (isStudentCorrect ? 'border-green-200 shadow-green-100' : 'border-red-200 shadow-red-100') : 'border-slate-200'}`}>
+      <div className="flex items-start gap-4">
+        <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${submissionResult ? (isStudentCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700') : 'bg-slate-100 text-slate-500'}`}>
+          {idx + 1}
+        </span>
+        <div className="text-lg font-medium text-slate-800 leading-relaxed max-w-none">
+          {renderContentWithImages(q.text)}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 pl-12">
+        {q.options.map((opt: any) => {
+          let optionClass = 'border-slate-100 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 hover:border-slate-200';
+          let textClass = 'text-slate-600';
+          let showIcon = null;
+
+          if (submissionResult) {
+            if (opt.isCorrect) {
+              optionClass = 'border-green-500 bg-green-50 shadow-sm';
+              textClass = 'text-green-700';
+              showIcon = <span className="material-symbols-outlined text-green-600">check_circle</span>;
+            } else if (studentAnswer === opt.id && !opt.isCorrect) {
+              optionClass = 'border-red-500 bg-red-50 shadow-sm';
+              textClass = 'text-red-700';
+              showIcon = <span className="material-symbols-outlined text-red-600">cancel</span>;
+            } else {
+              optionClass = 'border-slate-100 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 opacity-60';
+            }
+          } else {
+            if (studentAnswer === opt.id) {
+              optionClass = 'border-[#00355f] bg-[#00355f]/10 dark:bg-[#00C6FF]/10 text-[#00355f] dark:text-[#00C6FF] shadow-sm';
+              textClass = 'text-[#00355f] dark:text-[#00C6FF]';
+            }
+          }
+
+          return (
+            <div
+              key={opt.id} 
+              role={!submissionResult ? "radio" : undefined}
+              aria-checked={!submissionResult ? studentAnswer === opt.id : undefined}
+              tabIndex={!submissionResult ? 0 : undefined}
+              onClick={() => {
+                if (!submissionResult) handleSelect(q.id, opt.id);
+              }}
+              onKeyDown={(e) => {
+                if (!submissionResult && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  handleSelect(q.id, opt.id);
+                }
+              }}
+              className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${submissionResult ? 'cursor-default' : 'cursor-pointer'} ${optionClass}`}
+            >
+              <div className="flex items-center gap-4">
+                {!submissionResult && (
+                  <input 
+                    type="radio" 
+                    name={q.id} 
+                    checked={studentAnswer === opt.id}
+                    readOnly
+                    className="w-5 h-5 accent-[#00355f] pointer-events-none" 
+                  />
+                )}
+                 <div className={`text-base flex-1 min-w-0 ${textClass}`}>
+                  <ReactMarkdown 
+                     remarkPlugins={[remarkGfm, remarkMath]} 
+                     rehypePlugins={[rehypeKatex]}
+                     components={{ 
+                       p: ({node, ...props}) => <span {...props} />,
+                       table: ({node, ...props}) => <div className="overflow-x-auto my-1"><table className="border-collapse w-full text-sm text-center" {...props} /></div>,
+                       th: ({node, ...props}) => <th className="border border-slate-300 bg-blue-50 px-2 py-1 text-center font-bold text-slate-700" {...props} />,
+                       td: ({node, ...props}) => <td className="border border-slate-300 px-2 py-1 text-center text-slate-600" {...props} />
+                     }}
+                   >
+                     {preprocessMarkdownTables(opt.text)}
+                   </ReactMarkdown>
+                 </div>
+              </div>
+              {showIcon}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
 
 export default function TakeExam() {
   const router = useRouter();
@@ -255,14 +353,14 @@ export default function TakeExam() {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const renderContentWithImages = (text: string) => {
+  const renderContentWithImages = useCallback((text: string) => {
     if (!text) return null;
     const parts = text.split(/(\[IMG_\d+\])/g);
     return parts.map((part, i) => {
       const match = part.match(/\[IMG_(\d+)\]/);
       if (match) {
         const idx = parseInt(match[1], 10);
-        if (examVersion.extractedImages && examVersion.extractedImages[idx]) {
+        if (examVersion?.extractedImages && examVersion.extractedImages[idx]) {
           return (
             <img 
               key={i} 
@@ -293,16 +391,25 @@ export default function TakeExam() {
         </ReactMarkdown>
       );
     });
-  };
+  }, [examVersion]);
 
-  const handleSelect = (qId: string, oId: string) => {
-    setAnswers(prev => ({ ...prev, [qId]: oId }));
-  };
+  const handleSelect = useCallback((qId: string, oId: string) => {
+    setAnswers(prev => {
+      if (prev[qId] !== oId) {
+        return { ...prev, [qId]: oId };
+      }
+
+      const next = { ...prev };
+      delete next[qId];
+      return next;
+    });
+  }, []);
 
   // Số lượng câu đã trả lời và chưa trả lời
   const totalQuestionsCount = examVersion?.questions?.length || 0;
   const answeredCount = Object.keys(answers).length;
   const unansweredCount = totalQuestionsCount - answeredCount;
+  const allowReview = examVersion?.allowReview !== false;
 
   const handleSubmit = async (force = false) => {
     if (!examVersion) return;
@@ -353,6 +460,7 @@ export default function TakeExam() {
           score: Math.round(finalScore * 10) / 10,
           correctAnswers: correctCount,
           totalQuestions: total,
+          timeSpent,
           answers: answers
         }),
       });
@@ -649,7 +757,7 @@ export default function TakeExam() {
                 </button>
               </>
             )}
-            {submissionResult && showReview && (
+            {submissionResult && showReview && allowReview && (
               <>
                 <button 
                   onClick={() => setShowReview(false)}
@@ -677,7 +785,7 @@ export default function TakeExam() {
         </div>
       </header>
 
-      {submissionResult && !showReview ? (
+      {submissionResult && (!showReview || !allowReview) ? (
         <div className="max-w-3xl mx-auto mt-12 px-4 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl p-8 md:p-12 shadow-2xl border border-slate-100 dark:border-cyan-950/30 text-center relative overflow-hidden">
              {/* Background shapes */}
@@ -735,13 +843,20 @@ export default function TakeExam() {
              </div>
 
              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative">
-               <button 
-                 onClick={() => setShowReview(true)}
-                 className="w-full sm:w-auto px-8 py-3.5 bg-white dark:bg-[#0A1F3E] border-2 border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 hover:border-slate-300 active:scale-95 transition-all flex items-center justify-center gap-2"
-               >
-                 <span className="material-symbols-outlined text-[20px]">fact_check</span>
-                 Xem chi tiết đáp án
-               </button>
+               {allowReview ? (
+                 <button 
+                   onClick={() => setShowReview(true)}
+                   className="w-full sm:w-auto px-8 py-3.5 bg-white dark:bg-[#0A1F3E] border-2 border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 hover:border-slate-300 active:scale-95 transition-all flex items-center justify-center gap-2"
+                 >
+                   <span className="material-symbols-outlined text-[20px]">fact_check</span>
+                   Xem chi tiết đáp án
+                 </button>
+               ) : (
+                 <div className="w-full sm:w-auto px-5 py-3 bg-amber-50 border border-amber-200 text-amber-700 font-bold rounded-xl text-sm flex items-center justify-center gap-2">
+                   <span className="material-symbols-outlined text-[20px]">lock</span>
+                   Giáo viên không cho phép xem chi tiết đáp án của bài thi này.
+                 </div>
+               )}
                <button 
                   onClick={() => {
                     if (classroomId) {
@@ -761,87 +876,17 @@ export default function TakeExam() {
       ) : (
         <div className="max-w-7xl mx-auto mt-8 px-4 flex flex-col lg:flex-row gap-8 items-start w-full">
           <div className="flex-1 min-w-0 space-y-8">
-          {examVersion.questions.map((q: any, idx: number) => {
-            const isCorrectAnswer = q.options.find((o: any) => o.isCorrect)?.id;
-            const studentAnswer = answers[q.id];
-            const isStudentCorrect = studentAnswer === isCorrectAnswer;
-
-            return (
-              <div key={q.id} id={`question-${q.id}`} className={`bg-white dark:bg-[#0A1F3E] rounded-2xl p-8 shadow-sm border space-y-6 ${submissionResult ? (isStudentCorrect ? 'border-green-200 shadow-green-100' : 'border-red-200 shadow-red-100') : 'border-slate-200'}`}>
-                <div className="flex items-start gap-4">
-                  <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${submissionResult ? (isStudentCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700') : 'bg-slate-100 text-slate-500'}`}>
-                    {idx + 1}
-                  </span>
-                  <div className="text-lg font-medium text-slate-800 leading-relaxed max-w-none">
-                    {renderContentWithImages(q.text)}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 pl-12">
-                  {q.options.map((opt: any) => {
-                    let optionClass = 'border-slate-100 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 hover:border-slate-200';
-                    let textClass = 'text-slate-600';
-                    let showIcon = null;
-
-                    if (submissionResult) {
-                      // Chế độ xem kết quả
-                      if (opt.isCorrect) {
-                        optionClass = 'border-green-500 bg-green-50 shadow-sm';
-                        textClass = 'text-green-700';
-                        showIcon = <span className="material-symbols-outlined text-green-600">check_circle</span>;
-                      } else if (answers[q.id] === opt.id && !opt.isCorrect) {
-                        optionClass = 'border-red-500 bg-red-50 shadow-sm';
-                        textClass = 'text-red-700';
-                        showIcon = <span className="material-symbols-outlined text-red-600">cancel</span>;
-                      } else {
-                        optionClass = 'border-slate-100 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 opacity-60';
-                      }
-                    } else {
-                      // Chế độ làm bài
-                      if (answers[q.id] === opt.id) {
-                        optionClass = 'border-[#00355f] bg-[#00355f]/10 dark:bg-[#00C6FF]/10 text-[#00355f] dark:text-[#00C6FF] shadow-sm';
-                        textClass = 'text-[#00355f] dark:text-[#00C6FF]';
-                      }
-                    }
-
-                    return (
-                      <label 
-                        key={opt.id} 
-                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${submissionResult ? 'cursor-default' : 'cursor-pointer'} ${optionClass}`}
-                      >
-                        <div className="flex items-center gap-4">
-                          {!submissionResult && (
-                            <input 
-                              type="radio" 
-                              name={q.id} 
-                              checked={answers[q.id] === opt.id}
-                              onChange={() => handleSelect(q.id, opt.id)}
-                              className="w-5 h-5 accent-[#00355f]" 
-                            />
-                          )}
-                           <div className={`text-base flex-1 min-w-0 ${textClass}`}>
-                            <ReactMarkdown 
-                               remarkPlugins={[remarkGfm, remarkMath]} 
-                               rehypePlugins={[rehypeKatex]}
-                               components={{ 
-                                 p: ({node, ...props}) => <span {...props} />,
-                                 table: ({node, ...props}) => <div className="overflow-x-auto my-1"><table className="border-collapse w-full text-sm text-center" {...props} /></div>,
-                                 th: ({node, ...props}) => <th className="border border-slate-300 bg-blue-50 px-2 py-1 text-center font-bold text-slate-700" {...props} />,
-                                 td: ({node, ...props}) => <td className="border border-slate-300 px-2 py-1 text-center text-slate-600" {...props} />
-                               }}
-                             >
-                               {preprocessMarkdownTables(opt.text)}
-                             </ReactMarkdown>
-                           </div>
-                        </div>
-                        {showIcon}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+          {examVersion.questions.map((q: any, idx: number) => (
+            <QuestionItem 
+              key={q.id}
+              q={q}
+              idx={idx}
+              studentAnswer={answers[q.id]}
+              submissionResult={submissionResult}
+              handleSelect={handleSelect}
+              renderContentWithImages={renderContentWithImages}
+            />
+          ))}
         </div>
 
         {/* Sơ đồ câu hỏi (Right Sidebar) */}

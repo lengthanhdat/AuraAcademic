@@ -35,6 +35,31 @@ export default function ExamResults() {
     }
   };
 
+  const getScore = (result: any) => {
+    const score = Number(result?.score);
+    if (!Number.isFinite(score)) return 0;
+    return Math.max(0, Math.min(10, score));
+  };
+
+  const formatSubmittedAt = (result: any) => {
+    const raw = result?.submittedAt ?? result?.submitted_at ?? result?.submitTime ?? result?.createdAt;
+    if (raw === null || raw === undefined || raw === "") return "";
+
+    const date = typeof raw === "number" || /^\d+$/.test(String(raw))
+      ? new Date(Number(raw))
+      : new Date(raw);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  };
+
+  const toCsvCell = (value: unknown) => {
+    const text = String(value ?? "");
+    return `"${text.replace(/"/g, '""')}"`;
+  };
+
   const exportCSV = () => {
     if (results.length === 0) return;
     const headers = ["Hạng", "Tên học sinh", "Mã học sinh", "Mã đề thi", "Số câu đúng", "Tổng câu", "Điểm số", "Thời gian nộp"];
@@ -45,10 +70,10 @@ export default function ExamResults() {
       r.versionCode,
       r.correctAnswers,
       r.totalQuestions,
-      r.score,
-      new Date(r.submittedAt).toLocaleString('vi-VN')
+      getScore(r).toFixed(1),
+      `\t${formatSubmittedAt(r)}`
     ]);
-    const csvContent = [headers, ...rows].map(row => row.map((v: any) => `"${v}"`).join(",")).join("\n");
+    const csvContent = [headers, ...rows].map(row => row.map(toCsvCell).join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -60,15 +85,21 @@ export default function ExamResults() {
 
   const totalStudents = results.length;
   const averageScore = totalStudents > 0 
-    ? (results.reduce((acc, curr) => acc + curr.score, 0) / totalStudents).toFixed(2) 
+    ? (results.reduce((acc, curr) => acc + getScore(curr), 0) / totalStudents).toFixed(1) 
     : 0;
   
-  const passedStudents = results.filter(r => r.score >= 5).length;
+  const passedStudents = results.filter(r => getScore(r) >= 5).length;
   const passedPercentage = totalStudents > 0 
     ? Math.round((passedStudents / totalStudents) * 100) 
     : 0;
 
-  const maxScore = totalStudents > 0 ? Math.max(...results.map(r => r.score)) : 0;
+  const maxScore = totalStudents > 0 ? Math.max(...results.map(getScore)) : 0;
+  const minScore = totalStudents > 0 ? Math.min(...results.map(getScore)) : 0;
+  const distribution = new Array(11).fill(0);
+  results.forEach((result) => {
+    distribution[Math.round(getScore(result))]++;
+  });
+  const maxBucket = Math.max(...distribution, 1);
 
   return (
     <main className="p-8 space-y-8 flex-1 bg-[#f8fafc]">
@@ -87,7 +118,7 @@ export default function ExamResults() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
             <span className="material-symbols-outlined text-3xl">groups</span>
@@ -127,9 +158,49 @@ export default function ExamResults() {
           </div>
           <div>
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Điểm cao nhất</p>
-            <p className="text-3xl font-black text-slate-800">{maxScore}</p>
+            <p className="text-3xl font-black text-slate-800">{maxScore.toFixed(1)}</p>
           </div>
         </div>
+
+        <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
+          <div className="w-14 h-14 rounded-xl bg-red-100 flex items-center justify-center text-red-600">
+            <span className="material-symbols-outlined text-3xl">south</span>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Điểm thấp nhất</p>
+            <p className="text-3xl font-black text-slate-800">{minScore.toFixed(1)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Score Distribution */}
+      <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-sm border border-slate-200 p-6">
+        <h3 className="text-lg font-bold text-slate-800 mb-5">Phân bố điểm</h3>
+        {results.length === 0 ? (
+          <div className="text-center text-slate-400 py-10 border border-dashed border-slate-200 rounded-2xl">
+            Chưa có dữ liệu để thống kê.
+          </div>
+        ) : (
+          <>
+            <div className="flex items-end gap-1.5 h-32">
+              {distribution.map((count, score) => (
+                <div key={score} className="flex-1 flex flex-col items-center justify-end gap-1 group/bar">
+                  <span className="text-[10px] font-bold text-slate-400">{count}</span>
+                  <div
+                    className="w-full rounded-t bg-gradient-to-t from-cyan-600/80 to-cyan-400/80 group-hover/bar:from-cyan-500 group-hover/bar:to-cyan-300 transition-all min-h-[4px]"
+                    style={{ height: `${(count / maxBucket) * 100}%` }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex mt-2">
+              {Array.from({ length: 11 }, (_, i) => (
+                <span key={i} className="flex-1 text-center text-[10px] font-bold text-slate-500">{i}</span>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500 text-center mt-2">Số học sinh theo từng mốc điểm 0-10</p>
+          </>
+        )}
       </div>
 
       {/* Table Section */}
@@ -142,7 +213,7 @@ export default function ExamResults() {
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-all shadow-sm"
             >
               <span className="material-symbols-outlined text-lg">download</span>
-              Xuat CSV
+              Xuất CSV
             </button>
           )}
         </div>
@@ -189,12 +260,12 @@ export default function ExamResults() {
                       <p className="font-semibold text-slate-700">{res.correctAnswers} / {res.totalQuestions}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`font-black text-lg ${res.score >= 8 ? 'text-green-600' : res.score >= 5 ? 'text-blue-600' : 'text-red-600'}`}>
-                        {res.score}
+                      <span className={`font-black text-lg ${getScore(res) >= 8 ? 'text-green-600' : getScore(res) >= 5 ? 'text-blue-600' : 'text-red-600'}`}>
+                        {getScore(res).toFixed(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
-                      {new Date(res.submittedAt).toLocaleString('vi-VN')}
+                      {formatSubmittedAt(res) || "--"}
                     </td>
                   </tr>
                 ))

@@ -42,7 +42,7 @@ function ExamBuilderContent() {
   const [difficulty, setDifficulty] = useState("MEDIUM");
   const [language, setLanguage] = useState("vi");
   const [generatingMode, setGeneratingMode] = useState<"file" | "prompt">("file");
-  const [aiSubMode, setAiSubMode] = useState<"file" | "prompt">("file");
+  const [aiSubMode, setAiSubMode] = useState<"file" | "prompt">("prompt");
   // -------------------------
   const [genLog, setGenLog] = useState(t('generating.log_start'));
   const [genProgress, setGenProgress] = useState(0);
@@ -749,6 +749,34 @@ function ExamBuilderContent() {
             {/* ── Sub-mode: FROM TOPIC ── */}
             {aiSubMode === "prompt" && (
               <div className="p-6 space-y-5">
+                {/* Hướng dẫn sử dụng */}
+                <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-900/40 rounded-2xl p-5 mb-2">
+                  <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 mb-3">
+                    <span className="material-symbols-outlined text-[20px]">lightbulb</span>
+                    Hướng dẫn chi tiết tạo đề bằng AI
+                  </h4>
+                  <div className="text-xs text-blue-900/80 dark:text-blue-300/80 space-y-3 font-medium leading-relaxed">
+                    <p>Để AI (Trí tuệ nhân tạo) hiểu rõ và tạo ra bộ câu hỏi chính xác nhất, Thầy/Cô vui lòng mô tả yêu cầu theo cấu trúc sau:</p>
+                    
+                    <div className="bg-white/60 dark:bg-black/20 rounded-xl p-4 border border-blue-100/50 dark:border-white/5 shadow-sm">
+                      <p className="font-bold text-blue-800 dark:text-blue-400 mb-1">Công thức viết yêu cầu chuẩn:</p>
+                      <p className="italic text-blue-700 dark:text-blue-300 mb-3 bg-blue-100/50 dark:bg-blue-900/40 py-1.5 px-3 rounded-lg">[Môn học] + [Lớp/Khối] + [Tên bài học/Chương cụ thể] + [Yêu cầu thêm nếu có]</p>
+                      
+                      <p className="font-bold text-blue-800 dark:text-blue-400 mb-1">Ví dụ minh họa dễ hiểu:</p>
+                      <ul className="list-disc list-outside ml-4 space-y-1.5 text-blue-800/90 dark:text-blue-300/90">
+                        <li><span className="font-semibold text-blue-600 dark:text-blue-400">Môn Lịch sử lớp 9</span>, <span className="font-semibold text-emerald-600 dark:text-emerald-400">bài Chiến tranh thế giới thứ 2</span>, <span className="font-semibold text-amber-600 dark:text-amber-400">tập trung vào nguyên nhân và kết quả.</span></li>
+                        <li><span className="font-semibold text-blue-600 dark:text-blue-400">Môn Toán lớp 12</span>, <span className="font-semibold text-emerald-600 dark:text-emerald-400">chương Tích phân bất định</span>, <span className="font-semibold text-amber-600 dark:text-amber-400">chỉ gồm các bài toán ở mức độ vận dụng.</span></li>
+                        <li><span className="font-semibold text-blue-600 dark:text-blue-400">Tiếng Anh lớp 6</span>, <span className="font-semibold text-emerald-600 dark:text-emerald-400">Unit 4: My Neighbourhood</span>, <span className="font-semibold text-amber-600 dark:text-amber-400">kiểm tra chủ yếu về từ vựng.</span></li>
+                      </ul>
+                    </div>
+                    
+                    <ul className="list-disc list-outside ml-4 space-y-1.5 pt-1">
+                      <li>Sau khi nhập mô tả, Thầy/Cô chọn <b>Độ khó</b>, <b>Ngôn ngữ</b> và nhập <b>Số câu</b> muốn tạo ở các ô phía dưới.</li>
+                      <li>Cuối cùng nhấn nút <b>Aura AI — Biên soạn đề thi ngay</b> và chờ hệ thống tạo đề.</li>
+                    </ul>
+                  </div>
+                </div>
+
                 {/* Chips */}
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -774,7 +802,7 @@ function ExamBuilderContent() {
                     value={topic}
                     onChange={e => setTopic(e.target.value)}
                     rows={3}
-                    placeholder="Ví dụ: Tạo 15 câu trắc nghiệm môn Toán lớp 12 chương tích phân bất định, tập trung vào kỹ thuật đổi biến..."
+                    placeholder="Ví dụ: Đề thi môn Toán lớp 12 chương tích phân bất định, tập trung vào kỹ thuật đổi biến..."
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 dark:border-cyan-950/40 rounded-2xl outline-none focus:border-violet-400 focus:bg-white dark:bg-[#0A1F3E] transition-all text-sm text-slate-700 dark:text-slate-300 resize-none leading-relaxed"
                   />
                 </div>

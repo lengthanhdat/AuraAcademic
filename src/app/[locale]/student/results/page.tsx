@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { API_BASE } from "@/lib/api";
+import { classroomApi } from "@/lib/classroomApi";
 
 type Result = {
   id: string;
@@ -12,6 +14,8 @@ type Result = {
   submittedAt: number;
   totalQuestions?: number;
   correctAnswers?: number;
+  classroomId?: string;
+  classroomName?: string;
 };
 
 export default function StudentResults() {
@@ -22,6 +26,7 @@ export default function StudentResults() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "score">("date");
   const [filter, setFilter] = useState<"all" | "pass" | "fail">("all");
+  const [scopeFilter, setScopeFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,16 +41,45 @@ export default function StudentResults() {
   const fetchResults = async (studentId: string) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/exams/results/student/${studentId}`, {
+      const examRes = await fetch(`${API_BASE}/exams/results/student/${studentId}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setResults(Array.isArray(data) ? data : []);
+
+      if (examRes.ok) {
+        const data = await examRes.json();
+        const examResults = Array.isArray(data) ? data : [];
+        const classroomMap = await buildClassroomExamMap();
+        setResults(examResults.map((result: Result) => ({
+          ...result,
+          ...classroomMap[result.examId],
+        })));
+      } else {
+        setResults([]);
       }
     } catch { /* ignore */ } finally {
       setLoading(false);
     }
+  };
+
+  const buildClassroomExamMap = async () => {
+    const map: Record<string, { classroomId: string; classroomName: string }> = {};
+    try {
+      const classrooms = await classroomApi.getStudentClassrooms();
+      await Promise.all(classrooms.map(async (cls: any) => {
+        try {
+          const details = await classroomApi.getClassroomDetails(cls.id);
+          (details.exams || []).forEach((exam: any) => {
+            if (exam.accessCode) {
+              map[exam.accessCode] = {
+                classroomId: cls.id,
+                classroomName: cls.name,
+              };
+            }
+          });
+        } catch {}
+      }));
+    } catch {}
+    return map;
   };
 
   const getRank = (score: number) => {
@@ -60,7 +94,12 @@ export default function StudentResults() {
     .filter(r => {
       const matchSearch = r.examTitle?.toLowerCase().includes(search.toLowerCase()) || r.versionCode?.toLowerCase().includes(search.toLowerCase());
       const matchFilter = filter === "all" || (filter === "pass" && r.score >= 5) || (filter === "fail" && r.score < 5);
-      return matchSearch && matchFilter;
+      const matchScope =
+        scopeFilter === "all" ||
+        (scopeFilter === "classroom" && !!r.classroomId) ||
+        (scopeFilter === "outside" && !r.classroomId) ||
+        r.classroomId === scopeFilter;
+      return matchSearch && matchFilter && matchScope;
     })
     .sort((a, b) => sortBy === "date" ? (b.submittedAt - a.submittedAt) : (b.score - a.score));
 
@@ -68,6 +107,13 @@ export default function StudentResults() {
   const avgScore = totalExams > 0 ? (results.reduce((s, r) => s + r.score, 0) / totalExams) : 0;
   const passRate = totalExams > 0 ? Math.round((results.filter(r => r.score >= 5).length / totalExams) * 100) : 0;
   const bestScore = totalExams > 0 ? Math.max(...results.map(r => r.score)) : 0;
+  const classroomOptions = Array.from(
+    new Map(
+      results
+        .filter(r => r.classroomId && r.classroomName)
+        .map(r => [r.classroomId, r.classroomName])
+    )
+  );
 
   return (
     <main className="flex-1 p-8 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -123,6 +169,18 @@ export default function StudentResults() {
             </button>
           ))}
           <select
+            value={scopeFilter}
+            onChange={e => setScopeFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] text-xs font-bold focus:outline-none focus:border-primary transition-colors"
+          >
+            <option value="all">Tất cả nguồn</option>
+            <option value="classroom">Trong lớp học</option>
+            <option value="outside">Ngoài lớp học</option>
+            {classroomOptions.map(([id, name]) => (
+              <option key={id} value={id}>{name}</option>
+            ))}
+          </select>
+          <select
             value={sortBy}
             onChange={e => setSortBy(e.target.value as "date" | "score")}
             className="px-3 py-2 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] text-xs font-bold focus:outline-none focus:border-primary transition-colors"
@@ -170,9 +228,19 @@ export default function StudentResults() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-on-surface dark:text-slate-200 truncate">{r.examTitle || `${t('room_prefix')} ${r.examId}`}</p>
-                      <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                        {t('version_prefix')} {r.versionCode} &nbsp;·&nbsp; {new Date(r.submittedAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap text-xs text-on-surface-variant dark:text-slate-400">
+                        <span>{t('version_prefix')} {r.versionCode}</span>
+                        <span>·</span>
+                        <span>{new Date(r.submittedAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                        {r.classroomName && (
+                          <>
+                            <span>·</span>
+                            <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-bold">
+                              Lớp: {r.classroomName}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase hidden sm:block ${rank.cls}`}>{rank.label}</span>
                     <div className="text-right flex-shrink-0">
@@ -195,6 +263,12 @@ export default function StudentResults() {
                       <div className="bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/40">
                         <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-1">{t('detail_time')}</p>
                         <p className="text-sm font-bold text-on-surface dark:text-slate-200">{new Date(r.submittedAt).toLocaleString("vi-VN")}</p>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/40 sm:col-span-3">
+                        <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-1">Nguồn bài thi</p>
+                        <p className="text-sm font-bold text-on-surface dark:text-slate-200">
+                          {r.classroomName ? `Lớp học: ${r.classroomName}` : "Bài thi ngoài lớp học"}
+                        </p>
                       </div>
                     </div>
                   )}

@@ -5,8 +5,10 @@ import { classroomApi } from "@/lib/classroomApi";
 import { BookOpen, LogIn, Users, Clock } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useLocale } from "next-intl";
 
 export default function StudentClassroomsPage() {
+  const locale = useLocale();
   const [classrooms, setClassrooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -95,7 +97,7 @@ export default function StudentClassroomsPage() {
             return (
               <Link
                 key={cls.id}
-                href={`/vi/student/classrooms/${cls.id}`}
+                href={`/${locale}/student/classrooms/${cls.id}`}
                 className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-500/50 dark:hover:border-cyan-500/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden"
               >
                 {/* Glow accent */}

@@ -8,6 +8,8 @@ type ExamConfigDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
   exam: any;
+  defaultClassroomId?: string;
+  lockClassroom?: boolean;
   onSuccess?: () => void;
 };
 
@@ -15,6 +17,8 @@ export default function ExamConfigDrawer({
   isOpen,
   onClose,
   exam,
+  defaultClassroomId,
+  lockClassroom = false,
   onSuccess,
 }: ExamConfigDrawerProps) {
   const router = useRouter();
@@ -23,6 +27,7 @@ export default function ExamConfigDrawer({
   const [versionCount, setVersionCount] = useState<number>(1);
   const [shuffle, setShuffle] = useState<boolean>(true);
   const [aiProctoring, setAiProctoring] = useState<boolean>(false);
+  const [allowReview, setAllowReview] = useState<boolean>(true);
   const [classroomId, setClassroomId] = useState<string>("");
   const [scheduledStartTime, setScheduledStartTime] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -33,6 +38,8 @@ export default function ExamConfigDrawer({
 
   useEffect(() => {
     if (isOpen) {
+      setAllowReview(exam?.allowReview ?? true);
+      setClassroomId(defaultClassroomId || "");
       // Fetch teacher classrooms
       setIsLoadingClassrooms(true);
       fetch("http://localhost:8088/api/classrooms/teacher", {
@@ -48,7 +55,7 @@ export default function ExamConfigDrawer({
         .catch(() => toast.error("Không thể tải danh sách lớp học"))
         .finally(() => setIsLoadingClassrooms(false));
     }
-  }, [isOpen]);
+  }, [isOpen, exam, defaultClassroomId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +68,7 @@ export default function ExamConfigDrawer({
         versionCount,
         shuffle,
         aiProctoring,
+        allowReview,
         classroomId: classroomId || null,
         scheduledStartTime: scheduledStartTime ? new Date(scheduledStartTime).getTime() : null,
       };
@@ -200,7 +208,7 @@ export default function ExamConfigDrawer({
                   <select
                     value={classroomId}
                     onChange={(e) => setClassroomId(e.target.value)}
-                    disabled={isLoadingClassrooms}
+                    disabled={isLoadingClassrooms || lockClassroom}
                     className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:bg-white dark:bg-[#0A1F3E] dark:border-cyan-950/40 focus:border-blue-200 outline-none transition-all font-semibold text-slate-700 dark:text-slate-300 disabled:opacity-50"
                   >
                     <option value="">-- Không giao lớp (Thi tự do) --</option>
@@ -248,6 +256,27 @@ export default function ExamConfigDrawer({
                     </div>
                     <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
                       Bật giám sát AI phát hiện chuyển tab hoặc rời camera trong quá trình thi.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 dark:bg-cyan-950/20 rounded-2xl border border-slate-200/50 dark:border-cyan-950/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-slate-400">fact_check</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Cho phép xem đáp án</span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={allowReview}
+                          onChange={(e) => setAllowReview(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-[#0A1F3E] after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                      </label>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
+                      Tắt tùy chọn này để học sinh chỉ xem điểm tổng quan sau khi nộp bài.
                     </p>
                   </div>
                 </div>

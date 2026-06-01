@@ -54,6 +54,7 @@ function ImportFormContent() {
   const [grade, setGrade] = useState("");
   const [subject, setSubject] = useState("");
   const [addToBank, setAddToBank] = useState(isBank || !!folderId);
+  const [allowReview, setAllowReview] = useState(true);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
@@ -195,6 +196,7 @@ function ImportFormContent() {
         subject: subject || null,
         isPractice: addToBank, // Thay vì isBank || folderId
         isBankItem: addToBank,
+        allowReview: addToBank ? true : allowReview,
       };
 
       const token = localStorage.getItem("accessToken");
@@ -556,6 +558,24 @@ function ImportFormContent() {
                 Đồng thời lưu đề thi này vào <span className="text-blue-600">Ngân hàng đề thi</span> (Công khai cho học sinh ôn tập)
               </label>
             </div>
+
+            {!addToBank && (
+              <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <input
+                  type="checkbox"
+                  id="allowReview"
+                  checked={allowReview}
+                  onChange={(e) => setAllowReview(e.target.checked)}
+                  className="mt-0.5 w-5 h-5 accent-blue-600 rounded cursor-pointer"
+                />
+                <label htmlFor="allowReview" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
+                  Cho phép học sinh xem đáp án sau khi nộp bài
+                  <span className="block text-xs font-medium text-slate-400 mt-1">
+                    Tắt tùy chọn này nếu bài thi chỉ nên hiển thị điểm tổng quan.
+                  </span>
+                </label>
+              </div>
+            )}
 
             {/* Summary */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-1 text-sm">

@@ -1,6 +1,7 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useLocale } from "next-intl";
 import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
@@ -63,6 +64,46 @@ export default function ExamBankPage() {
   const [searchTerm, setSearchTerm]           = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [showAllSubjects, setShowAllSubjects]  = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
+  const [user, setUser] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("user");
+        return stored ? JSON.parse(stored) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "user") {
+        try {
+          const stored = localStorage.getItem("user");
+          setUser(stored ? JSON.parse(stored) : null);
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    const handleUserUpdated = () => {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          setUser(JSON.parse(stored));
+        }
+      } catch {}
+    };
+    window.addEventListener("user-updated", handleUserUpdated);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("user-updated", handleUserUpdated);
+    }
+  }, []);
 
   const { data: exams = [], isLoading } = useSWR<any[]>(
     `${API_BASE}/exam-bank/public/exams`, authFetcher, { revalidateOnFocus: false }
@@ -80,9 +121,10 @@ export default function ExamBankPage() {
     exams.filter(e => {
       const matchSearch  = !searchTerm || e.title.toLowerCase().includes(searchTerm.toLowerCase());
       const matchSubject = !selectedSubject || e.subject === selectedSubject;
-      return matchSearch && matchSubject;
+      const matchFav = !showFavoritesOnly || user?.favoritePracticeIds?.includes(e.id);
+      return matchSearch && matchSubject && matchFav;
     }),
-    [exams, searchTerm, selectedSubject]
+    [exams, searchTerm, selectedSubject, showFavoritesOnly, user]
   );
 
   const trendingExams = useMemo(() =>
@@ -130,7 +172,35 @@ export default function ExamBankPage() {
     },
   ];
 
-  const clearFilters = () => { setSelectedSubject(null); setSearchTerm(""); };
+  const clearFilters = () => { setSelectedSubject(null); setSearchTerm(""); setShowFavoritesOnly(false); };
+
+  const handleToggleFavorite = async (e: React.MouseEvent, examId: string) => {
+    e.stopPropagation();
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_BASE}/users/me/favorite-practice/${examId}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+          "Content-Type": "application/json"
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const currentFavs = user.favoritePracticeIds || [];
+        const newFavs = data.isFavorite 
+          ? [...currentFavs, examId]
+          : currentFavs.filter((id: string) => id !== examId);
+        
+        const updatedUser = { ...user, favoritePracticeIds: newFavs };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        window.dispatchEvent(new Event("user-updated"));
+      }
+    } catch (err) {
+      console.error("Lỗi khi cập nhật yêu thích:", err);
+    }
+  };
 
   return (
     <div className="max-w-[1400px] mx-auto w-full px-4 md:px-8 py-8 space-y-6">
@@ -139,8 +209,17 @@ export default function ExamBankPage() {
       <section className="bg-gradient-to-br from-[#0C2E5E] via-[#14508F] to-[#00A6D6] p-6 sm:p-8 rounded-3xl shadow-lg text-white">
         <div className="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-end">
           <div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20 mb-5">
-              <span className="material-symbols-outlined text-3xl text-white">library_books</span>
+            <div className="flex items-center gap-4 mb-5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
+                <span className="material-symbols-outlined text-3xl text-white">library_books</span>
+              </div>
+              <Link
+                href={`/${locale}/student/exam-bank/results`}
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl text-white font-bold backdrop-blur-sm ring-1 ring-white/30 w-fit"
+              >
+                <span className="material-symbols-outlined text-[20px]">query_stats</span>
+                Lịch sử làm bài
+              </Link>
             </div>
             <h1 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight mb-3">
               Ngân hàng Đề thi
@@ -186,7 +265,7 @@ export default function ExamBankPage() {
 
       {/* ─── Search Bar ─────────────────────────────────────── */}
       <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-cyan-950/40 dark:bg-[#0A1F3E]/70">
-        <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto] lg:items-center">
+        <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto_auto] lg:items-center">
           <div className="relative">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
             <input
@@ -206,6 +285,13 @@ export default function ExamBankPage() {
               </button>
             )}
           </div>
+          <button 
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            className={`flex h-12 items-center justify-center gap-2 px-4 rounded-xl lg:min-w-[140px] font-bold transition-all border ${showFavoritesOnly ? "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-[#071A33] dark:text-slate-400 dark:border-cyan-950/40"}`}
+          >
+             <span className={`material-symbols-outlined text-lg ${showFavoritesOnly ? "font-variation-fill text-rose-500" : ""}`}>favorite</span>
+             Đề yêu thích
+          </button>
           <div className="flex h-12 items-center justify-center gap-2 px-4 bg-[#0C2E5E] text-white rounded-xl lg:min-w-[124px]">
             <span className="material-symbols-outlined text-white/80 text-lg">quiz</span>
             <span className="text-sm font-extrabold">
@@ -436,8 +522,18 @@ export default function ExamBankPage() {
                   <div
                     key={exam.id}
                     onClick={() => router.push(`/${locale}/student/exam-bank/${exam.id}`)}
-                    className="group flex gap-4 p-4 bg-white dark:bg-[#0A1F3E]/80 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900/50 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                    className="group relative flex gap-4 p-4 bg-white dark:bg-[#0A1F3E]/80 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900/50 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer pr-12"
                   >
+                    <button
+                      onClick={(e) => handleToggleFavorite(e, exam.id)}
+                      className={`absolute right-4 top-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10 
+                        ${user?.favoritePracticeIds?.includes(exam.id) 
+                          ? "bg-rose-50 text-rose-500 dark:bg-rose-900/30" 
+                          : "text-slate-300 hover:bg-slate-100 hover:text-rose-400 dark:text-slate-600 dark:hover:bg-cyan-950/40"}`}
+                      title={user?.favoritePracticeIds?.includes(exam.id) ? "Bỏ yêu thích" : "Yêu thích"}
+                    >
+                      <span className={`material-symbols-outlined text-xl ${user?.favoritePracticeIds?.includes(exam.id) ? "font-variation-fill" : ""}`}>favorite</span>
+                    </button>
                     {/* Gradient thumbnail */}
                     <div className={`w-[68px] h-[68px] rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shrink-0 shadow group-hover:scale-105 transition-transform duration-200`}>
                       <span className="material-symbols-outlined text-white text-2xl">
