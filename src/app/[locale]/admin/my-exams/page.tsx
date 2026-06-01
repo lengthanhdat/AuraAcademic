@@ -367,8 +367,7 @@ function ExamBuilderContent() {
         options: (q.options || []).map((o: any) => ({
           id: o.id || o.label?.toLowerCase() || String(i),
           text: o.text || o.content || "",
-          // Jackson serialize isCorrect() getter thành "correct" trong JSON (bỏ prefix "is")
-          isCorrect: o.isCorrect ?? o.correct ?? false
+          isCorrect: false
         }))
       }));
 
@@ -629,12 +628,57 @@ function ExamBuilderContent() {
 
           </div>
           <div className="flex flex-col gap-2 items-end">
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#4c2b00] text-[#FFD700] rounded-full text-xs font-bold shadow-sm border border-[#FFD700]/20">
-              <span className="material-symbols-outlined text-[16px] animate-pulse">auto_awesome</span>
-              AI đang hoạt động
-            </div>
+            {creationMode === "ai" && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-[#4c2b00] text-[#FFD700] rounded-full text-xs font-bold shadow-sm border border-[#FFD700]/20">
+                <span className="material-symbols-outlined text-[16px] animate-pulse">auto_awesome</span>
+                AI đang hoạt động
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Warning / Guide Banner */}
+        {creationMode === "ai" && (
+          <div className="bg-gradient-to-r from-amber-50/80 to-orange-50/80 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200/60 dark:border-amber-900/30 rounded-2xl p-4 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[22px] animate-pulse">warning</span>
+            </div>
+            <div className="flex-1 py-0.5">
+              <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300">{t('warning.title')}</h4>
+              <p className="text-xs text-amber-800/90 dark:text-amber-400/90 mt-0.5 leading-relaxed font-semibold">
+                {t('warning.text')}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {creationMode === "import" && (
+          <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200/60 dark:border-blue-900/30 rounded-2xl p-4 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[22px] animate-pulse">info</span>
+            </div>
+            <div className="flex-1 py-0.5">
+              <h4 className="text-sm font-bold text-blue-900 dark:text-blue-300">Hướng dẫn nhập câu hỏi từ file</h4>
+              <p className="text-xs text-blue-800/90 dark:text-blue-400/90 mt-0.5 leading-relaxed font-semibold">
+                Hệ thống tự động tách câu hỏi dựa trên cấu trúc văn bản (Ví dụ: "Câu 1:", "A. B. C. D."). Vui lòng kiểm tra lại nội dung câu hỏi sau khi trích xuất và tự chọn đáp án đúng cho từng câu hỏi trước khi lưu đề thi.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {creationMode === "manual" && (
+          <div className="bg-gradient-to-r from-green-50/80 to-emerald-50/80 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200/60 dark:border-green-900/30 rounded-2xl p-4 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[22px] animate-pulse">edit_note</span>
+            </div>
+            <div className="flex-1 py-0.5">
+              <h4 className="text-sm font-bold text-green-900 dark:text-green-300">Chế độ biên soạn thủ công</h4>
+              <p className="text-xs text-green-800/90 dark:text-green-400/90 mt-0.5 leading-relaxed font-semibold">
+                Bạn đang tự tay soạn thảo đề thi. Hãy nhập nội dung câu hỏi, điền các phương án lựa chọn và đánh dấu đáp án đúng cho từng câu hỏi để hoàn tất.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Unified AI Area */}
         {creationMode === "ai" && step === "upload" && (

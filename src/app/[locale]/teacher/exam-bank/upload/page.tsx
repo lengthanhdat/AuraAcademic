@@ -87,7 +87,7 @@ export default function ExamBankUploadPage() {
         options: q.options.map((o: any) => ({
           id: o.id,
           text: o.text,
-          isCorrect: o.isCorrect,
+          isCorrect: false,
         })),
       }));
 

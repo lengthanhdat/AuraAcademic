@@ -95,7 +95,13 @@ function ImportFormContent() {
         setUploadError(data.error || "Lỗi khi xử lý file");
         return;
       }
-      const qs: ParsedQuestion[] = data.questions || [];
+      const qs: ParsedQuestion[] = (data.questions || []).map((q: ParsedQuestion) => ({
+        ...q,
+        options: (q.options || []).map((o) => ({
+          ...o,
+          isCorrect: false
+        }))
+      }));
       setQuestions(qs);
       // Mặc định chọn tất cả
       setSelected(new Set(qs.map((q) => q.id)));
@@ -296,7 +302,7 @@ function ImportFormContent() {
               Câu 1: Nội dung câu hỏi...<br/>
               A. Đáp án A&nbsp;&nbsp;B. Đáp án B&nbsp;&nbsp;C. Đáp án C&nbsp;&nbsp;D. Đáp án D<br/>
               <br/>
-              Giáo viên có thể tô đậm đáp án đúng trong DOCX hoặc thêm dấu * cuối đáp án đúng.
+              Hệ thống sẽ tự động tách các câu hỏi và đáp án từ tệp tải lên. Vui lòng tự tay chọn đáp án chính xác cho từng câu hỏi ở giao diện tiếp theo.
             </p>
           </div>
 

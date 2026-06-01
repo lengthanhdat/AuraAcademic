@@ -41,7 +41,7 @@
       "manage_classes": "Manage Class List"
     },
     "table": {
-      "title": "My Assessments",
+      "title": "Exam Session Management",
       "subtitle": "List of recently assigned assessments",
       "col_name": "ASSESSMENT NAME",
       "col_time": "TIME",

@@ -164,7 +164,7 @@ export default function TeacherExamTemplatesPage() {
               Kho đề của tôi
             </h2>
             <p className="text-white/80 max-w-lg leading-relaxed">
-              Lưu trữ các đề mẫu của bạn từ thiết kế. Nhấn nút &quot;Giao bài&quot; để cấu hình, nhân bản và giao bài kiểm tra cho các lớp học.
+              Lưu trữ các đề mẫu của bạn từ thiết kế. Nhấn nút &quot;Sử dụng&quot; để cấu hình, nhân bản và giao bài kiểm tra cho các lớp học.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0 relative z-10">
@@ -346,14 +346,14 @@ export default function TeacherExamTemplatesPage() {
                           )}
                         </td>
                         <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end gap-1.5 transition-opacity">
                             <button
                               onClick={() => setSelectedExamForConfig(exam)}
-                              title="Cấu hình & Giao bài"
+                              title="Cấu hình & Sử dụng"
                               className="px-3 py-1.5 bg-[#0C2E5E] text-white hover:bg-[#0E3E7A] text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm transition-all"
                             >
                               <span className="material-symbols-outlined text-sm">send</span>
-                              Giao bài
+                              Sử dụng
                             </button>
                             <button
                               onClick={() => router.push(`/${locale}/teacher/exams?edit=${exam.id}`)}
@@ -431,13 +431,13 @@ export default function TeacherExamTemplatesPage() {
                     </h3>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 shrink-0 transition-opacity">
                     <button
                       onClick={() => setSelectedExamForConfig(exam)}
                       className="px-3 py-1.5 bg-[#0C2E5E] text-white hover:bg-[#0E3E7A] text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm transition-all"
                     >
                       <span className="material-symbols-outlined text-sm">send</span>
-                      Giao bài
+                      Sử dụng
                     </button>
                     <button
                       onClick={() => router.push(`/${locale}/teacher/exams?edit=${exam.id}`)}

@@ -52,6 +52,7 @@ export default function StudentLayout({
       <AuthGuard allowedRoles={["student"]}>
         <div className="w-full min-h-screen bg-[#f8fafc] dark:bg-[#051329] transition-colors duration-300">
           {children}
+          <KatexStyles />
         </div>
       </AuthGuard>
     );

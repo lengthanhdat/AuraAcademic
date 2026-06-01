@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { useRouter } from "@/navigation";
 
@@ -26,6 +27,9 @@ export default function ExamConfigDrawer({
   const [scheduledStartTime, setScheduledStartTime] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoadingClassrooms, setIsLoadingClassrooms] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (isOpen) {
@@ -90,11 +94,11 @@ export default function ExamConfigDrawer({
     }
   };
 
-  if (!isOpen || !exam) return null;
+  if (!mounted || !isOpen || !exam) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 overflow-hidden"
+      className="fixed inset-0 z-[9999] overflow-hidden"
       aria-labelledby="slide-over-title"
       role="dialog"
       aria-modal="true"
@@ -277,6 +281,7 @@ export default function ExamConfigDrawer({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -108,7 +108,7 @@ function normalizeQuestions(rawQuestions: ParsedQuestion[]): BankQuestion[] {
         id: option.id || label.toLowerCase(),
         label,
         text: (option.text || option.content || "").replace(/^\*\s*/, "").replace(/^[(\[]?[x✓✔]\s*[\])\-.]\s*/i, ""),
-        isCorrect: optionIndex === correctIndex,
+        isCorrect: false,
       };
       }),
     };

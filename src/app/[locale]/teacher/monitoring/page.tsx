@@ -26,8 +26,8 @@ export default function MonitoringPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        // Lọc các kỳ thi đang diễn ra (PUBLISHED hoặc STARTED)
-        const live = data.filter((e: any) => e.status === "PUBLISHED" || e.status === "STARTED");
+        // Lọc các kỳ thi đang diễn ra (PUBLISHED, STARTED hoặc WAITING)
+        const live = data.filter((e: any) => e.status === "PUBLISHED" || e.status === "STARTED" || e.status === "WAITING");
         setExams(live);
       }
     } catch (e) {

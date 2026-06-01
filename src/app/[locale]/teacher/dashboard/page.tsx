@@ -283,7 +283,7 @@ export default function TeacherDashboard() {
                 <span className="text-xs font-extrabold px-2.5 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full">{t('stats.live_now')}</span>
               </div>
               <div
-                onClick={() => router.push("/teacher/monitoring")}
+                onClick={() => router.push("/teacher/my-exams")}
                 className="mt-6 flex items-center gap-2 text-[#0C2E5E] dark:text-[#E2E8F0] hover:text-[#00C6FF] text-sm font-bold cursor-pointer hover:underline transition-colors duration-200"
               >
                 <span>{t('stats.details')}</span>
