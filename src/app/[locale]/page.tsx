@@ -58,30 +58,7 @@ function PillButton({ children, href = "/login" }: { children: ReactNode; href?:
   );
 }
 
-function Navbar() {
-  return (
-    <nav className="fixed top-6 left-4 right-4 z-50">
-      <div className="max-w-7xl mx-auto bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_32px_rgba(12,46,94,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-full px-6 sm:px-8 py-3 flex items-center justify-between transition-all duration-300 hover:shadow-[0_12px_40px_rgba(12,46,94,0.12)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
-        <a href="#" className="flex items-center gap-1 group">
-          <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-9 sm:h-11 object-contain group-hover:scale-105 transition-transform duration-300 dark:hidden" />
-          <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className="h-9 sm:h-11 object-contain group-hover:scale-105 transition-transform duration-300 hidden dark:block" />
-        </a>
-
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <div className="flex items-center gap-2.5">
-            <a href="/login" className="text-[#0C2E5E]/85 dark:text-slate-350 hover:text-[#00C6FF] dark:hover:text-white text-xs sm:text-sm font-extrabold px-4 sm:px-5 py-2.5 rounded-full transition-all duration-300">
-              Đăng nhập
-            </a>
-            <a href="/register" className="bg-gradient-to-r from-[#0C2E5E] via-[#0E3E7A] to-[#00C6FF] text-white text-xs sm:text-sm font-extrabold px-5 sm:px-6 py-2.5 rounded-full hover:shadow-lg hover:shadow-[#00C6FF]/35 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-[0_4px_15px_rgba(0,198,255,0.2)]">
-              Đăng ký ngay
-            </a>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
+import { Navbar } from "@/components/layout/Navbar";
 
 function HeroMarquee() {
   return (
@@ -452,6 +429,8 @@ function UseCasesSection() {
   );
 }
 
+import { Footer } from "@/components/layout/Footer";
+
 export default function Home() {
   return (
     <main className="flex flex-col bg-[#F8FAFC] dark:bg-[#030712] transition-colors duration-500">
@@ -461,7 +440,79 @@ export default function Home() {
       </div>
       <InfoSection />
       <BackedBySection />
+      <FeaturesSection />
       <UseCasesSection />
+      <Footer />
     </main>
+  );
+}
+
+function FeaturesSection() {
+  const features = [
+    {
+      title: "Ngân Hàng Đề Thi Thông Minh",
+      description: "Quản lý hệ thống câu hỏi đa dạng với khả năng phân loại theo mức độ khó, chủ đề. Hỗ trợ tạo đề tự động và import nhanh từ định dạng Word/PDF.",
+      image: "/feature_1.png",
+      reverse: false
+    },
+    {
+      title: "Giám Sát AI Thời Gian Thực",
+      description: "Tích hợp công nghệ nhận diện khuôn mặt và hành vi tiên tiến. Tự động cảnh báo các dấu hiệu bất thường như rời khỏi khung hình, người lạ xuất hiện hoặc âm thanh đáng ngờ.",
+      image: "/feature_2.png",
+      reverse: true
+    },
+    {
+      title: "Phân Tích Phổ Điểm Chuyên Sâu",
+      description: "Hệ thống chấm điểm tự động tức thì. Báo cáo kết quả bằng biểu đồ trực quan, phân tích chi tiết độ phân hóa của câu hỏi giúp giáo viên tối ưu hóa kỳ thi.",
+      image: "/feature_3.png",
+      reverse: false
+    }
+  ];
+
+  return (
+    <section className="py-24 lg:py-32 bg-white dark:bg-[#020b18] transition-colors duration-500 border-t border-slate-100 dark:border-white/5 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-cyan-400/5 dark:bg-cyan-500/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-blue-600/5 dark:bg-blue-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+        <ScrollReveal variant="fade-up" className="text-center max-w-3xl mx-auto mb-20 lg:mb-28">
+          <h2 className="text-[#0C2E5E] dark:text-white text-4xl md:text-5xl lg:text-6xl font-black mb-6 tracking-tight leading-tight">
+            Nền Tảng <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0072FF]">Toàn Diện</span>
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 text-lg md:text-xl font-medium leading-relaxed">
+            Hàng loạt tính năng nổi bật giúp tối ưu hóa quy trình từ khâu chuẩn bị đến khi kết thúc bài thi.
+          </p>
+        </ScrollReveal>
+
+        <div className="space-y-24 lg:space-y-36">
+          {features.map((feature, idx) => (
+            <div key={idx} className={`flex flex-col ${feature.reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12 lg:gap-20`}>
+              <ScrollReveal variant={feature.reverse ? "fade-left" : "fade-right"} className="w-full lg:w-1/2">
+                <div className="relative group">
+                  <div className="absolute -inset-4 bg-gradient-to-tr from-[#00C6FF]/20 to-[#0C2E5E]/10 dark:from-[#00C6FF]/10 dark:to-emerald-400/10 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                  <div className="relative rounded-3xl overflow-hidden border border-slate-200/50 dark:border-white/10 shadow-2xl shadow-slate-200/50 dark:shadow-none bg-slate-50 dark:bg-slate-900 aspect-[16/10] flex items-center justify-center group-hover:-translate-y-2 transition-transform duration-500">
+                    <img src={feature.image} alt={feature.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  </div>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal variant={feature.reverse ? "fade-right" : "fade-left"} className="w-full lg:w-1/2">
+                <div className="max-w-xl">
+                  <div className="w-12 h-12 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center mb-6 text-[#00C6FF] border border-cyan-100 dark:border-cyan-500/20 shadow-sm">
+                    <span className="text-xl font-bold tracking-tighter">0{idx + 1}</span>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-extrabold text-[#0C2E5E] dark:text-white mb-6 leading-tight tracking-tight">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-350 text-lg leading-relaxed font-medium">
+                    {feature.description}
+                  </p>
+                </div>
+              </ScrollReveal>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

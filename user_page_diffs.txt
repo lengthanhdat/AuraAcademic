@@ -1,0 +1,718 @@
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -112,7 +112,7 @@
+   return (
+     <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_20%,rgba(0,198,255,0.22),transparent_38%),radial-gradient(circle_at_50%_80%,rgba(220,168,55,0.08),transparent_45%),linear-gradient(135deg,#f0f8ff_0%,#ffffff_40%,#e6eff8_100%)] dark:bg-[radial-gradient(circle_at_85%_20%,rgba(0,198,255,0.15),transparent_40%),radial-gradient(circle_at_50%_80%,rgba(12,46,94,0.3),transparent_50%),linear-gradient(135deg,#030712_0%,#080f1c_40%,#02060f_100%)] overflow-hidden transition-all duration-500">
+       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(12,46,94,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(12,46,94,0.04)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4.5rem_4.5rem]" />
+-      
++
+       {/* Brand Glowing Orbs in Bg */}
+       <div className="absolute -right-20 top-20 w-96 h-96 bg-[#00C6FF]/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen animate-pulse" />
+       <div className="absolute right-1/4 top-1/3 w-80 h-80 bg-[#DCA837]/10 dark:bg-[#DCA837]/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen animation-delay-2000" />
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -159,7 +159,7 @@
+       `}</style>
+       <div className="relative w-full rounded-[3rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(12,46,94,0.15)] dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] border border-white/30 dark:border-white/10 flex flex-col lg:flex-row flex-1">
+         <HeroVisual />
+-        
++
+         {/* Left Column: Text content */}
+         <div className="relative z-10 flex flex-col items-start justify-center p-8 md:p-12 lg:p-16 w-full lg:w-1/2">
+           <ScrollReveal variant="fade-up" delay={50}>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -184,7 +184,7 @@
+ 
+           <ScrollReveal variant="fade-up" delay={500}>
+             <div className="flex flex-wrap gap-4">
+-               <PillButton href="/login">Khám phá ngay</PillButton>
++              <PillButton href="/login">Khám phá ngay</PillButton>
+             </div>
+           </ScrollReveal>
+ 
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -240,7 +240,7 @@
+           <ScrollReveal variant="fade-up" delay={100}>
+             <div>
+               <h2 className="text-[#0C2E5E] dark:text-white text-4xl md:text-6xl font-black leading-tight mb-8 tracking-tight">
+-                Kiến tạo hệ sinh thái<br/>
++                Kiến tạo hệ sinh thái<br />
+                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E]">AuraAcademic.</span>
+               </h2>
+               <PillButton href="/register">Gia nhập ngay</PillButton>
+@@ -247,7 +247,7 @@
+           </ScrollReveal>
+           <ScrollReveal variant="fade-up" delay={250}>
+             <p className="text-slate-600 dark:text-slate-300 text-xl md:text-2xl leading-relaxed font-medium border-l-4 border-[#00C6FF] pl-8 py-2">
+-              Sự giao thoa đỉnh cao giữa tri thức truyền thống và công nghệ giám sát AI tự động, tối ưu hóa quy trình từ tạo ngân hàng câu hỏi đến thống kê vi phạm.
++              Sự giao thoa giữa tri thức truyền thống và công nghệ giám sát AI tự động, tối ưu hóa quy trình từ tạo ngân hàng câu hỏi đến thống kê vi phạm.
+             </p>
+           </ScrollReveal>
+         </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -317,7 +317,7 @@
+                 </div>
+                 <div>
+                   <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
+-                    Proctoring AI<br />Đỉnh Cao
++                    Proctoring AI<br />
+                   </h3>
+                   <p className="text-white/70 text-base font-medium leading-relaxed">
+                     Nhận diện đa nhân diện, phát hiện đổi người, rời khỏi camera hoặc có tạp âm lạ chính xác tuyệt đối.
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -418,31 +418,31 @@
+                 border-color: rgba(0, 198, 255, 0.3);
+               }
+             `}</style>
+-            
++
+             <div className="w-full h-full rounded-[3.5rem] overflow-hidden showcase-3d relative bg-[radial-gradient(circle_at_60%_10%,rgba(255,255,255,0.95),transparent_25%),linear-gradient(145deg,#eaf6ff_0%,#ffffff_45%,#cbe5f9_100%)] dark:bg-[radial-gradient(circle_at_60%_10%,rgba(15,23,42,0.95),transparent_25%),linear-gradient(145deg,#030712_0%,#0f172a_45%,#0b1528_100%)] border border-white/70 dark:border-white/10">
+               <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,198,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,198,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+-              
++
+               <div className="absolute inset-8 lg:inset-12 glass-panel-3d bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl rounded-[3rem] shadow-[0_30px_80px_rgba(12,46,94,0.1)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.5)] flex flex-col justify-between p-10 md:p-14">
+-                 <div>
+-                   <div className="w-16 h-16 bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] rounded-3xl flex items-center justify-center mb-10 shadow-xl shadow-[#00C6FF]/30 dark:shadow-[#00C6FF]/15">
+-                     <ShieldCheck className="w-8 h-8 text-white" />
+-                   </div>
+-                   <h3 className="text-4xl md:text-6xl font-black leading-tight mb-6 tracking-tight text-[#0C2E5E] dark:text-white">
+-                     Trung Tâm<br/>Theo Dõi
+-                   </h3>
+-                   <p className="text-slate-600 dark:text-slate-350 text-lg font-medium leading-relaxed max-w-md">
+-                     Bảng điều khiển giám sát trung tâm giúp quản trị viên phát hiện sự cố và duy trì 
+<truncated 902 bytes>
+iv>
+-                   ))}
+-                 </div>
++                <div>
++                  <div className="w-16 h-16 bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] rounded-3xl flex items-center justify-center mb-10 shadow-xl shadow-[#00C6FF]/30 dark:shadow-[#00C6FF]/15">
++                    <ShieldCheck className="w-8 h-8 text-white" />
++                  </div>
++                  <h3 className="text-4xl md:text-6xl font-black leading-tight mb-6 tracking-tight text-[#0C2E5E] dark:text-white">
++                    Trung Tâm<br />Theo Dõi
++                  </h3>
++                  <p className="text-slate-600 dark:text-slate-350 text-lg font-medium leading-relaxed max-w-md">
++                    Bảng điều khiển giám sát trung tâm giúp quản trị viên phát hiện sự cố và duy trì tính chính trực của bài thi.
++                  </p>
++                </div>
++
++                <div className="grid grid-cols-3 gap-5 floating-stats-3d">
++                  {["Chờ thi", "Đang làm", "Đã nộp"].map((label, index) => (
++                    <div key={label} className="stat-card-3d rounded-2xl bg-white dark:bg-slate-900/65 shadow-[0_20px_50px_-10px_rgba(12,46,94,0.08)] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.4)] p-6 border border-slate-100 dark:border-white/10 flex flex-col items-center text-center">
++                      <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] mb-2">{[24, 18, 42][index]}</p>
++                      <p className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</p>
++                    </div>
++                  ))}
++                </div>
+               </div>
+             </div>
+           </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -471,7 +471,7 @@
+ 
+   return (
+     <footer className="relative bg-white dark:bg-[#030712] border-t border-slate-200/60 dark:border-white/5 pt-20 pb-10 overflow-hidden transition-colors duration-500">
+-      
++
+       {/* Light decorative blobs */}
+       <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-[#00C6FF]/[0.03] dark:bg-[#00C6FF]/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+       <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-[#0C2E5E]/[0.02] dark:bg-[#DCA837]/5 rounded-full blur-[80px] -z-10 pointer-events-none" />
+@@ -478,5 +478,5 @@
+       <div className="max-w-7xl mx-auto px-6 relative z-10">
+-        
++
+         {/* Top CTA Section - Light Theme */}
+         <div className="flex flex-col md:flex-row items-center justify-between gap-8 pb-12 border-b border-slate-200 dark:border-white/10 mb-16">
+           <div className="max-w-xl">
+@@ -483,4 +483,4 @@
+-              Sẵn sàng số hóa <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E] dark:to-[#DCA837]">thi cử?</span>
++              Bạn đã sẵn sàng trải nghiệm? <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E] dark:to-[#DCA837]"></span>
+             </h2>
+             <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">
+               Khởi tạo nền tảng giáo dục AI của riêng bạn ngay hôm nay.
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -500,7 +500,7 @@
+ 
+         {/* Main Grid */}
+         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8 mb-16">
+-          
++
+           {/* Brand Col */}
+           <div className="md:col-span-12 lg:col-span-4 flex flex-col">
+             <a href="#" className="flex items-center gap-2 mb-6 group inline-block">
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -548,7 +548,7 @@
+                 ))}
+               </ul>
+             </div>
+-            
++
+             <div className="flex flex-col">
+               <h4 className="text-[#0C2E5E] dark:text-white font-black text-sm uppercase tracking-widest mb-6 relative inline-block">
+                 {t('footer.resources.title')}
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -578,13 +578,13 @@
+               <span className="absolute -bottom-2 left-0 w-8 h-[3px] bg-[#00C6FF] rounded-full"></span>
+             </h4>
+             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 font-medium">Đăng ký email để nhận những bản cập nhật AI mới nhất.</p>
+-            
++
+             <div className="relative group mb-8">
+               <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E] dark:to-[#DCA837] rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+               <div className="relative flex items-center bg-white dark:bg-[#02050A] rounded-xl border border-slate-200 dark:border-white/10 p-1 shadow-sm">
+-                <input 
+-                  type="email" 
+-                  placeholder="Địa chỉ Email..." 
++                <input
++                  type="email"
++                  placeholder="Địa chỉ Email..."
+                   className="bg-transparent border-none outline-none text-slate-700 dark:text-white text-sm px-4 py-2 w-full placeholder:text-slate-400"
+                 />
+                 <button className="bg-[#0C2E5E] hover:bg-[#00C6FF] dark:bg-white/10 dark:hover:bg-white/20 text-white p-2 rounded-lg transition-colors">
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -618,7 +618,7 @@
+     {
+       title: "Khởi tạo đề thi thông minh với AI",
+       subtitle: "AI Exam Builder",
+-      description: "Chỉ cần tải lên tài liệu PDF hoặc nhập chủ đề bài giảng, AI của Aura Academic sẽ tự động trích xuất kiến thức và sinh ra hàng chục câu hỏi trắc nghiệm kèm đáp án chỉ trong vài giây. Tiết kiệm 90% thời gian soạn đề của giáo viên.",
++      description: "Chỉ cần tải lên tài liệu PDF hoặc nhập chủ đề bài giảng, AI của Aura Academic sẽ tự động trích xuất kiến thức và sinh ra hàng chục câu hỏi trắc nghiệm kèm đáp án. Tiết kiệm 90% thời gian soạn đề của giáo viên.",
+       image: "/feature_1.png",
+       reversed: false
+     },
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -635,7 +635,7 @@
+     <section className="bg-white dark:bg-[#030712] py-32 border-y border-slate-200/50 dark:border-white/5 transition-colors duration-500 overflow-hidden relative">
+       <div className="absolute top-1/4 right-0 w-[50rem] h-[50rem] bg-[#00C6FF]/5 rounded-full blur-[100px] pointer-events-none" />
+       <div className="absolute bottom-1/4 left-0 w-[50rem] h-[50rem] bg-[#DCA837]/5 rounded-full blur-[100px] pointer-events-none" />
+-      
++
+       <div className="max-w-7xl mx-auto px-6 relative z-10">
+         <ScrollReveal variant="fade-up">
+           <div className="text-center mb-24">
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -654,7 +654,7 @@
+                   <img src={feat.image} alt={feat.title} className="relative w-full aspect-[4/3] object-cover rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-white/10" />
+                 </div>
+               </ScrollReveal>
+-              
++
+               <ScrollReveal variant={feat.reversed ? 'fade-right' : 'fade-left'} delay={250} className="w-full lg:w-1/2">
+                 <div className="pl-0 lg:pl-8">
+                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00C6FF]/10 text-[#00C6FF] font-bold text-sm mb-6 border border-[#00C6FF]/20">
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+ import type { CSSProperties, ReactNode } from "react";
+-import { ArrowRight, BookOpenCheck, Camera, FileText, ShieldCheck } from "lucide-react";
++import { ArrowRight, BookOpenCheck, Camera, FileText, Github, HeartHandshake, ShieldCheck } from "lucide-react";
+ import { ScrollReveal } from "@/components/ui/ScrollReveal";
+ import { ThemeToggle } from "@/components/ui/ThemeToggle";
+ 
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -17,31 +17,31 @@
+ };
+ 
+ const heroBrands: LogoWordmark[] = [
+-  { name: "AI Proctoring", style: { fontFamily: "Georgia, serif", fontWeight: 700, letterSpacing: "-0.02em", fontSize: "15px" } },
+-  { name: "Live Exams", style: { fontFamily: "Arial, sans-serif", fontWeight: 900, letterSpacing: "0.08em", fontSize: "13px", textTransform: "uppercase" } },
+-  { name: "Smart Grading", style: { fontFamily: "Trebuchet MS, sans-serif", fontWeight: 600, letterSpacing: "0.01em", fontSize: "15px", fontStyle: "italic" } },
+-  { name: "Secure Sessions", style: { fontFamily: "Courier New, monospace", fontWeight: 700, letterSpacing: "0.12em", fontSize: "13px", textTransform: "uppercase" } },
+-  { name: "Question Bank", style: { fontFamily: "Palatino, 'Book Antiqua', serif", fontWeight: 400, letterSpacing: "-0.01em", fontSize: "16px" } },
+-  { name: "Teacher Studio", style: { fontFamily: "Impact, 'Arial Narrow', sans-serif", fontWeight: 400, letterSpacing: "0.04em", fontSize: "14px" } },
+-  { name: "Audit Logs", style: { fontFamily: "Verdana, sans-serif", fontWeight: 700, letterSpacing: "-0.03em", fontSize: "13px" } },
++  { name: "Giám sát AI", style: { fontFamily: "Georgia, serif", fontWeight: 700, letterSpacing: "-0.02em", fontSize: "15px" } },
++  { name: "Thi trực tuyến", style: { fontFamily: "Arial, sans-serif", fontWeight: 900, letterSpacing: "0.08em", fontSize: "13px", textTransform: "uppercase" } },
++  { name: "Chấm điểm thông minh", style: { fontFamily: "Trebuchet MS, sans-serif", fontWeight: 600, letterSpacing: "0.01em", fontSize: "15px", fontStyle: "italic" } },
++  { name: "Phòng thi bảo mật", style: { fontFamily: "Courier New, monospace", fontWeight: 700, letterSpacing: "0.12em", fontSize: "13px", textTransform: "uppercase" } },
++  { name: "Ngân hàng đề", style: { fontFamily: "
+<truncated 1961 bytes>
+.05em", fontSize: "18px" } },
++  { name: "Giáo viên", style: { fontFamily: "Georgia, serif", fontWeight: 600, letterSpacing: "-0.02em", fontSize: "17px" } },
++  { name: "Học sinh", style: { fontFamily: "Helvetica, Arial, sans-serif", fontWeight: 700, letterSpacing: "-0.01em", fontSize: "15px" } },
++  { name: "Hội đồng thi", style: { fontFamily: "Verdana, sans-serif", fontWeight: 700, letterSpacing: "0.06em", fontSize: "14px", textTransform: "uppercase" } },
++  { name: "Quản trị viên", style: { fontFamily: "Courier New, monospace", fontWeight: 700, letterSpacing: "0.18em", fontSize: "14px" } },
++  { name: "Tổ chức giáo dục", style: { fontFamily: "Palatino, serif", fontWeight: 500, letterSpacing: "0.03em", fontSize: "15px" } },
+ ];
+ 
+ const heroFeatures: FeatureCard[] = [
+-  { title: "AI Camera", Icon: Camera, body: "Nhận diện bất thường trong lúc làm bài" },
+-  { title: "Exam Builder", Icon: FileText, body: "Tạo đề từ tài liệu hoặc ngân hàng câu hỏi" },
+-  { title: "Secure Room", Icon: ShieldCheck, body: "Quản lý phiên thi, mã phòng và trạng thái" },
+-  { title: "Auto Report", Icon: BookOpenCheck, body: "Tổng hợp kết quả và vi phạm sau kỳ thi" },
++  { title: "AI Camera", Icon: Camera, body: "Phát hiện hành vi bất thường trong phòng thi" },
++  { title: "Tạo đề thi", Icon: FileText, body: "Tạo đề từ tài liệu hoặc ngân hàng câu hỏi" },
++  { title: "Phòng thi an toàn", Icon: ShieldCheck, body: "Quản lý phiên thi, mã phòng và trạng thái" },
++  { title: "Báo cáo tự động", Icon: BookOpenCheck, body: "Tổng hợp kết quả và vi phạm sau mỗi kỳ thi" },
+ ];
+ 
+ function PillButton({ children, href = "/login" }: { children: ReactNode; href?: string }) {
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -165,7 +165,7 @@
+           <ScrollReveal variant="fade-up" delay={50}>
+             <div className="inline-flex items-center gap-2 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md px-4 py-2 rounded-full border border-[#00C6FF]/30 dark:border-[#00C6FF]/20 shadow-sm mb-6">
+               <span className="w-2 h-2 bg-[#00C6FF] rounded-full animate-ping"></span>
+-              <span className="text-xs font-bold text-[#0C2E5E] dark:text-[#00C6FF] tracking-wider uppercase">Hệ thống Giáo dục AI Thế hệ Mới</span>
++              <span className="text-xs font-bold text-[#0C2E5E] dark:text-[#00C6FF] tracking-wider uppercase">Nền tảng giáo dục AI thế hệ mới</span>
+             </div>
+           </ScrollReveal>
+ 
+@@ -172,6 +172,6 @@
+             <h1 className="text-[#0C2E5E] dark:text-white text-5xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight">
+               Thi trực tuyến<br />
+-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0C2E5E] via-[#00C6FF] to-[#DCA837] dark:from-white dark:via-[#00C6FF] dark:to-[#DCA837] drop-shadow-[0_2px_20px_rgba(0,198,255,0.15)]">Thông minh đột phá</span>
++              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0C2E5E] via-[#00C6FF] to-[#DCA837] dark:from-white dark:via-[#00C6FF] dark:to-[#DCA837] drop-shadow-[0_2px_20px_rgba(0,198,255,0.15)]">Thông minh, an toàn, nhanh hơn</span>
+             </h1>
+           </ScrollReveal>
+ 
+@@ -178,5 +178,5 @@
+             <p className="text-slate-600 dark:text-slate-200 text-lg lg:text-xl max-w-lg mb-10 leading-relaxed font-medium">
+-              Nền tảng tạo đề, tổ chức phòng thi và tích hợp trí tuệ nhân tạo giám sát bảo mật tối đa, kiến tạo sự công bằng hoàn hảo.
++              Tạo đề thi, vận hành phòng thi an toàn, giám sát bằng AI và giữ mọi bài đánh giá công bằng từ đầu đến cuối.
+             </p>
+           </ScrollReveal>
+ 
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -240,10 +240,10 @@
+           <ScrollReveal variant="fade-up" delay={100}>
+             <div>
+               <h2 className="text-[#0C2E5E] dark:text-white text-4xl md:text-6xl font-black leading-tight mb-8 tracking-tight">
+-                Kiến tạo hệ sinh thái<br />
++                Xây dựng hệ sinh thái học tập hoàn chỉnh<br />
+                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E]">AuraAcademic.</span>
+               </h2>
+-              <PillButton href="/register">Gia nhập ngay</PillButton>
++              <PillButton href="/register">Tham gia ngay</PillButton>
+             </div>
+           </ScrollReveal>
+           <ScrollReveal variant="fade-up" delay={250}>
+@@ -250,4 +250,4 @@
+-              Sự giao thoa giữa tri thức truyền thống và công nghệ giám sát AI tự động, tối ưu hóa quy trình từ tạo ngân hàng câu hỏi đến thống kê vi phạm.
++              Một quy trình mượt mà kết nối ngân hàng câu hỏi, giám sát AI, quản lý phòng thi và báo cáo trong cùng một trải nghiệm.
+             </p>
+           </ScrollReveal>
+         </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -279,10 +279,10 @@
+                     <FileText className="w-8 h-8 text-[#00C6FF]" />
+                   </div>
+                   <h3 className="text-[#0C2E5E] dark:text-white text-4xl font-extrabold leading-tight mb-6 tracking-tight">
+-                    Biên Soạn Đề Thi<br />Tự Động Siêu Tốc
++                    Tạo đề thi<br />thông minh
+                   </h3>
+                   <p className="text-slate-600 dark:text-slate-350 text-lg font-medium leading-relaxed max-w-sm">
+-                    Trích xuất thông minh tài liệu từ DOCX, PDF hoặc ra lệnh cho AI sinh đề cấu trúc phân hóa chỉ trong một lần chạm.
++                    Trích xuất câu hỏi từ DOCX/PDF hoặc để AI tạo bài đánh giá có cấu trúc trong một quy trình liền mạch.
+                   </p>
+                 </div>
+               </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -298,10 +298,10 @@
+                 </div>
+                 <div>
+                   <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
+-                    Phòng Thi<br />Khép Kín.
+-                  </h3>
+-                  <p className="text-white/70 text-base font-medium leading-relaxed">
+-                    Môi trường bảo mật tuyệt đối, ghi nhận sự cố mất kết nối và theo dõi màn hình thí sinh thời gian thực.
++                    Phòng thi<br />an toàn
++                  </h3>
++                  <p className="text-white/70 text-base font-medium leading-relaxed">
++                    Kiểm soát phiên thi bằng mã phòng, theo dõi kết nối và giám sát thời gian thực.
+                   </p>
+                 </div>
+               </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -320,7 +320,7 @@
+                     Proctoring AI<br />
+                   </h3>
+                   <p className="text-white/70 text-base font-medium leading-relaxed">
+-                    Nhận diện đa nhân diện, phát hiện đổi người, rời khỏi camera hoặc có tạp âm lạ chính xác tuyệt đối.
++                    Phát hiện nhiều khuôn mặt, mất camera, góc nhìn bất thường và âm thanh đáng ngờ trong lúc thi.
+                   </p>
+                 </div>
+               </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -338,7 +338,7 @@
+       <ScrollReveal variant="fade-up" delay={50}>
+         <div className="max-w-[88rem] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 items-center overflow-hidden">
+           <p className="text-black/70 dark:text-white/70 text-base leading-relaxed whitespace-pre-line font-semibold">
+-            Xây dựng cho nhà trường,{"\n"}giảng viên và đội ngũ vận hành thi.
++            Dành cho nhà trường,{"\n"}giáo viên và đội ngũ vận hành kỳ thi.
+           </p>
+           <div className="md:col-span-3 overflow-hidden">
+             <style>{`
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -372,7 +372,7 @@
+       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+         <ScrollReveal variant="fade-right" delay={100}>
+           <div className="lg:pr-12">
+-            <p className="text-[#00C6FF] text-sm mb-4 font-black tracking-[0.2em] uppercase">Vận hành chuyên nghiệp</p>
++            <p className="text-[#00C6FF] text-sm mb-4 font-black tracking-[0.2em] uppercase">Quy trình chuyên nghiệp</p>
+             <h2 className="text-[#0C2E5E] dark:text-white text-5xl md:text-7xl font-black leading-[1.05] mb-8 tracking-tight">
+               Quy trình khép kín
+             </h2>
+@@ -379,4 +379,4 @@
+-              Tích hợp xuyên suốt từ bước chuẩn bị đề bài, quản lý tài liệu đến phát mã phòng và tổng hợp báo cáo phổ điểm cuối kỳ thi.
++              Kết nối khâu chuẩn bị, quản lý tài liệu, mã phòng, giám sát, chấm điểm và báo cáo cuối kỳ tại một nơi.
+             </p>
+             <a href="/login" className="group inline-flex items-center gap-4 text-[#0C2E5E] dark:text-[#00C6FF] text-xl font-extrabold">
+               <span className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-xl shadow-[#00C6FF]/30 dark:shadow-[#00C6FF]/10 animate-pulse">
+@@ -383,5 +383,5 @@
+               </span>
+-              Trải nghiệm ứng dụng ngay
++              Dùng thử nền tảng
+             </a>
+           </div>
+         </ScrollReveal>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -428,10 +428,10 @@
+                     <ShieldCheck className="w-8 h-8 text-white" />
+                   </div>
+                   <h3 className="text-4xl md:text-6xl font-black leading-tight mb-6 tracking-tight text-[#0C2E5E] dark:text-white">
+-                    Trung Tâm<br />Theo Dõi
++                    Trung tâm<br />giám sát
+                   </h3>
+                   <p className="text-slate-600 dark:text-slate-350 text-lg font-medium leading-relaxed max-w-md">
+-                    Bảng điều khiển giám sát trung tâm giúp quản trị viên phát hiện sự cố và duy trì tính chính trực của bài thi.
++                    Bảng điều khiển tập trung giúp quản trị viên phát hiện rủi ro sớm và giữ tính nghiêm túc cho mọi phòng thi.
+                   </p>
+                 </div>
+ 
+@@ -438,4 +438,4 @@
+-                  {["Chờ thi", "Đang làm", "Đã nộp"].map((label, index) => (
++                  {["Chờ thi", "Đang thi", "Đã nộp"].map((label, index) => (
+                     <div key={label} className="stat-card-3d rounded-2xl bg-white dark:bg-slate-900/65 shadow-[0_20px_50px_-10px_rgba(12,46,94,0.08)] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.4)] p-6 border border-slate-100 dark:border-white/10 flex flex-col items-center text-center">
+                       <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] mb-2">{[24, 18, 42][index]}</p>
+                       <p className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</p>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -455,11 +455,11 @@
+ function Footer() {
+   // Simple dictionary to mock translations and show actual text
+   const dict: Record<string, string> = {
+-    'footer.brand_description': 'Nền tảng thi cử và đánh giá trực tuyến thông minh, tích hợp trí tuệ nhân tạo (AI) giúp cá nhân hóa lộ trình học tập và giám sát bảo mật tuyệt đối.',
++    'footer.brand_description': 'Nền tảng AI cho thi trực tuyến, đánh giá, giám sát và phân tích học tập.',
+     'footer.features.title': 'Tính năng',
+-    'footer.features.proctoring': 'Giám sát AI (Proctoring)',
++    'footer.features.proctoring': 'Giám sát AI',
+     'footer.features.auto_exam': 'Tạo đề tự động',
+-    'footer.features.secure_room': 'Phòng thi bảo mật',
++    'footer.features.secure_room': 'Phòng thi an toàn',
+     'footer.resources.title': 'Tài nguyên',
+     'footer.resources.guide': 'Hướng dẫn sử dụng',
+     'footer.resources.terms': 'Điều khoản dịch vụ',
+@@ -466,5 +466,5 @@
+-    'footer.newsletter.title': 'Nhận bản tin',
+-    'footer.copyright': `© ${new Date().getFullYear()} AuraAcademic. Tác quyền đã được bảo hộ.`
++    'footer.newsletter.title': 'Bản tin',
++    'footer.copyright': `© ${new Date().getFullYear()} AuraAcademic. Tất cả quyền được bảo hộ.`
+   };
+   const t = (key: string) => dict[key] || key;
+ 
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -482,10 +482,10 @@
+         <div className="flex flex-col md:flex-row items-center justify-between gap-8 pb-12 border-b border-slate-200 dark:border-white/10 mb-16">
+           <div className="max-w-xl">
+             <h2 className="text-3xl md:text-4xl font-black mb-4 text-[#0C2E5E] dark:text-white tracking-tight">
+-              Bạn đã sẵn sàng trải nghiệm? <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E] dark:to-[#DCA837]"></span>
++              Sẵn sàng trải nghiệm <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E] dark:to-[#DCA837]">AuraAcademic?</span>
+             </h2>
+             <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">
+-              Khởi tạo nền tảng giáo dục AI của riêng bạn ngay hôm nay.
++              Bắt đầu xây dựng nền tảng giáo dục tích hợp AI ngay hôm nay.
+             </p>
+           </div>
+           <div className="flex-shrink-0">
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -505,23 +505,23 @@
+               <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className="h-12 object-contain transition-transform duration-300 dark:hidden" />
+               <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-12 object-contain transition-transform duration-300 hidden dark:block" />
+             </a>
+-            
++
+             <p className="text-slate-600 dark:text-slate-400 text-[15px] leading-relaxed mb-10 font-medium">
+-              Nền tảng thi cử và đánh giá trực tuyến thông minh, tích hợp trí tuệ nhân tạo (AI) giúp cá nhân hóa lộ trình học tập và giám sát bảo mật tuyệt đối.
+-            </p>
+-            
++              Nền tảng AI cho thi trực tuyến, đánh giá, giám sát và phân tích học tập.
++            </p>
++
+             <div className="flex items-center gap-4">
+               {/* Facebook */}
+               <a href="https://www.facebook.com/lengthanhdatt" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#1877F2] hover:border-[#1877F2] hover:-translate-y-1 transition-all duration-300 shadow-sm group">
+-                <svg className="w-5 h-5 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
++                <svg className="w-5 h-5 fill-current group-hover:scale-110 transition-trans
+<truncated 3575 bytes>
+058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
++                <svg className="w-5 h-5 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
+               </a>
+             </div>
+           </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -577,7 +577,7 @@
+               {t('footer.newsletter.title')}
+               <span className="absolute -bottom-2 left-0 w-8 h-[3px] bg-[#00C6FF] rounded-full"></span>
+             </h4>
+-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 font-medium">Đăng ký email để nhận những bản cập nhật AI mới nhất.</p>
++            <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 font-medium">Nhận cập nhật sản phẩm và các tính năng AI mới.</p>
+ 
+             <div className="relative group mb-8">
+               <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E] dark:to-[#DCA837] rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+@@ -584,6 +584,6 @@
+                 <input
+                   type="email"
+-                  placeholder="Địa chỉ Email..."
++                  placeholder="Địa chỉ email..."
+                   className="bg-transparent border-none outline-none text-slate-700 dark:text-white text-sm px-4 py-2 w-full placeholder:text-slate-400"
+                 />
+                 <button className="bg-[#0C2E5E] hover:bg-[#00C6FF] dark:bg-white/10 dark:hover:bg-white/20 text-white p-2 rounded-lg transition-colors">
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -599,17 +599,49 @@
+         </div>
+ 
+         {/* Bottom Bar */}
+-        <div className="pt-8 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+-          <div className="text-slate-500 text-sm font-medium flex flex-col md:flex-row md:items-center gap-1.5 md:gap-3 text-center md:text-left">
+-            <span>{t('footer.copyright')}</span>
+-            <span className="hidden md:inline-block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+-            <span>
+-              Phát triển bởi <a href="https://github.com/lengthanhdat" target="_blank" rel="noopener noreferrer" className="text-[#0C2E5E] dark:text-white hover:text-[#00C6FF] dark:hover:text-[#00C6FF] font-bold transition-colors">lengthanhdat</a> & <a href="https://github.com/trgiahuy" target="_blank" rel="noopener noreferrer" className="text-[#0C2E5E] dark:text-white hover:text-[#00C6FF] dark:hover:text-[#00C6FF] font-bold transition-colors">trgiahuy</a>
+-            </span>
+-          </div>
+-          <div className="flex items-center gap-8">
+-            <a href="/about" className="text-slate-500 hover:text-[#00C6FF] text-sm font-medium transition-colors">Về chúng tôi</a>
+-            <a href="/contact" className="text-slate-500 hover:text-[#00C6FF] text-sm font-medium transition-colors">Liên hệ</a>
++        <div className="pt-8 border-t border-slate-200 dark:border-white/10">
++          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-white/[0.03] px-4 py-4 md:px-5 shadow-sm backdrop-blur flex flex-col lg:flex-row items-center justify-between gap-4">
++            <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
++              <div className="w-10 h-10 rounded-xl
+<truncated 807 bytes>
+copy; {new Date().getFullYear()} AuraAcademic. Tất cả quyền được bảo hộ.
++                </p>
++              </div>
++            </div>
++
++            <div className="flex flex-col sm:flex-row items-center gap-3">
++              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">
++                <HeartHandshake className="w-3.5 h-3.5" />
++                Built with care
++              </div>
++              <div className="flex flex-wrap justify-center items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] px-2 py-1.5">
++                <span className="px-2 text-xs font-semibold text-slate-500 dark:text-slate-400">Phát triển bởi</span>
++                {[
++                  { name: "lengthanhdat", href: "https://github.com/lengthanhdat" },
++                  { name: "imyuh1209", href: "https://github.com/imyuh1209" },
++                ].map((dev) => (
++                  <a
++                    key={dev.name}
++                    href={dev.href}
++                    target="_blank"
++                    rel="noopener noreferrer"
++                    className="inline-flex items-center gap-1.5 rounded-full bg-white dark:bg-[#02050A] border border-slate-200 dark:border-white/10 px-3 py-1.5 text-xs font-black text-[#0C2E5E] dark:text-white hover:border-[#00C6FF] hover:text-[#00C6FF] transition-all"
++                  >
++                    <Github className="w-3.5 h-3.5" />
++                    {dev.name}
++                  </a>
++                ))}
++              </div>
++            </div>
+           </div>
+         </div>
+       </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -652,9 +652,9 @@
+ function DetailedFeaturesSection() {
+   const features = [
+     {
+-      title: "Khởi tạo đề thi thông minh với AI",
++      title: "Tạo đề thi bằng AI",
+       subtitle: "AI Exam Builder",
+-      description: "Chỉ cần tải lên tài liệu PDF hoặc nhập chủ đề bài giảng, AI của Aura Academic sẽ tự động trích xuất kiến thức và sinh ra hàng chục câu hỏi trắc nghiệm kèm đáp án. Tiết kiệm 90% thời gian soạn đề của giáo viên.",
++      description: "Tải PDF hoặc nhập chủ đề bài học, AuraAcademic sẽ trích xuất kiến thức, tạo câu hỏi và chuẩn bị đáp án nhanh hơn cho giáo viên.",
+       image: "/feature_1.png",
+       reversed: false
+     },
+@@ -661,6 +661,6 @@
+-      title: "Hệ thống giám sát phòng thi 360°",
++      title: "Giám sát phòng thi 360 độ",
+       subtitle: "Proctoring AI & Secure Room",
+-      description: "Tích hợp công nghệ nhận diện khuôn mặt và theo dõi hành vi qua Camera. AI có thể phát hiện các dấu hiệu gian lận như: rời khỏi khung hình, có người thứ hai xuất hiện, góc nhìn bất thường, và tự động cảnh báo theo thời gian thực đến màn hình của quản thị.",
++      description: "Nhận diện khuôn mặt và theo dõi hành vi giúp phát hiện rủi ro như rời khỏi khung hình, xuất hiện người thứ hai, góc nhìn bất thường và tín hiệu đáng ngờ theo thời gian thực.",
+       image: "/feature_2.png",
+       reversed: true
+     }
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -676,8 +676,8 @@
+         <ScrollReveal variant="fade-up">
+           <div className="text-center mb-24">
+             <p className="text-[#00C6FF] text-sm mb-4 font-black tracking-[0.2em] uppercase">Khám phá tính năng</p>
+-            <h2 className="text-[#0C2E5E] dark:text-white text-4xl md:text-5xl font-black mb-6 tracking-tight">Hệ sinh thái Đánh giá Toàn diện</h2>
+-            <p className="text-slate-600 dark:text-slate-400 text-lg font-medium max-w-2xl mx-auto">Các công cụ mạnh mẽ được thiết kế tỉ mỉ để hỗ trợ cả quá trình trước, trong và sau kỳ thi.</p>
++            <h2 className="text-[#0C2E5E] dark:text-white text-4xl md:text-5xl font-black mb-6 tracking-tight">Hệ sinh thái đánh giá hoàn chỉnh</h2>
++            <p className="text-slate-600 dark:text-slate-400 text-lg font-medium max-w-2xl mx-auto">Bộ công cụ mạnh mẽ hỗ trợ toàn bộ quy trình trước, trong và sau mỗi kỳ thi.</p>
+           </div>
+         </ScrollReveal>
+ 
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+--- NEW ACTION ---
+The following changes were made by the USER to: d:\AUAC\AuraAcademic\src\app\[locale]\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -704,7 +704,7 @@
+                     {feat.description}
+                   </p>
+                   <a href="/login" className="inline-flex items-center gap-2 text-[#0C2E5E] dark:text-white font-extrabold hover:text-[#00C6FF] dark:hover:text-[#00C6FF] transition-colors group">
+-                    Khám phá tính năng này
++                    Khám phá tính năng
+                     <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                   </a>
+                 </div>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
