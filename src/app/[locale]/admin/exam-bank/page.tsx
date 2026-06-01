@@ -32,6 +32,7 @@ export default function AdminExamBankPage() {
   );
 
   const uniqueAuthors = Array.from(new Set(items.map((i: any) => i.teacherName || "Ẩn danh"))).filter(Boolean) as string[];
+  const uniqueSubjects = Array.from(new Set(items.map((i: any) => i.subject).filter(Boolean))) as string[];
 
   const filtered = items.filter((item: any) => {
     const matchSearch = item.title?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -57,39 +58,95 @@ export default function AdminExamBankPage() {
     }
   };
 
+  const featureCards = [
+    {
+      icon: "upload_file",
+      title: "Upload nhanh",
+      description: "Nhập PDF/DOCX và lưu thẳng vào ngân hàng đề.",
+      cls: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300",
+    },
+    {
+      icon: "library_add",
+      title: "Đồng bộ Kho đề",
+      description: "Chọn đề mẫu sẵn có để công khai cho luyện tập.",
+      cls: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300",
+    },
+    {
+      icon: "tune",
+      title: "Lọc chính xác",
+      description: "Tìm theo tên đề, người đăng và từng môn học.",
+      cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300",
+    },
+  ];
+
   return (
-    <main className="p-8 space-y-8 max-w-5xl mx-auto w-full">
+    <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
       {/* Header banner */}
       <ScrollReveal variant="fade-up" duration={600}>
-        <section className="bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] p-8 rounded-[2rem] shadow-lg relative overflow-hidden text-white flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="material-symbols-outlined text-4xl text-white">account_balance</span>
+        <section className="bg-gradient-to-br from-[#0C2E5E] via-[#14508F] to-[#00A6D6] p-6 sm:p-8 rounded-3xl shadow-lg text-white">
+          <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-end">
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20 mb-5">
+                <span className="material-symbols-outlined text-3xl text-white">account_balance</span>
+              </div>
+              <h1 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight mb-3">
+                Ngân hàng Đề thi
+              </h1>
+              <p className="text-white/85 max-w-2xl leading-relaxed text-sm sm:text-base">
+                Quản lý toàn bộ đề luyện tập trong hệ thống, nhập đề mới, đồng bộ từ Kho đề và kiểm soát nội dung công khai cho học sinh ôn tập.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => router.push(`/${locale}/admin/my-exams/import?isBank=true`)}
+                  className="h-12 px-5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-colors flex items-center justify-center gap-2 hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-white/70 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-lg">upload_file</span>
+                  Upload PDF/DOCX
+                </button>
+                <button
+                  onClick={() => setIsPublishModalOpen(true)}
+                  className="h-12 px-5 bg-white/15 hover:bg-white/25 text-white font-bold rounded-xl text-sm shadow-md transition-colors flex items-center justify-center gap-2 backdrop-blur-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/70 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-lg">library_add</span>
+                  Thêm từ Kho đề
+                </button>
+              </div>
             </div>
-            <h2 className="font-headline font-extrabold text-4xl text-white tracking-tight mb-2">
-              Ngân hàng Đề thi
-            </h2>
-            <p className="text-white/80 max-w-lg leading-relaxed">
-              Quản lý toàn bộ danh sách đề thi luyện tập trong hệ thống. Bạn có thể Tạo mới hoặc Upload đề thi trực tiếp vào Ngân hàng.
-            </p>
+
+            <div className="grid grid-cols-3 gap-3 rounded-2xl bg-white/12 p-3 ring-1 ring-white/15 backdrop-blur-sm">
+              <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+                <p className="text-2xl font-black leading-none">{items.length}</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">Tổng đề</p>
+              </div>
+              <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+                <p className="text-2xl font-black leading-none">{uniqueSubjects.length}</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">Môn học</p>
+              </div>
+              <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+                <p className="text-2xl font-black leading-none">{uniqueAuthors.length}</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">Người đăng</p>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0 relative z-10">
-            <button
-              onClick={() => router.push(`/${locale}/admin/my-exams/import?isBank=true`)}
-              className="px-5 py-2.5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-all flex items-center gap-2 hover:scale-105"
+        </section>
+      </ScrollReveal>
+
+      <ScrollReveal variant="fade-up" duration={600} delay={60}>
+        <section className="grid gap-3 md:grid-cols-3">
+          {featureCards.map((feature) => (
+            <div
+              key={feature.title}
+              className="flex gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-cyan-950/40 dark:bg-[#0A1F3E]/70"
             >
-              <span className="material-symbols-outlined text-lg">upload_file</span>
-              Upload PDF/DOCX
-            </button>
-            <button
-              onClick={() => setIsPublishModalOpen(true)}
-              className="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center gap-2 backdrop-blur-sm border border-white/10"
-            >
-              <span className="material-symbols-outlined text-lg">library_add</span>
-              Thêm từ Kho đề
-            </button>
-          </div>
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${feature.cls}`}>
+                <span className="material-symbols-outlined text-2xl">{feature.icon}</span>
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{feature.title}</h2>
+                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{feature.description}</p>
+              </div>
+            </div>
+          ))}
         </section>
       </ScrollReveal>
 
@@ -101,24 +158,25 @@ export default function AdminExamBankPage() {
 
       {/* Toolbar */}
       <ScrollReveal variant="fade-up" duration={600} delay={80}>
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-          <div className="relative w-full sm:max-w-xs">
+        <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-cyan-950/40 dark:bg-[#0A1F3E]/70">
+          <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_220px_220px_auto] lg:items-center">
+          <div className="relative w-full">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
             <input
               type="text"
-              placeholder="Tìm đề thi trong chuyên đề..."
+              placeholder="Tìm theo tên đề thi..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200"
+              className="h-12 w-full pl-12 pr-4 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200"
             />
           </div>
           
-          <div className="relative w-full sm:w-auto">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 text-lg">person</span>
+          <div className="relative w-full">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#0C2E5E] dark:text-cyan-300 text-lg">person</span>
             <select
               value={selectedAuthor}
               onChange={(e) => setSelectedAuthor(e.target.value)}
-              className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
+              className="h-12 w-full pl-10 pr-9 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
             >
               <option value="Tất cả">Tất cả người đăng</option>
               {uniqueAuthors.map(author => (
@@ -128,12 +186,12 @@ export default function AdminExamBankPage() {
             <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
           </div>
 
-          <div className="relative w-full sm:w-auto">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 text-lg">category</span>
+          <div className="relative w-full">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#0C2E5E] dark:text-cyan-300 text-lg">category</span>
             <select
               value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
+              className="h-12 w-full pl-10 pr-9 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
             >
               <option value="Tất cả">Tất cả môn học</option>
               {ALL_SUBJECTS.map((sub: string) => (
@@ -143,13 +201,14 @@ export default function AdminExamBankPage() {
             <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
           </div>
 
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl ml-auto">
-            <span className="material-symbols-outlined text-slate-400 text-lg">quiz</span>
-            <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+          <div className="flex h-12 items-center justify-center gap-2 px-4 bg-[#0C2E5E] text-white rounded-xl lg:min-w-[124px]">
+            <span className="material-symbols-outlined text-white/80 text-lg">quiz</span>
+            <span className="text-sm font-extrabold">
               {filtered.length} đề thi
             </span>
           </div>
-        </div>
+          </div>
+        </section>
       </ScrollReveal>
 
       {/* Exam list */}

@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
 import { API_BASE } from "@/lib/api";
+import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
 interface Exam {
   id: string;
   title: string;
   subject: string;
+  grade: string;
   duration: number;
 }
 
@@ -20,14 +22,16 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
   const locale = useLocale();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedExams, setSelectedExams] = useState<Set<string>>(new Set());
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Record<string, { grade: string; subject: string }>>({});
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       fetchMyExams();
-      setSelectedExams(new Set());
+      setSelectedExams([]);
+      setCategories({});
       setError("");
     }
   }, [isOpen]);
@@ -50,6 +54,12 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
         // Lọc các đề thi mẫu chưa được công khai vào ngân hàng (isPractice và isBankItem đều false)
         const unshared = (data || []).filter((exam: any) => !exam.isPractice && !exam.isBankItem);
         setExams(unshared);
+        
+        const cats: Record<string, { grade: string; subject: string }> = {};
+        unshared.forEach((exam: any) => {
+          cats[exam.id] = { grade: exam.grade || "", subject: exam.subject || "" };
+        });
+        setCategories(cats);
       } else {
         setError(`Không thể tải dữ liệu từ máy chủ (Mã lỗi: ${res.status})`);
       }
@@ -62,19 +72,55 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
   };
 
   const toggleSelect = (id: string) => {
-    const next = new Set(selectedExams);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedExams(next);
+    setSelectedExams(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
   };
 
   const handlePublish = async () => {
-    if (selectedExams.size === 0) return;
+    if (selectedExams.length === 0) return;
+    
+    // Validate that all selected exams have both grade and subject set
+    for (const id of selectedExams) {
+      const cat = categories[id];
+      if (!cat || !cat.grade || !cat.subject) {
+        setError("Vui lòng phân loại đầy đủ Cấp học và Môn học cho các đề thi đã chọn để lưu vào đúng thư mục chuyên đề.");
+        return;
+      }
+    }
+
     setPublishing(true);
     setError("");
     try {
       const token = localStorage.getItem("accessToken");
-      const promises = Array.from(selectedExams).map(id =>
+      
+      // Step 1: Update grade & subject of the template exams if they changed
+      const updatePromises = selectedExams.map(async (id) => {
+        const cat = categories[id];
+        const exam = exams.find(e => e.id === id);
+        if (exam && (exam.grade !== cat.grade || exam.subject !== cat.subject)) {
+          const detailRes = await fetch(`${API_BASE}/exams/${id}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (detailRes.ok) {
+            const detail = await detailRes.json();
+            detail.grade = cat.grade;
+            detail.subject = cat.subject;
+            await fetch(`${API_BASE}/exams/${id}`, {
+              method: "PUT",
+              headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` 
+              },
+              body: JSON.stringify(detail)
+            });
+          }
+        }
+      });
+      await Promise.all(updatePromises);
+
+      // Step 2: Publish to bank
+      const promises = selectedExams.map(id =>
         fetch(`${API_BASE}/exams/${id}/publish-to-bank`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` }
@@ -133,20 +179,56 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
                 <div 
                   key={exam.id} 
                   onClick={() => toggleSelect(exam.id)}
-                  className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer ${selectedExams.has(exam.id) ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-blue-200 hover:bg-slate-50'}`}
+                  className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer ${selectedExams.includes(exam.id) ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-blue-200 hover:bg-slate-50'}`}
                 >
                   <input 
                     type="checkbox" 
-                    checked={selectedExams.has(exam.id)}
+                    checked={selectedExams.includes(exam.id)}
                     onChange={() => {}}
                     className="w-5 h-5 accent-blue-600 rounded cursor-pointer"
                   />
-                  <div>
-                    <h3 className={`font-bold ${selectedExams.has(exam.id) ? 'text-blue-800' : 'text-slate-800'}`}>{exam.title}</h3>
-                    <p className="text-xs text-slate-500 font-medium flex items-center gap-3 mt-1">
-                      <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">book</span> {exam.subject || 'Không có môn học'}</span>
+                  <div className="flex-1">
+                    <h3 className={`font-bold ${selectedExams.includes(exam.id) ? 'text-blue-800' : 'text-slate-800'}`}>{exam.title}</h3>
+                    <div className="text-xs text-slate-500 font-medium flex flex-wrap items-center gap-3 mt-1.5" onClick={e => e.stopPropagation()}>
                       <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">timer</span> {exam.duration} phút</span>
-                    </p>
+                      
+                      {/* Grade Selector */}
+                      <select
+                        value={categories[exam.id]?.grade || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCategories(prev => ({
+                            ...prev,
+                            [exam.id]: { grade: val, subject: "" }
+                          }));
+                        }}
+                        className="px-2 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 outline-none"
+                      >
+                        <option value="">-- Cấp học --</option>
+                        {EDUCATION_HIERARCHY.map(l => (
+                          <option key={l.id} value={l.name}>{l.name}</option>
+                        ))}
+                      </select>
+
+                      {/* Subject Selector */}
+                      <select
+                        value={categories[exam.id]?.subject || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCategories(prev => ({
+                            ...prev,
+                            [exam.id]: { ...prev[exam.id], subject: val }
+                          }));
+                        }}
+                        disabled={!categories[exam.id]?.grade}
+                        className="px-2 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 outline-none disabled:opacity-50"
+                      >
+                        <option value="">-- Môn học --</option>
+                        {EDUCATION_HIERARCHY.find(l => l.name === categories[exam.id]?.grade)?.subjects.map(s => (
+                          <option key={s.id} value={s.name}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -157,13 +239,13 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
           <p className="text-sm font-bold text-slate-500">
-            Đã chọn <span className="text-blue-600 text-base">{selectedExams.size}</span> đề thi
+            Đã chọn <span className="text-blue-600 text-base">{selectedExams.length}</span> đề thi
           </p>
           <div className="flex gap-3">
             <button onClick={onClose} className="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-colors text-sm">Hủy</button>
             <button 
               onClick={handlePublish}
-              disabled={selectedExams.size === 0 || publishing}
+              disabled={selectedExams.length === 0 || publishing}
               className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-md transition-all text-sm flex items-center gap-2"
             >
               {publishing ? (

@@ -16,6 +16,7 @@ function ExamBuilderContent() {
   const t = useTranslations('TeacherExams');
   const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
+  const fileRefImport = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>("upload");
   type CreationMode = "ai" | "manual" | "import";
@@ -792,7 +793,7 @@ function ExamBuilderContent() {
             </div>
 
             <div
-              onClick={() => fileRef.current?.click()}
+              onClick={() => fileRefImport.current?.click()}
               className={`relative border-2 border-dashed m-8 rounded-2xl p-12 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 dark:border-cyan-950/40 hover:border-blue-400 hover:bg-blue-50/10"
                 }`}
             >
@@ -800,7 +801,7 @@ function ExamBuilderContent() {
                 <span className="material-symbols-outlined text-4xl">cloud_upload</span>
               </div>
               <h3 className="text-lg font-black text-slate-700 dark:text-slate-300">
-                {file ? file.name : t('upload.title')}
+                {file ? file.name : t('upload.title_import')}
               </h3>
               <p className="text-sm text-slate-400 mt-2 font-medium max-w-md mx-auto">{t('upload.hint')}</p>
               
@@ -820,7 +821,7 @@ function ExamBuilderContent() {
                 {t('upload.btn_choose')}
               </button>
               
-              <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+              <input ref={fileRefImport} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
 
               {file && !questions.length && (
                 <div className="mt-8 pt-8 border-t border-blue-100/50 animate-in fade-in slide-in-from-bottom-2">

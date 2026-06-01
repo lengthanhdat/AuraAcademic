@@ -71,6 +71,9 @@ export default function ExamBankPage() {
     bySubject: Record<string, number>;
     byGrade:   Record<string, number>;
   }>(`${API_BASE}/exam-bank/public/stats`, authFetcher, { revalidateOnFocus: false });
+  const { data: folders = [], isLoading: foldersLoading } = useSWR<any[]>(
+    `${API_BASE}/exam-bank/public/folders`, authFetcher, { revalidateOnFocus: false }
+  );
 
   // ─── Derived exam list ───────────────────────────────────────
   const filteredExams = useMemo(() =>
@@ -105,46 +108,172 @@ export default function ExamBankPage() {
   const visibleRows  = showAllSubjects ? subjectRows : subjectRows.slice(0, SHOW_LIMIT);
   const hasMore      = subjectRows.length > SHOW_LIMIT;
   const hasFilter    = !!(selectedSubject || searchTerm);
+  const activeSubjectCount = statsEmpty ? subjectRows.length : subjectRows.filter(s => s.count > 0).length;
+  const featureCards = [
+    {
+      icon: "search",
+      title: "Tìm đề nhanh",
+      description: "Tra cứu theo tên đề và lọc đúng môn học cần ôn.",
+      cls: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300",
+    },
+    {
+      icon: "folder_open",
+      title: "Ôn theo chuyên đề",
+      description: "Vào thẳng các thư mục đề được phân loại sẵn.",
+      cls: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300",
+    },
+    {
+      icon: "trending_up",
+      title: "Đề phổ biến",
+      description: "Ưu tiên những đề được luyện nhiều trong hệ thống.",
+      cls: "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300",
+    },
+  ];
 
   const clearFilters = () => { setSelectedSubject(null); setSearchTerm(""); };
 
   return (
-    <div className="max-w-[1400px] mx-auto w-full px-4 md:px-8 py-8">
+    <div className="max-w-[1400px] mx-auto w-full px-4 md:px-8 py-8 space-y-6">
 
       {/* ─── Header ─────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-cyan-500 flex items-center justify-center shadow">
-            <span className="material-symbols-outlined text-white text-lg">library_books</span>
+      <section className="bg-gradient-to-br from-[#0C2E5E] via-[#14508F] to-[#00A6D6] p-6 sm:p-8 rounded-3xl shadow-lg text-white">
+        <div className="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-end">
+          <div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20 mb-5">
+              <span className="material-symbols-outlined text-3xl text-white">library_books</span>
+            </div>
+            <h1 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight mb-3">
+              Ngân hàng Đề thi
+            </h1>
+            <p className="text-white/85 max-w-2xl leading-relaxed text-sm sm:text-base">
+              Khám phá đề luyện tập theo môn học, chuyên đề và mức độ phổ biến. Chọn đề, làm bài và xem kết quả ngay trong một luồng gọn gàng.
+            </p>
           </div>
-          <h1 className="font-headline font-extrabold text-3xl text-on-surface dark:text-slate-100 tracking-tight">
-            Ngân Hàng Đề Thi
-          </h1>
+
+          <div className="grid grid-cols-3 gap-3 rounded-2xl bg-white/12 p-3 ring-1 ring-white/15 backdrop-blur-sm">
+            <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+              <p className="text-2xl font-black leading-none">{exams.length}</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">Tổng đề</p>
+            </div>
+            <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+              <p className="text-2xl font-black leading-none">{activeSubjectCount}</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">Môn học</p>
+            </div>
+            <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+              <p className="text-2xl font-black leading-none">{folders.length}</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">Chuyên đề</p>
+            </div>
+          </div>
         </div>
-        <p className="text-on-surface-variant dark:text-slate-400 ml-12 text-sm">
-          Khám phá đề luyện tập từ Lớp 1 đến Lớp 12 — lọc nhanh theo môn học.
-        </p>
-      </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-3">
+        {featureCards.map((feature) => (
+          <div
+            key={feature.title}
+            className="flex gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-cyan-950/40 dark:bg-[#0A1F3E]/70"
+          >
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${feature.cls}`}>
+              <span className="material-symbols-outlined text-2xl">{feature.icon}</span>
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{feature.title}</h2>
+              <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{feature.description}</p>
+            </div>
+          </div>
+        ))}
+      </section>
 
       {/* ─── Search Bar ─────────────────────────────────────── */}
-      <div className="relative mb-6">
-        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-        <input
-          type="text"
-          placeholder="Tìm đề thi theo tên..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-10 py-3 bg-white dark:bg-[#0A1F3E]/70 border border-slate-200 dark:border-cyan-950/40 rounded-2xl shadow-sm focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200 placeholder:text-slate-400"
-        />
-        {searchTerm && (
+      <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-cyan-950/40 dark:bg-[#0A1F3E]/70">
+        <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto] lg:items-center">
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+            <input
+              type="text"
+              placeholder="Tìm đề thi theo tên..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="h-12 w-full pl-12 pr-10 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200 placeholder:text-slate-400"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-300 transition-colors cursor-pointer"
+                title="Xoá tìm kiếm"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            )}
+          </div>
+          <div className="flex h-12 items-center justify-center gap-2 px-4 bg-[#0C2E5E] text-white rounded-xl lg:min-w-[124px]">
+            <span className="material-symbols-outlined text-white/80 text-lg">quiz</span>
+            <span className="text-sm font-extrabold">
+              {filteredExams.length} đề thi
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden">
           <button
-            onClick={() => setSearchTerm("")}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-300 transition-colors"
+            onClick={() => setSelectedSubject(null)}
+            className={`h-9 shrink-0 px-3 rounded-xl text-xs font-extrabold transition-colors cursor-pointer ${!selectedSubject ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-cyan-950/40 dark:text-slate-300"}`}
           >
-            <span className="material-symbols-outlined text-sm">close</span>
+            Tất cả môn
           </button>
-        )}
-      </div>
+          {visibleRows.map(({ name, count }) => (
+            <button
+              key={name}
+              onClick={() => setSelectedSubject(selectedSubject === name ? null : name)}
+              className={`h-9 shrink-0 px-3 rounded-xl text-xs font-extrabold transition-colors cursor-pointer ${selectedSubject === name ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-cyan-950/40 dark:text-slate-300"}`}
+            >
+              {name}{!statsEmpty && count > 0 ? ` (${count})` : ""}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── Folder Categories Grid ─────────────────────────── */}
+      {!foldersLoading && folders.length > 0 && (
+        <section>
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-base text-indigo-500">folder_open</span>
+            Thư mục Chuyên đề Ôn tập
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {folders.map((folder: any) => {
+              const grad = SUBJECT_GRADIENT[folder.subject] || defaultGradient;
+              return (
+                <div
+                  key={folder.id}
+                  onClick={() => router.push(`/${locale}/student/exam-bank/folder/${folder.id}`)}
+                  className="group relative overflow-hidden bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900/50 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[110px]"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${grad} flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-200`}>
+                      <span className="material-symbols-outlined text-white text-base">
+                        {SUBJECT_ICON[folder.subject] || "folder"}
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-black uppercase bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded">
+                      {folder.grade || "Chung"}
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-xs line-clamp-1 leading-tight group-hover:text-indigo-600 dark:group-hover:text-[#00C6FF] transition-colors">
+                      {folder.name}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-bold">
+                      <span className="material-symbols-outlined text-[12px]">quiz</span>
+                      Ôn tập chuyên đề
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ─── 3-Column Layout ────────────────────────────────── */}
       <div className="flex gap-6 items-start">
@@ -244,7 +373,7 @@ export default function ExamBankPage() {
         {/* ── Main list ─────────────────────────────────────── */}
         <main className="flex-1 min-w-0">
           {/* Result bar */}
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
             <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
               {isLoading ? "Đang tải..." : (
                 <><span className="text-on-surface dark:text-slate-200 font-bold">{filteredExams.length}</span> đề thi</>
@@ -369,9 +498,18 @@ export default function ExamBankPage() {
                       </div>
                     </div>
 
-                    {/* Arrow */}
-                    <div className="flex items-center shrink-0 self-center opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all duration-200">
-                      <span className="material-symbols-outlined text-indigo-400 text-lg">chevron_right</span>
+                    {/* Action */}
+                    <div className="flex items-center shrink-0 self-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/${locale}/student/exam-bank/${exam.id}`);
+                        }}
+                        className="h-10 px-3 rounded-xl bg-[#0C2E5E] text-white text-xs font-extrabold flex items-center gap-1.5 hover:bg-[#14508F] transition-colors cursor-pointer"
+                      >
+                        Làm đề
+                        <span className="material-symbols-outlined text-base">chevron_right</span>
+                      </button>
                     </div>
                   </div>
                 );

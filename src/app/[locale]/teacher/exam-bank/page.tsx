@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import PublishToBankModal from "@/components/PublishToBankModal";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
@@ -16,6 +17,134 @@ const DIFFICULTY_CONFIG: Record<string, { label: string; cls: string }> = {
   EXPERT: { label: "Chuyên", cls: "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
 };
 
+const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
+
+const ExamDetailModal = ({
+  isOpen,
+  onClose,
+  exam,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  exam: any;
+}) => {
+  const questions = exam?.versions?.[0]?.questions || [];
+
+  if (!isOpen || !exam) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-[#071829] border border-slate-200 dark:border-cyan-900/40 rounded-[2rem] w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between p-7 pb-4 border-b border-slate-100 dark:border-cyan-950/40 shrink-0">
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Nội dung đề thi</p>
+            <h3 className="font-extrabold text-xl text-slate-900 dark:text-slate-100 tracking-tight">{exam.title}</h3>
+            <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 font-medium">
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">help</span>
+                {questions.length} câu hỏi
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">schedule</span>
+                {exam.duration} phút
+              </span>
+              {exam.difficulty && (
+                <>
+                  <span>•</span>
+                  <span>{
+                    exam.difficulty === "EASY" ? "🟢 Dễ" :
+                    exam.difficulty === "MEDIUM" ? "🟡 Trung bình" :
+                    exam.difficulty === "HARD" ? "🔴 Khó" : "🟣 Chuyên gia"
+                  }</span>
+                </>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-cyan-950/40 transition-all shrink-0 ml-4"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div className="overflow-y-auto p-7 pt-5 space-y-5">
+          {questions.length === 0 ? (
+            <div className="py-12 text-center">
+              <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2 block">article</span>
+              <p className="text-sm text-slate-400">Chưa có câu hỏi nào trong đề thi này.</p>
+            </div>
+          ) : (
+            questions.map((q: any, idx: number) => {
+              return (
+                <div
+                  key={q.id || idx}
+                  className="bg-slate-50 dark:bg-cyan-950/20 border border-slate-200/60 dark:border-cyan-950/30 rounded-2xl p-5 space-y-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="shrink-0 w-7 h-7 rounded-xl bg-[#0C2E5E] dark:bg-cyan-900/60 text-white text-[11px] font-black flex items-center justify-center">
+                      {idx + 1}
+                    </span>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
+                      {q.text || <em className="text-slate-400">Không có nội dung</em>}
+                    </p>
+                  </div>
+
+                  {q.options?.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-10">
+                      {q.options.map((opt: any, oIdx: number) => {
+                        const isCorrect = opt.isCorrect ?? opt.correct;
+                        return (
+                          <div
+                            key={opt.id || oIdx}
+                            className={`flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs font-medium transition-all ${
+                              isCorrect
+                                ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-300"
+                                : "bg-white dark:bg-cyan-950/20 border-slate-200 dark:border-cyan-950/30 text-slate-600 dark:text-slate-400"
+                            }`}
+                          >
+                            <span className={`shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center ${
+                              isCorrect
+                                ? "bg-emerald-500 text-white"
+                                : "bg-slate-200 dark:bg-cyan-950/50 text-slate-500 dark:text-slate-400"
+                            }`}>
+                              {OPTION_LABELS[oIdx] || oIdx + 1}
+                            </span>
+                            <span className="leading-relaxed">{opt.text || "(Trống)"}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="p-7 pt-4 border-t border-slate-100 dark:border-cyan-950/40 flex justify-between items-center shrink-0">
+          <p className="text-[10px] text-slate-400 font-medium">
+            ✓ Đáp án đúng được highlight màu xanh lá
+          </p>
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-slate-100 dark:bg-cyan-950/40 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-cyan-950/60 transition-all"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function TeacherExamBankPage() {
   const router = useRouter();
   const locale = useLocale();
@@ -23,9 +152,9 @@ export default function TeacherExamBankPage() {
   const [selectedGrade, setSelectedGrade] = useState("Tất cả");
   const [selectedSubject, setSelectedSubject] = useState("Tất cả");
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
+  const [examToView, setExamToView] = useState<any>(null);
 
   const [user, setUser] = useState<any>(() => {
     if (typeof window !== "undefined") {
@@ -91,7 +220,6 @@ export default function TeacherExamBankPage() {
       }
     };
 
-    // Listen to changes from other tabs/windows
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "user") {
         loadUser();
@@ -99,7 +227,6 @@ export default function TeacherExamBankPage() {
     };
     window.addEventListener("storage", handleStorageChange);
 
-    // Listen to user-updated events (e.g. from Profile page updates)
     const handleUserUpdated = () => {
       try {
         const stored = localStorage.getItem("user");
@@ -110,7 +237,6 @@ export default function TeacherExamBankPage() {
     };
     window.addEventListener("user-updated", handleUserUpdated);
 
-    // Initial check on mount
     loadUser();
 
     return () => {
@@ -119,7 +245,6 @@ export default function TeacherExamBankPage() {
     };
   }, []);
 
-  // Removed teacher verification requirement
   const isUnverified = false;
 
   const { data: items = [], isLoading, mutate } = useSWR(
@@ -159,30 +284,12 @@ export default function TeacherExamBankPage() {
     }
   };
 
-  const handleDeleteExam = async (examId: string) => {
-    if (!confirm("Xác nhận xóa VĨNH VIỄN đề thi này khỏi hệ thống?")) return;
-    setDeletingId(examId);
-    try {
-      const res = await fetch(`${API_BASE}/exams/${examId}`, {
-        method: "DELETE",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
-      });
-      if (res.ok) mutate();
-      else alert("Lỗi khi xoá đề thi.");
-    } catch {
-      alert("Lỗi kết nối.");
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
   if (showLockScreen) {
     return (
       <main className="p-8 max-w-2xl mx-auto w-full min-h-[70vh] flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
         <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-[2.5rem] p-10 shadow-[0_20px_50px_rgba(12,46,94,0.05)] dark:shadow-[0_20px_50px_rgba(0,198,255,0.03)] text-center relative overflow-hidden flex flex-col items-center gap-6">
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
           
-          {/* Glowing Lock Badge */}
           <div className="relative">
             <div className="w-20 h-20 rounded-[2rem] bg-amber-100 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-inner-sm animate-pulse">
               <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
@@ -226,37 +333,45 @@ export default function TeacherExamBankPage() {
   }
 
   return (
-    <main className="p-8 space-y-8 max-w-5xl mx-auto w-full">
-      {/* Header banner */}
+    <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
       <ScrollReveal variant="fade-up" duration={600}>
-        <section className="bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] p-8 rounded-[2rem] shadow-lg relative overflow-hidden text-white flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="material-symbols-outlined text-4xl text-white">account_balance</span>
+        <section className="bg-gradient-to-br from-[#0C2E5E] via-[#14508F] to-[#00A6D6] p-6 sm:p-8 rounded-3xl shadow-lg text-white">
+          <div className="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-end">
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20 mb-5">
+                <span className="material-symbols-outlined text-3xl text-white">account_balance</span>
+              </div>
+              <h1 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight mb-3">
+                Ngân hàng Đề thi
+              </h1>
+              <p className="text-white/85 max-w-2xl leading-relaxed text-sm sm:text-base">
+                Quản lý đề luyện tập được chia sẻ trong hệ thống, lọc nhanh theo cấp bậc và môn học.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setIsPublishModalOpen(true)}
+                  className="h-12 px-5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-colors flex items-center justify-center gap-2 hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-white/70 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-lg">library_add</span>
+                  Thêm từ Kho đề
+                </button>
+              </div>
             </div>
-            <h2 className="font-headline font-extrabold text-4xl text-white tracking-tight mb-2">
-              Ngân hàng Đề thi
-            </h2>
-            <p className="text-white/80 max-w-lg leading-relaxed">
-              Quản lý toàn bộ danh sách đề thi luyện tập trong hệ thống. Bạn có thể Tạo mới hoặc Upload đề thi trực tiếp vào Ngân hàng.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0 relative z-10">
-            <button
-              onClick={() => router.push(`/${locale}/teacher/exams/import?isBank=true`)}
-              className="px-5 py-2.5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-all flex items-center gap-2 hover:scale-105"
-            >
-              <span className="material-symbols-outlined text-lg">upload_file</span>
-              Upload PDF/DOCX
-            </button>
-            <button
-              onClick={() => setIsPublishModalOpen(true)}
-              className="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center gap-2 backdrop-blur-sm border border-white/10"
-            >
-              <span className="material-symbols-outlined text-lg">library_add</span>
-              Thêm từ Kho đề
-            </button>
+
+            <div className="grid grid-cols-3 gap-3 rounded-2xl bg-white/12 p-3 ring-1 ring-white/15 backdrop-blur-sm">
+              <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+                <p className="text-2xl font-black leading-none">{items.length}</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">Tổng đề</p>
+              </div>
+              <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+                <p className="text-2xl font-black leading-none">{filtered.length}</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">Đang lọc</p>
+              </div>
+              <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
+                <p className="text-2xl font-black leading-none">{availableSubjects.length}</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">Môn học</p>
+              </div>
+            </div>
           </div>
         </section>
       </ScrollReveal>
@@ -267,31 +382,29 @@ export default function TeacherExamBankPage() {
         onSuccess={mutate}
       />
 
-      {/* Toolbar */}
       <ScrollReveal variant="fade-up" duration={600} delay={80}>
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-          <div className="relative w-full sm:max-w-xs">
+        <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-cyan-950/40 dark:bg-[#0A1F3E]/70">
+          <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_240px_240px_auto_auto] xl:items-center">
+          <div className="relative w-full">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
             <input
               type="text"
-              placeholder="Tìm đề thi trong chuyên đề..."
+              placeholder="Tìm theo tên đề thi..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200"
+              className="h-12 w-full pl-12 pr-4 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200"
             />
           </div>
-          
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <div className="relative w-full sm:w-auto">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-lg">school</span>
+            <div className="relative w-full">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 text-lg">school</span>
               <select
                 value={selectedGrade}
                 onChange={(e) => {
                   setSelectedGrade(e.target.value);
                   setSelectedSubject("Tất cả");
                 }}
-                className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
+                className="h-12 w-full pl-10 pr-9 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
               >
                 <option value="Tất cả">Tất cả cấp bậc</option>
                 <optgroup label="Phổ Thông (K-12)">
@@ -308,12 +421,12 @@ export default function TeacherExamBankPage() {
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
             </div>
 
-            <div className="relative w-full sm:w-auto">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 text-lg">category</span>
+            <div className="relative w-full">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-indigo-600 text-lg">category</span>
               <select
                 value={selectedSubject}
                 onChange={(e) => setSelectedSubject(e.target.value)}
-                className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
+                className="h-12 w-full pl-10 pr-9 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
               >
                 <option value="Tất cả">Tất cả môn học</option>
                 {availableSubjects.map((sub: string) => (
@@ -322,38 +435,34 @@ export default function TeacherExamBankPage() {
               </select>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
             </div>
-          </div>
 
-          <div className="flex items-center gap-4 ml-auto">
-            {/* View mode switcher */}
-            <div className="flex items-center bg-slate-100 dark:bg-cyan-950/40 p-1 rounded-xl border border-slate-200/50 dark:border-cyan-950/30">
+            <div className="flex h-12 items-center justify-center bg-slate-100 dark:bg-cyan-950/40 p-1 rounded-xl border border-slate-200/50 dark:border-cyan-950/30">
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
+                className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${viewMode === "list" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
                 title="Dạng danh sách"
               >
                 <span className="material-symbols-outlined text-lg">format_list_bulleted</span>
               </button>
               <button
                 onClick={() => setViewMode("table")}
-                className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === "table" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
+                className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${viewMode === "table" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
                 title="Dạng bảng"
               >
                 <span className="material-symbols-outlined text-lg">table_chart</span>
               </button>
             </div>
 
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl">
-              <span className="material-symbols-outlined text-slate-400 text-lg">quiz</span>
-              <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+            <div className="flex h-12 items-center justify-center gap-2 px-4 bg-[#0C2E5E] text-white rounded-xl xl:min-w-[124px]">
+              <span className="material-symbols-outlined text-white/80 text-lg">quiz</span>
+              <span className="text-sm font-extrabold">
                 {filtered.length} đề thi
               </span>
             </div>
           </div>
-        </div>
+        </section>
       </ScrollReveal>
 
-      {/* Exam list */}
       <ScrollReveal variant="fade-up" duration={600} delay={150}>
         {showLoading ? (
           <div className="space-y-3">
@@ -378,11 +487,6 @@ export default function TeacherExamBankPage() {
             <p className="font-bold text-slate-500 dark:text-slate-400 mb-1">
               {searchTerm ? "Không tìm thấy đề phù hợp" : "Ngân hàng chưa có đề thi nào"}
             </p>
-            <p className="text-sm text-slate-400">
-              {searchTerm
-                ? "Thử thay đổi từ khoá tìm kiếm hoặc bộ lọc"
-                : "Admin và Giáo viên có thể Upload hoặc Tạo đề thi ngay tại đây."}
-            </p>
           </div>
         ) : viewMode === "table" ? (
           <div className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-3xl overflow-hidden shadow-sm">
@@ -401,13 +505,11 @@ export default function TeacherExamBankPage() {
                   {filtered.map((exam: any) => {
                     const diff = exam.difficulty ? DIFFICULTY_CONFIG[exam.difficulty] : null;
                     const isRemoving = removingId === exam.id;
-                    const isDeleting = deletingId === exam.id;
                     return (
                       <tr
                         key={exam.id}
                         className="group hover:bg-slate-50/50 dark:hover:bg-[#0E2D56]/30 transition-colors"
                       >
-                        {/* Title */}
                         <td className="py-4 px-6 min-w-[250px]">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center shrink-0">
@@ -418,15 +520,11 @@ export default function TeacherExamBankPage() {
                             </span>
                           </div>
                         </td>
-
-                        {/* Subject */}
                         <td className="py-4 px-6">
                           <span className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-lg border border-slate-100 dark:border-cyan-950/20">
                             {exam.subject || "Chưa rõ"}
                           </span>
                         </td>
-
-                        {/* Stats */}
                         <td className="py-4 px-6">
                           <div className="flex flex-col gap-0.5 text-xs text-slate-500 dark:text-slate-400 font-semibold">
                             <span className="flex items-center gap-1">
@@ -439,8 +537,6 @@ export default function TeacherExamBankPage() {
                             </span>
                           </div>
                         </td>
-
-                        {/* Difficulty */}
                         <td className="py-4 px-6">
                           {diff ? (
                             <span className={`px-2 py-0.5 text-[10px] font-black rounded-md inline-block uppercase tracking-wider ${diff.cls}`}>
@@ -450,41 +546,26 @@ export default function TeacherExamBankPage() {
                             <span className="text-slate-400">--</span>
                           )}
                         </td>
-
-
-                        {/* Actions */}
                         <td className="py-4 px-6 text-right">
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
-                              onClick={() => router.push(`/${locale}/teacher/exams/${exam.id}`)}
+                              onClick={() => setExamToView(exam)}
                               title="Xem chi tiết"
-                              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"
+                              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all cursor-pointer"
                             >
                               <span className="material-symbols-outlined text-lg">visibility</span>
                             </button>
                             {user?.id === exam.teacherId && (
-                              <>
-                                <button
-                                  onClick={() => handleRemoveExam(exam.id)}
-                                  disabled={isRemoving || isDeleting}
-                                  title="Gỡ khỏi ngân hàng"
-                                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-orange-50 dark:hover:bg-orange-900/30 text-slate-400 hover:text-orange-500 transition-all disabled:opacity-40"
-                                >
-                                  <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
-                                    {isRemoving ? "refresh" : "link_off"}
-                                  </span>
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteExam(exam.id)}
-                                  disabled={isRemoving || isDeleting}
-                                  title="Xoá vĩnh viễn"
-                                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all disabled:opacity-40"
-                                >
-                                  <span className={`material-symbols-outlined text-lg ${isDeleting ? "animate-spin" : ""}`}>
-                                    {isDeleting ? "refresh" : "delete_forever"}
-                                  </span>
-                                </button>
-                              </>
+                              <button
+                                onClick={() => handleRemoveExam(exam.id)}
+                                disabled={isRemoving}
+                                title="Gỡ khỏi ngân hàng"
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-orange-50 dark:hover:bg-orange-900/30 text-slate-400 hover:text-orange-500 transition-all disabled:opacity-40"
+                              >
+                                <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
+                                  {isRemoving ? "refresh" : "link_off"}
+                                </span>
+                              </button>
                             )}
                           </div>
                         </td>
@@ -500,18 +581,14 @@ export default function TeacherExamBankPage() {
             {filtered.map((exam: any) => {
               const diff = exam.difficulty ? DIFFICULTY_CONFIG[exam.difficulty] : null;
               const isRemoving = removingId === exam.id;
-              const isDeleting = deletingId === exam.id;
               return (
                 <div
                   key={exam.id}
                   className="group flex gap-4 p-5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl shadow-sm hover:shadow-md hover:border-[#00C6FF]/40 transition-all items-center"
                 >
-                  {/* Icon */}
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center shrink-0 shadow-sm">
                     <span className="material-symbols-outlined text-white text-xl">quiz</span>
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                       {diff && (
@@ -529,51 +606,30 @@ export default function TeacherExamBankPage() {
                           {exam.questionCount} câu hỏi
                         </span>
                       )}
-                      {exam.duration > 0 && (
-                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[9px] font-bold rounded">
-                          {exam.duration} phút
-                        </span>
-                      )}
                     </div>
                     <h3 className="font-extrabold text-slate-800 dark:text-white text-base leading-snug line-clamp-1 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                       {exam.title?.replace(/\s*\(Ngân hàng\)/gi, "")}
                     </h3>
                   </div>
-
-                  {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() =>
-                        router.push(`/${locale}/teacher/exams/${exam.id}`)
-                      }
+                      onClick={() => setExamToView(exam)}
                       title="Xem chi tiết"
-                      className="p-2 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
+                      className="p-2 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-lg">visibility</span>
                     </button>
                     {user?.id === exam.teacherId && (
-                      <>
-                        <button
-                          onClick={() => handleRemoveExam(exam.id)}
-                          disabled={isRemoving || isDeleting}
-                          title="Gỡ khỏi ngân hàng đề thi"
-                          className="p-2 text-slate-400 hover:text-orange-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all disabled:opacity-40"
-                        >
-                          <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
-                            {isRemoving ? "refresh" : "link_off"}
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteExam(exam.id)}
-                          disabled={isRemoving || isDeleting}
-                          title="Xoá vĩnh viễn"
-                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all disabled:opacity-40"
-                        >
-                          <span className={`material-symbols-outlined text-lg ${isDeleting ? "animate-spin" : ""}`}>
-                            {isDeleting ? "refresh" : "delete_forever"}
-                          </span>
-                        </button>
-                      </>
+                      <button
+                        onClick={() => handleRemoveExam(exam.id)}
+                        disabled={isRemoving}
+                        title="Gỡ khỏi ngân hàng đề thi"
+                        className="p-2 text-slate-400 hover:text-orange-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all disabled:opacity-40"
+                      >
+                        <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
+                          {isRemoving ? "refresh" : "link_off"}
+                        </span>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -582,6 +638,13 @@ export default function TeacherExamBankPage() {
           </div>
         )}
       </ScrollReveal>
+
+      {/* Exam Detail Modal */}
+      <ExamDetailModal
+        isOpen={!!examToView}
+        onClose={() => setExamToView(null)}
+        exam={examToView}
+      />
     </main>
   );
 }

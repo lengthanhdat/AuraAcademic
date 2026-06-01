@@ -14,7 +14,7 @@ import {
   Link
 } from "lucide-react";
 
-type Tab = "stream" | "members" | "materials" | "chat" | "gradebook" | "exams";
+type Tab = "stream" | "members" | "chat" | "gradebook" | "exams";
 
 interface ClassroomMsg {
   id?: string;
@@ -32,7 +32,7 @@ export default function TeacherClassroomDetailPage() {
   const classroomId = params.id as string;
 
   const [tab, setTab] = useState<Tab>("stream");
-  const [data, setData] = useState<{ classroom: any; exams: any[]; materials: any[]; students?: any[]; pendingStudents?: any[] } | null>(null);
+  const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; pendingStudents?: any[]; removedStudents?: any[]; posts?: any[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -40,10 +40,39 @@ export default function TeacherClassroomDetailPage() {
   const [chatInput, setChatInput] = useState("");
   const [wsConnected, setWsConnected] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [examStats, setExamStats] = useState<Record<string, number[]>>({});
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stompRef = useRef<Client | null>(null);
   const userRef = useRef<any>(null);
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (tab === "gradebook" && data?.exams) {
+      data.exams.forEach(async (exam: any) => {
+        if (!exam.accessCode) return;
+        try {
+          const r = await fetch(`http://localhost:8088/api/exams/${exam.accessCode}/results`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+          });
+          if (r.ok) {
+            const results = await r.json();
+            const dist = new Array(11).fill(0);
+            results.forEach((res: any) => {
+               const maxScore = res.maxScore || 10;
+               const scaledScore = (res.score / maxScore) * 10;
+               let rounded = Math.round(scaledScore);
+               if (rounded < 0) rounded = 0;
+               if (rounded > 10) rounded = 10;
+               dist[rounded]++;
+            });
+            const maxCount = Math.max(...dist, 1);
+            const heights = dist.map(c => (c / maxCount) * 100);
+            setExamStats(prev => ({ ...prev, [exam.id]: heights }));
+          }
+        } catch(e) {}
+      });
+    }
+  }, [tab, data?.exams]);
 
   // Auto-activate tab from URL query param (e.g. ?tab=exams after returning from exam builder)
   useEffect(() => {
@@ -229,12 +258,11 @@ export default function TeacherClassroomDetailPage() {
     <div className="flex items-center justify-center min-h-screen text-slate-400">Không tìm thấy lớp học.</div>
   );
 
-  const { classroom, exams, materials, students = [], pendingStudents = [] } = data;
+  const { classroom, exams, students = [], pendingStudents = [], removedStudents = [], posts = [] } = data;
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { key: "stream",    label: "Bảng tin",   icon: <Radio className="w-4 h-4" /> },
     { key: "members",   label: "Thành viên", icon: <Users className="w-4 h-4" />, badge: classroom?.pendingStudentIds?.length || 0 },
-    { key: "materials", label: "Tài liệu",   icon: <BookOpen className="w-4 h-4" /> },
     { key: "exams",     label: "Bài thi",    icon: <Trophy className="w-4 h-4" />, badge: exams?.length || 0 },
     { key: "chat",      label: "Thảo luận",  icon: <MessageSquare className="w-4 h-4" /> },
     { key: "gradebook", label: "Bảng điểm",  icon: <BarChart3 className="w-4 h-4" /> },
@@ -315,21 +343,60 @@ export default function TeacherClassroomDetailPage() {
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-bold">Đăng thông báo cho lớp...</span>
               </div>
               <textarea
+                id="postInput"
                 rows={3}
                 placeholder="Nhập nội dung thông báo, nhắc nhở, bài tập..."
                 className="w-full bg-slate-50 dark:bg-[#051329] border border-slate-200 dark:border-cyan-950/40 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-100 text-sm resize-none focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
               <div className="flex justify-end mt-3">
-                <button className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_12px_rgba(0,198,255,0.2)] active:scale-[0.98]">
+                <button 
+                  onClick={async () => {
+                    const content = (document.getElementById("postInput") as HTMLTextAreaElement)?.value;
+                    if (!content?.trim()) return;
+                    try {
+                      const r = await fetch(`http://localhost:8088/api/classrooms/${classroomId}/posts`, {
+                        method: 'POST',
+                        headers: { 
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${localStorage.getItem("accessToken")}` 
+                        },
+                        body: JSON.stringify({ content })
+                      });
+                      if (!r.ok) throw new Error("Không thể đăng thông báo.");
+                      toast.success("Đã đăng thông báo.");
+                      (document.getElementById("postInput") as HTMLTextAreaElement).value = "";
+                      fetchData();
+                    } catch(e: any) { toast.error(e.message); }
+                  }}
+                  className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_12px_rgba(0,198,255,0.2)] active:scale-[0.98]"
+                >
                   Đăng thông báo
                 </button>
               </div>
             </div>
-            <div className="text-center text-slate-400 dark:text-slate-500 py-16 border border-dashed border-slate-200 dark:border-cyan-950/60 rounded-3xl bg-white/40 dark:bg-[#0A1F3E]/20 backdrop-blur-sm">
-              <span className="material-symbols-outlined text-4xl mb-3 block text-slate-300 dark:text-slate-600">notifications_active</span>
-              <p className="font-bold text-slate-500 dark:text-slate-400 mb-1">Chưa có thông báo nào</p>
-              <p className="text-xs text-slate-400">Hãy đăng thông báo đầu tiên để trao đổi và giao nhiệm vụ cho cả lớp!</p>
-            </div>
+            
+            {posts.length === 0 ? (
+              <div className="text-center text-slate-400 dark:text-slate-500 py-16 border border-dashed border-slate-200 dark:border-cyan-950/60 rounded-3xl bg-white/40 dark:bg-[#0A1F3E]/20 backdrop-blur-sm">
+                <span className="material-symbols-outlined text-4xl mb-3 block text-slate-300 dark:text-slate-600">notifications_active</span>
+                <p className="font-bold text-slate-500 dark:text-slate-400 mb-1">Chưa có thông báo nào</p>
+                <p className="text-xs text-slate-400">Hãy đăng thông báo đầu tiên để trao đổi và giao nhiệm vụ cho cả lớp!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post: any) => (
+                  <div key={post.id} className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 text-xs font-black">GV</div>
+                      <div>
+                        <p className="text-slate-800 dark:text-slate-100 text-sm font-bold">{post.authorName}</p>
+                        <p className="text-slate-400 dark:text-slate-500 text-xs">{new Date(post.createdAt).toLocaleString("vi-VN")}</p>
+                      </div>
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">{post.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -406,54 +473,60 @@ export default function TeacherClassroomDetailPage() {
               ) : (
                 <div className="space-y-2">
                   {students.map((stud: any) => (
-                    <div key={stud.id} className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-[#051329]/60 rounded-xl border border-slate-200/50 dark:border-transparent">
+                    <div key={stud.id} className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-[#051329]/60 rounded-xl border border-slate-200/50 dark:border-transparent group">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 text-xs font-black">H</div>
                       <div>
                         <p className="text-slate-800 dark:text-slate-100 text-sm font-bold">{stud.fullName}</p>
                         <p className="text-slate-450 dark:text-slate-500 text-xs font-semibold">{stud.email}</p>
                       </div>
-                      <span className="ml-auto text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-450 rounded-full font-bold">Thành viên</span>
+                      <span className="ml-auto text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-450 rounded-full font-bold group-hover:hidden">Thành viên</span>
+                      <button
+                        onClick={async () => {
+                          if (window.confirm("Bạn có chắc chắn muốn xóa học sinh này khỏi lớp?")) {
+                            try {
+                              const r = await fetch(`http://localhost:8088/api/classrooms/${classroomId}/remove/${stud.id}`, {
+                                method: 'POST',
+                                headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+                              });
+                              if (!r.ok) throw new Error("Không thể xóa học sinh.");
+                              toast.success("Đã xóa học sinh khỏi lớp.");
+                              fetchData();
+                            } catch (e: any) { toast.error(e.message); }
+                          }
+                        }}
+                        className="ml-auto hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-600 hover:text-white rounded-lg text-xs font-bold transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Xóa
+                      </button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </div>
-        )}
 
-        {/* TÀI LIỆU */}
-        {tab === "materials" && (
-          <div className="max-w-3xl mx-auto">
-            <h3 className="text-slate-800 dark:text-white font-bold mb-4 text-sm uppercase tracking-wider">Tài liệu của lớp ({materials.length})</h3>
-            {materials.length === 0 ? (
-              <div className="text-center text-slate-400 dark:text-slate-500 py-20 border border-dashed border-slate-200 dark:border-cyan-950/60 rounded-3xl bg-white dark:bg-[#0A1F3E]/20">
-                <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30 animate-pulse" />
-                <p className="font-bold text-slate-500 dark:text-slate-400">Chưa có tài liệu nào</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Giáo viên có thể gán các tài liệu hệ thống cho lớp này.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {materials.map((m: any) => (
-                  <a
-                    key={m.id}
-                    href={m.fileUrl || "#"}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-4 bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-2xl px-6 py-5 shadow-sm hover:border-cyan-500/40 hover:-translate-y-0.5 transition-all group"
-                  >
-                    <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0 border border-blue-100/50">
-                      <FileText className="w-5 h-5 text-blue-500" />
+            {/* Removed students */}
+            {removedStudents.length > 0 && (
+              <div className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm opacity-75">
+                <h3 className="text-slate-800 dark:text-slate-300 font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                  <Users className="w-4 h-4 text-slate-500" /> Học sinh đã rời lớp ({removedStudents.length})
+                </h3>
+                <div className="space-y-2">
+                  {removedStudents.map((stud: any) => (
+                    <div key={stud.id} className="flex items-center gap-3 px-4 py-3 bg-slate-100 dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-transparent">
+                      <div className="w-9 h-9 rounded-full bg-slate-200/50 dark:bg-slate-800/50 flex items-center justify-center text-slate-500 text-xs font-black">H</div>
+                      <div>
+                        <p className="text-slate-700 dark:text-slate-400 text-sm font-bold">{stud.fullName}</p>
+                        <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold">{stud.email}</p>
+                      </div>
+                      <span className="ml-auto text-xs px-2.5 py-1 bg-slate-200 dark:bg-slate-800 text-slate-500 rounded-full font-bold">Đã xóa</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-slate-800 dark:text-white font-bold truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{m.title}</p>
-                      <p className="text-slate-450 dark:text-slate-500 text-xs font-semibold mt-0.5">{m.subject || "Chưa phân loại"}</p>
-                    </div>
-                  </a>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
         )}
+
 
         {/* THẢO LUẬN */}
         {tab === "chat" && (
@@ -555,10 +628,10 @@ export default function TeacherClassroomDetailPage() {
                 <div className="bg-white dark:bg-[#0A1F3E]/60 p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/20 space-y-2">
                   <div className="flex items-center gap-2 font-black text-slate-700 dark:text-slate-200">
                     <span className="w-5 h-5 rounded-full bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 flex items-center justify-center text-[10px]">2</span>
-                    Giao bài thi đã có từ &quot;Kỳ thi của tôi&quot;
+                    Giao bài thi đã có từ "Kỳ thi của tôi"
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 leading-relaxed pl-7 font-medium">
-                    Vào trang <a href="/teacher/my-exams" className="text-cyan-600 dark:text-cyan-400 font-black hover:underline">Kỳ thi của tôi</a> ở menu trái. Bấm <strong className="text-cyan-600 dark:text-cyan-400">Chỉnh sửa</strong> (hình bút) của đề thi đã có, tại mục Lớp học ở cột bên phải chọn lớp <strong className="text-cyan-600 dark:text-cyan-400">&quot;{classroom?.name}&quot;</strong> rồi bấm Lưu.
+                    Nhấp nút <strong className="text-cyan-600 dark:text-cyan-400">"Thêm từ Kho lưu trữ"</strong> phía trên. Danh sách các bài thi bạn đã tạo sẽ hiện ra để bạn có thể chọn và giao trực tiếp cho lớp một cách nhanh chóng.
                   </p>
                 </div>
               </div>
@@ -668,21 +741,44 @@ export default function TeacherClassroomDetailPage() {
               ) : (
                 <div className="space-y-6">
                   {exams.map((exam: any) => {
-                    // Tạo phổ điểm minh họa (10 cột: 0-10)
-                    const heights = Array.from({ length: 11 }, () => Math.floor(Math.random() * 90 + 5));
+                    const heights = examStats[exam.id] || Array.from({ length: 11 }, () => 0);
                     return (
                       <div key={exam.id} className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/40 shadow-sm">
                         <div className="flex items-center justify-between mb-4 border-b border-slate-200/50 pb-3">
                           <h4 className="text-slate-800 dark:text-white font-bold text-base">{exam.title}</h4>
-                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200/30">
-                            {exam.questionCount || exam.versions?.[0]?.questions?.length || 0} câu hỏi
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const r = await fetch(`http://localhost:8088/api/exams/${exam.accessCode}/results`, {
+                                    headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
+                                  });
+                                  const results = await r.json();
+                                  let csv = "Họ tên,Email,Điểm,Thời gian nộp\n";
+                                  results.forEach((res: any) => {
+                                    csv += `${res.studentName || 'Ẩn danh'},${res.studentEmail || ''},${res.score}/${res.maxScore},${res.submittedAt ? new Date(res.submittedAt).toLocaleString('vi-VN') : ''}\n`;
+                                  });
+                                  const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
+                                  const link = document.createElement("a");
+                                  link.href = URL.createObjectURL(blob);
+                                  link.download = `BangDiem_${exam.title}.csv`;
+                                  link.click();
+                                } catch (e: any) { toast.error("Không thể xuất bảng điểm: " + e.message); }
+                              }}
+                              className="text-xs font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-100/50 dark:bg-cyan-500/20 px-3 py-1.5 rounded-lg border border-cyan-200 dark:border-cyan-500/30 hover:bg-cyan-100 dark:hover:bg-cyan-500/30 transition-colors"
+                            >
+                              Xuất CSV
+                            </button>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200/30">
+                              {exam.submissionCount || 0} lượt nộp
+                            </span>
+                          </div>
                         </div>
                         {/* SVG Bar Chart */}
                         <div className="mt-2">
                           <div className="flex items-end gap-1.5 h-20">
                             {heights.map((h, i) => (
-                              <div key={i} className="flex-1 flex flex-col items-center gap-0.5 group/bar cursor-pointer" title={`Điểm ${i}: ${h}%`}>
+                              <div key={i} className="flex-1 flex flex-col items-center gap-0.5 group/bar cursor-pointer">
                                 <div
                                   className="w-full rounded-t bg-gradient-to-t from-cyan-600/80 to-cyan-400/80 group-hover/bar:from-cyan-500 group-hover/bar:to-cyan-300 transition-all"
                                   style={{ height: `${h}%` }}
