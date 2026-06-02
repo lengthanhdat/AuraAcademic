@@ -90,7 +90,6 @@ export function TeacherHeader({ onMenuClick }: HeaderProps) {
           <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700 cursor-pointer hover:opacity-90 transition-opacity group">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-black text-[#0C2E5E] dark:text-slate-200 tracking-tight group-hover:text-[#00C6FF] transition-colors leading-none">{user?.fullName || t('teacher_default')}</p>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 uppercase font-extrabold tracking-wider">{t('role_teacher')}</p>
             </div>
             <div className="relative">
               {user?.verificationStatus === "VERIFIED" ? (

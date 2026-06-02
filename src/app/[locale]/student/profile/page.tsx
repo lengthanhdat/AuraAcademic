@@ -1,381 +1,645 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAlert } from "@/components/ui/AlertProvider";
-import { useTranslations } from "next-intl";
 
-export default function StudentProfile() {
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { API_BASE, getAuthHeaders } from "@/lib/api";
+import { useAlert } from "@/components/ui/AlertProvider";
+
+type StudentProfile = {
+  id?: string;
+  fullName?: string;
+  email?: string;
+  role?: string;
+  studentId?: string;
+  phoneNumber?: string;
+  birthDate?: string;
+  gender?: string;
+  title?: string;
+  department?: string;
+  avatarUrl?: string;
+  provider?: string;
+  emailVerified?: boolean;
+  twoFactorEnabled?: boolean;
+  createdAt?: string;
+  lastLoginAt?: string;
+};
+
+type ProfileForm = {
+  fullName: string;
+  studentId: string;
+  phoneNumber: string;
+  birthDate: string;
+  gender: string;
+  title: string;
+  department: string;
+};
+
+const emptyForm: ProfileForm = {
+  fullName: "",
+  studentId: "",
+  phoneNumber: "",
+  birthDate: "",
+  gender: "",
+  title: "",
+  department: "",
+};
+
+const hasValue = (value: unknown) => typeof value === "string" ? value.trim().length > 0 : value !== null && value !== undefined;
+
+const formatDate = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("vi-VN");
+};
+
+const formatDateTime = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("vi-VN", { hour12: false });
+};
+
+export default function StudentProfilePage() {
   const router = useRouter();
   const { showAlert } = useAlert();
-  const t = useTranslations('StudentProfile');
-  const [user, setUser] = useState<any>(null);
-  const [results, setResults] = useState<any[]>([]);
 
-  // States cho form
+  const [user, setUser] = useState<StudentProfile | null>(null);
+  const [results, setResults] = useState<any[]>([]);
+  const [form, setForm] = useState<ProfileForm>(emptyForm);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState({ 
-    fullName: "", 
-    studentId: "", 
-    phoneNumber: "", 
-    birthDate: "", 
-    gender: "",
-    title: "", // Dùng cho "Hệ đào tạo"
-    department: "" // Dùng cho "Lớp"
-  });
-  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
-  
-  const [saving, setSaving] = useState(false);
-  const [changingPw, setChangingPw] = useState(false);
-  const [pwMsg, setPwMsg] = useState({ type: "", text: "" });
+  const [isSaving, setIsSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isSendingVerification, setIsSendingVerification] = useState(false);
+  const [twoFactorPending, setTwoFactorPending] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [isTwoFactorBusy, setIsTwoFactorBusy] = useState(false);
+
+  const updateLocalUser = (nextUser: StudentProfile) => {
+    setUser(nextUser);
+    localStorage.setItem("user", JSON.stringify(nextUser));
+    window.dispatchEvent(new Event("user-updated"));
+  };
+
+  const fillForm = (nextUser: StudentProfile) => {
+    setForm({
+      fullName: nextUser.fullName || "",
+      studentId: nextUser.studentId || "",
+      phoneNumber: nextUser.phoneNumber || "",
+      birthDate: nextUser.birthDate || "",
+      gender: nextUser.gender || "",
+      title: nextUser.title || "",
+      department: nextUser.department || "",
+    });
+  };
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      const u = JSON.parse(stored);
-      setUser(u);
-      setForm({ 
-        fullName: u.fullName || "", 
-        studentId: u.studentId || "",
-        phoneNumber: u.phoneNumber || "",
-        birthDate: u.birthDate || "",
-        gender: u.gender || "",
-        title: u.title || "",
-        department: u.department || ""
-      });
-      
-      const token = localStorage.getItem("accessToken");
-      
-      // Fetch kết quả thi
-      fetch(`http://localhost:8088/api/exams/results/student/${u.id}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            setResults(data.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0)));
-          }
-        })
-        .catch(err => console.error("Error fetching results:", err));
-    }
-  }, []);
+    let ignore = false;
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const loadProfile = async () => {
+      setIsLoading(true);
+      try {
+        const storedRaw = localStorage.getItem("user");
+        const storedUser: StudentProfile | null = storedRaw ? JSON.parse(storedRaw) : null;
+
+        if (storedUser && !ignore) {
+          setUser(storedUser);
+          fillForm(storedUser);
+        }
+
+        const profileRes = await fetch(`${API_BASE}/users/me`, { headers: getAuthHeaders() });
+        if (!profileRes.ok) throw new Error("PROFILE_FAILED");
+
+        const profile: StudentProfile = await profileRes.json();
+        if (ignore) return;
+
+        updateLocalUser(profile);
+        fillForm(profile);
+
+        if (profile.id) {
+          const resultRes = await fetch(`${API_BASE}/exams/results/student/${profile.id}`, { headers: getAuthHeaders() });
+          const data = await resultRes.json().catch(() => []);
+          if (!ignore && Array.isArray(data)) {
+            setResults(data.sort((a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime()));
+          }
+        }
+      } catch {
+        if (!ignore) showAlert({ title: "Không tải được hồ sơ", message: "Vui lòng thử lại sau.", type: "error" });
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+    return () => {
+      ignore = true;
+    };
+  }, [showAlert]);
+
+  const displayName = user?.fullName || user?.email || "Học sinh";
+  const initials = displayName.trim().slice(0, 2).toUpperCase();
+  const totalExams = results.length;
+  const averageScore = totalExams > 0 ? results.reduce((sum, item) => sum + Number(item.score || 0), 0) / totalExams : 0;
+  const bestScore = totalExams > 0 ? Math.max(...results.map(item => Number(item.score || 0))) : 0;
+  const passCount = results.filter(item => Number(item.score || 0) >= 5).length;
+
+  const infoItems = [
+    { icon: "mail", label: "Email", value: user?.email },
+    { icon: "badge", label: "Mã học sinh", value: user?.studentId },
+    { icon: "groups", label: "Lớp", value: user?.department },
+    { icon: "school", label: "Hệ đào tạo", value: user?.title },
+    { icon: "call", label: "Số điện thoại", value: user?.phoneNumber },
+    { icon: "cake", label: "Ngày sinh", value: user?.birthDate ? formatDate(user.birthDate) : "" },
+    { icon: "wc", label: "Giới tính", value: user?.gender },
+    { icon: "login", label: "Đăng nhập gần nhất", value: formatDateTime(user?.lastLoginAt) },
+  ].filter(item => hasValue(item.value));
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      showAlert({
-        title: t("alert_file_error"),
-        message: t("avatar_type_error"),
-        type: "error"
-      });
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      showAlert({
-        title: t("alert_file_size"),
-        message: t("avatar_size_error"),
-        type: "error"
-      });
+      showAlert({ title: "File không hợp lệ", message: "Chỉ chấp nhận file ảnh.", type: "error" });
       return;
     }
 
     const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      const base64 = reader.result as string;
+    reader.onloadend = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch("http://localhost:8088/api/users/me/avatar", {
+        const res = await fetch(`${API_BASE}/users/me/avatar`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ avatarUrl: base64 })
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ avatarUrl: reader.result }),
         });
-
-        if (res.ok) {
-          const updatedUser = { ...user, avatarUrl: base64 };
-          setUser(updatedUser);
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-          window.dispatchEvent(new Event("user-updated"));
-          showAlert({
-            title: t("alert_success"),
-            message: t("avatar_success"),
-            type: "success"
-          });
-        } else {
-          showAlert({
-            title: t("alert_upload_error"),
-            message: t("avatar_error"),
-            type: "error"
-          });
-        }
+        if (!res.ok) throw new Error("AVATAR_FAILED");
+        const updated = await res.json();
+        updateLocalUser(updated);
+        showAlert({ title: "Đã cập nhật ảnh", message: "Ảnh đại diện đã được lưu.", type: "success" });
       } catch {
-        showAlert({
-            title: t("alert_connect_error"),
-            message: t("server_error"),
-            type: "error"
-          });
+        showAlert({ title: "Không lưu được ảnh", message: "Vui lòng thử lại với ảnh khác.", type: "error" });
       }
     };
+    reader.readAsDataURL(file);
   };
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+  const handleSaveProfile = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSaving(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/users/me`, {
+      const payload = Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim()]));
+      const res = await fetch(`${API_BASE}/users/me`, {
         method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(form),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        const updated = { ...user, ...form };
-        localStorage.setItem("user", JSON.stringify(updated));
-        window.dispatchEvent(new Event("user-updated"));
-        setUser(updated);
-        showAlert({
-          title: t("alert_success"),
-          message: t("profile_success"),
-          type: "success"
-        });
-        setIsEditing(false);
-      } else {
-        showAlert({
-          title: t("alert_save_error"),
-          message: t("profile_error"),
-          type: "error"
-        });
-      }
-    } catch {
-      showAlert({
-        title: t("alert_connect_error"),
-        message: t("server_error"),
-        type: "error"
-      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "SAVE_FAILED");
+
+      updateLocalUser(data);
+      fillForm(data);
+      setIsEditing(false);
+      showAlert({ title: "Đã lưu hồ sơ", message: "Thông tin học sinh đã được cập nhật.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không lưu được hồ sơ", message: error.message || "Vui lòng kiểm tra lại thông tin.", type: "error" });
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPwMsg({ type: "", text: "" });
-    if (pwForm.newPassword !== pwForm.confirmPassword) {
-      setPwMsg({ type: "error", text: t('pw_mismatch') });
+  const handleChangePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showAlert({ title: "Mật khẩu không khớp", message: "Vui lòng nhập lại mật khẩu xác nhận.", type: "warning" });
       return;
     }
-    setChangingPw(true);
+
+    setIsChangingPassword(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/users/me/password`, {
+      const res = await fetch(`${API_BASE}/users/me/password`, {
         method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
       });
-      if (res.ok) {
-        setPwMsg({ type: "success", text: t('pw_success') });
-        setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-        setTimeout(() => setPwMsg({ type: "", text: "" }), 3000);
-      } else {
-        const data = await res.json();
-        setPwMsg({ type: "error", text: data.error || t('pw_error') });
-      }
-    } catch {
-      setPwMsg({ type: "error", text: t('pw_server_error') });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "PASSWORD_FAILED");
+
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      showAlert({ title: "Đã đổi mật khẩu", message: "Bạn có thể tiếp tục sử dụng tài khoản.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không đổi được mật khẩu", message: error.message || "Vui lòng kiểm tra mật khẩu hiện tại.", type: "error" });
     } finally {
-      setChangingPw(false);
+      setIsChangingPassword(false);
     }
   };
 
-  if (!user) return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-    </div>
-  );
+  const handleSendEmailVerification = async () => {
+    if (!user?.email) return;
+    setIsSendingVerification(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = data.message || data.error || "";
+        if (message.includes("được xác thực") || message.includes("đã xác thực")) {
+          updateLocalUser({ ...user, emailVerified: true });
+          showAlert({ title: "Email đã xác minh", message: "Tài khoản này đã được xác minh email trước đó.", type: "info" });
+          return;
+        }
+        throw new Error(message || "VERIFY_EMAIL_FAILED");
+      }
 
-  const totalExams = results.length;
-  const avgScore = totalExams > 0 
-    ? (results.reduce((acc, curr) => acc + (curr.score || 0), 0) / totalExams).toFixed(2)
-    : "0.00";
-  
-  const getRank = (score: number) => {
-    if (score >= 9.0) return t("rank_excellent");
-    if (score >= 8.0) return t("rank_good");
-    if (score >= 6.5) return t("rank_fair");
-    if (score >= 5.0) return t("rank_average");
-    return t("rank_fail");
+      showAlert({ title: "Đã gửi mã xác minh", message: "Vui lòng kiểm tra email và nhập mã OTP.", type: "success" });
+      router.push(`/verify-email?email=${encodeURIComponent(user.email)}`);
+    } catch (error: any) {
+      showAlert({ title: "Không gửi được mã", message: error.message || "Vui lòng thử lại sau.", type: "error" });
+    } finally {
+      setIsSendingVerification(false);
+    }
   };
-  
-  const currentRank = totalExams > 0 ? getRank(parseFloat(avgScore)) : "--";
 
-  const getAiInsight = () => {
-    if (totalExams === 0) return t("ai_insight_new");
-    const score = parseFloat(avgScore);
-    if (score >= 8.0) return t("ai_insight_good", {score: avgScore});
-    if (score >= 5.0) return t("ai_insight_ok", {score: avgScore});
-    return t("ai_insight_low");
+  const handleSendTwoFactorOtp = async () => {
+    setIsTwoFactorBusy(true);
+    try {
+      const res = await fetch(`${API_BASE}/users/me/2fa/setup`, { headers: getAuthHeaders() });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "2FA_SETUP_FAILED");
+
+      setTwoFactorPending(true);
+      setTwoFactorCode("");
+      showAlert({ title: "Đã gửi mã 2FA", message: "Mã OTP 6 số đã được gửi tới email của bạn.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không gửi được mã 2FA", message: error.message || "Vui lòng thử lại sau.", type: "error" });
+    } finally {
+      setIsTwoFactorBusy(false);
+    }
   };
+
+  const handleConfirmTwoFactor = async () => {
+    if (!twoFactorCode.trim()) {
+      showAlert({ title: "Thiếu mã 2FA", message: "Nhập mã OTP 6 số đã gửi về email.", type: "warning" });
+      return;
+    }
+
+    setIsTwoFactorBusy(true);
+    try {
+      const endpoint = user?.twoFactorEnabled ? "disable" : "enable";
+      const res = await fetch(`${API_BASE}/users/me/2fa/${endpoint}`, {
+        method: "POST",
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ code: twoFactorCode.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "2FA_CONFIRM_FAILED");
+
+      if (user) updateLocalUser({ ...user, twoFactorEnabled: !user.twoFactorEnabled });
+      setTwoFactorPending(false);
+      setTwoFactorCode("");
+      showAlert({
+        title: user?.twoFactorEnabled ? "Đã tắt 2FA" : "Đã bật 2FA",
+        message: user?.twoFactorEnabled ? "Xác thực hai bước đã được tắt." : "Tài khoản đã được bảo vệ bằng email OTP.",
+        type: "success",
+      });
+    } catch (error: any) {
+      showAlert({ title: "Không xác nhận được 2FA", message: error.message || "Vui lòng kiểm tra lại mã.", type: "error" });
+    } finally {
+      setIsTwoFactorBusy(false);
+    }
+  };
+
+  if (isLoading && !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-sky-600" />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 p-8 max-w-[1400px] w-full mx-auto animate-in fade-in duration-500">
-      
-      <header className="flex justify-between items-center mb-10">
-        <div>
-          <h2 className="text-3xl font-extrabold text-primary dark:text-[#E2E8F0] tracking-tight">{t('title')}</h2>
-          <p className="text-on-surface-variant dark:text-slate-400 text-sm mt-1">{t('subtitle')}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-sm font-bold text-primary dark:text-slate-200">{user.fullName}</p>
-            <p className="text-xs text-on-surface-variant dark:text-slate-400">{t('role')}</p>
-          </div>
-          <div className="w-10 h-10 rounded-xl overflow-hidden bg-primary text-white flex items-center justify-center font-bold">
-            {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              user.fullName?.charAt(0).toUpperCase()
-            )}
-          </div>
-        </div>
-      </header>
-
-      <div className="space-y-6">
-        {/* Hero Card */}
-        <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-3xl p-8 flex flex-col md:flex-row shadow-sm items-center gap-8 shadow-sm">
-          <div className="relative group cursor-pointer">
-            <div className="w-32 h-32 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-bold shadow-xl">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                user.fullName?.charAt(0).toUpperCase()
-              )}
+    <div className="min-h-screen bg-slate-50 p-4 text-slate-900 dark:bg-slate-950 dark:text-white md:p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="relative h-32 w-32 overflow-hidden rounded-[28px] bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-xl">
+                {user?.avatarUrl ? (
+                  <Image src={user.avatarUrl} alt={displayName} fill sizes="128px" unoptimized className="object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-5xl font-black">{initials}</div>
+                )}
+                <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-1 bg-black/45 text-xs font-black text-white opacity-0 transition hover:opacity-100">
+                  <span className="material-symbols-outlined text-[24px]">photo_camera</span>
+                  Đổi ảnh
+                  <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+                </label>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">Hồ sơ học sinh</p>
+                <h1 className="mt-2 break-words text-3xl font-black md:text-4xl">{displayName}</h1>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {user?.studentId && <Badge icon="badge" text={user.studentId} />}
+                  {user?.department && <Badge icon="groups" text={user.department} />}
+                  {user?.title && <Badge icon="school" text={user.title} />}
+                </div>
+              </div>
             </div>
-            <label className="absolute inset-0 bg-black/40 backdrop-blur-xs opacity-0 group-hover:opacity-100 rounded-3xl flex items-center justify-center transition-all duration-300 cursor-pointer text-[10px] font-bold text-white flex-col gap-1">
-              <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-              Đổi ảnh
-              <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-            </label>
+            <button
+              type="button"
+              onClick={() => setIsEditing(prev => !prev)}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-sky-600/20 hover:bg-sky-700"
+            >
+              <span className="material-symbols-outlined text-[20px]">{isEditing ? "close" : "edit"}</span>
+              {isEditing ? "Đóng sửa" : "Sửa hồ sơ"}
+            </button>
           </div>
-          <div className="flex-1 text-center md:text-left">
-            <h3 className="text-4xl font-extrabold text-primary dark:text-[#E2E8F0] mb-2">{user.fullName}</h3>
-            <div className="flex flex-wrap justify-center md:justify-start gap-3">
-              {user.studentId && <span className="px-3 py-1 bg-blue-50 dark:bg-cyan-950/40 text-blue-700 dark:text-[#00C6FF] border border-blue-100/50 dark:border-cyan-950/50 rounded-full text-xs font-bold uppercase tracking-wider">{user.studentId}</span>}
-              {user.department && <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30 rounded-full text-xs font-bold uppercase tracking-wider">{user.department}</span>}
-              {user.title && <span className="px-3 py-1 bg-slate-50 dark:bg-cyan-950/20 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-cyan-950/40 rounded-full text-xs font-bold uppercase tracking-wider">{user.title}</span>}
-            </div>
-          </div>
-          <button onClick={() => setIsEditing(!isEditing)} className="px-6 py-3 bg-surface-container-high dark:bg-cyan-950/50 dark:text-slate-200 text-on-surface dark:text-slate-200 font-bold rounded-xl">{isEditing ? t('btn_close') : t('btn_edit')}</button>
         </section>
 
-        {/* Edit Form */}
+        <section className="grid gap-4 md:grid-cols-4">
+          <StatCard icon="assignment" label="Bài đã làm" value={totalExams.toString()} tone="text-sky-600" />
+          <StatCard icon="speed" label="Điểm trung bình" value={averageScore.toFixed(1)} tone="text-indigo-600" />
+          <StatCard icon="workspace_premium" label="Điểm cao nhất" value={bestScore.toFixed(1)} tone="text-emerald-600" />
+          <StatCard icon="task_alt" label="Đạt yêu cầu" value={`${passCount}/${totalExams}`} tone="text-rose-600" />
+        </section>
+
         {isEditing && (
-          <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm border border-primary/10">
-            <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-4 flex items-center gap-2">{t('update_title')}</h4>
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_fullname')} required />
-                <input value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_student_id')} />
-                <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_class')} />
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_program')} />
-                <input value={form.phoneNumber} onChange={e => setForm({ ...form, phoneNumber: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('field_phone')} />
-                <input type="date" value={form.birthDate} onChange={e => setForm({ ...form, birthDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" />
-                <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none">
-                  <option value="">{t('field_gender_placeholder')}</option>
-                  <option value="Nam">{t('gender_male')}</option>
-                  <option value="Nữ">{t('gender_female')}</option>
-                  <option value="Khác">{t('gender_other')}</option>
-                </select>
+          <Panel title="Cập nhật hồ sơ" icon="edit">
+            <form onSubmit={handleSaveProfile} className="grid gap-4 md:grid-cols-2">
+              <Input label="Họ tên" value={form.fullName} onChange={value => setForm({ ...form, fullName: value })} required />
+              <Input label="Mã học sinh" value={form.studentId} onChange={value => setForm({ ...form, studentId: value })} />
+              <Input label="Lớp" value={form.department} onChange={value => setForm({ ...form, department: value })} />
+              <Input label="Hệ đào tạo" value={form.title} onChange={value => setForm({ ...form, title: value })} />
+              <Input label="Số điện thoại" value={form.phoneNumber} onChange={value => setForm({ ...form, phoneNumber: value })} />
+              <Input label="Ngày sinh" type="date" value={form.birthDate} onChange={value => setForm({ ...form, birthDate: value })} />
+              <Select label="Giới tính" value={form.gender} onChange={value => setForm({ ...form, gender: value })} />
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="w-full rounded-2xl bg-sky-600 px-4 py-3 font-black text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                </button>
               </div>
-              <button type="submit" className="px-6 py-3 bg-primary text-on-primary font-bold rounded-xl">{saving ? t('btn_saving') : t('btn_save')}</button>
             </form>
-          </section>
+          </Panel>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section className="lg:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
-              <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">{t('detail_title')}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 block opacity-80 tracking-widest">{t('detail_email')}</label><p className="font-medium text-slate-700 dark:text-[#E2E8F0]">{user.email}</p></div>
-                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 block opacity-80 tracking-widest">{t('detail_phone')}</label><p className={user.phoneNumber ? "font-medium text-slate-700 dark:text-[#E2E8F0]" : "italic text-slate-400"}>{user.phoneNumber || t('not_updated')}</p></div>
-                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 block opacity-80 tracking-widest">{t('detail_dob')}</label><p className={user.birthDate ? "font-medium text-slate-700 dark:text-[#E2E8F0]" : "italic text-slate-400"}>{user.birthDate ? new Date(user.birthDate).toLocaleDateString("vi-VN") : t('not_updated')}</p></div>
-                <div><label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 block opacity-80 tracking-widest">{t('detail_gender')}</label><p className={user.gender ? "font-medium text-slate-700 dark:text-[#E2E8F0]" : "italic text-slate-400"}>{user.gender || t('not_updated')}</p></div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
-              <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">{t('password_title')}</h4>
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <input type="password" value={pwForm.currentPassword} onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('pw_current')} required />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input type="password" value={pwForm.newPassword} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('pw_new')} required />
-                  <input type="password" value={pwForm.confirmPassword} onChange={e => setPwForm({ ...pwForm, confirmPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none" placeholder={t('pw_confirm')} required />
-                </div>
-                <button type="submit" className="w-full py-3 bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 text-on-surface dark:text-slate-200 font-bold rounded-xl">{changingPw ? t('btn_pw_processing') : t('btn_pw_update')}</button>
-              </form>
-            </div>
-          </section>
-
-          <section className="space-y-6">
-            <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm border border-outline-variant/10">
-              <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">{t('summary_title')}</h4>
-              <div className="space-y-4">
-                <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant dark:text-slate-400">{t('col_exam')}</span><span className="text-xl font-black text-primary dark:text-[#00C6FF]">{totalExams}</span></div>
-                <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant dark:text-slate-400">{t('summary_avg')}</span><span className="text-xl font-black text-primary dark:text-[#00C6FF]">{avgScore}</span></div>
-                <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 p-4 rounded-xl flex items-center justify-between"><span className="text-xs text-on-surface-variant dark:text-slate-400">{t('summary_rank')}</span><span className="text-xl font-black text-primary dark:text-[#00C6FF]">{currentRank}</span></div>
-              </div>
-              <div className="mt-6 p-4 rounded-xl bg-tertiary-container/10 border-l-4 border-on-tertiary-container">
-                <p className="text-xs text-on-surface dark:text-slate-200 leading-relaxed">{getAiInsight()}</p>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Results Table */}
-        <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-surface-container"><h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0]">{t('results_title')}</h4></div>
-          {results.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead><tr className="bg-slate-50 dark:bg-[#051329] dark:text-slate-300 text-[10px] font-bold uppercase"><th className="px-6 py-4">{t('col_exam')}</th><th className="px-6 py-4">{t('col_date')}</th><th className="px-6 py-4">{t('col_score')}</th><th className="px-6 py-4">{t('col_status')}</th></tr></thead>
-                <tbody className="divide-y divide-surface-container dark:divide-cyan-950/40">
-                  {results.slice(0, 5).map((res, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 dark:bg-[#051329] dark:text-slate-400">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
-                            <span className="material-symbols-outlined text-[20px]">assignment</span>
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-800 dark:text-[#E2E8F0]">{res.examTitle || `${t('col_exam')} #${res.examId}`}</p>
-                            <p className="text-[10px] text-on-surface-variant dark:text-slate-400 font-medium">{t('col_score')} {res.versionCode}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-on-surface-variant dark:text-slate-400">{res.submittedAt ? new Date(res.submittedAt).toLocaleDateString("vi-VN") : "--"}</td>
-                      <td className="px-6 py-4 font-black">{res.score?.toFixed(1)}</td>
-                      <td className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${res.score >= 5 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{res.score >= 5 ? t('status_pass') : t('status_fail')}</span></td>
-                    </tr>
+        <section className="grid gap-6 xl:grid-cols-[1fr_420px]">
+          <div className="space-y-6">
+            <Panel title="Thông tin hiện có" icon="person">
+              {infoItems.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {infoItems.map(item => (
+                    <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60">
+                      <span className="material-symbols-outlined mt-0.5 text-[22px] text-sky-600 dark:text-sky-300">{item.icon}</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black uppercase tracking-wide text-slate-400">{item.label}</p>
+                        <p className="mt-1 break-words font-bold text-slate-700 dark:text-slate-200">{item.value}</p>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-10 text-center text-on-surface-variant dark:text-slate-400 italic">{t('no_data')}</div>
-          )}
+                </div>
+              ) : (
+                <EmptyState icon="person_add" text="Chưa có thông tin hồ sơ để hiển thị." />
+              )}
+            </Panel>
+
+            <Panel title="Kết quả gần đây" icon="bar_chart">
+              {results.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="text-xs font-black uppercase tracking-wide text-slate-400">
+                        <th className="px-3 py-3">Bài thi</th>
+                        <th className="px-3 py-3">Điểm</th>
+                        <th className="px-3 py-3">Nộp lúc</th>
+                        <th className="px-3 py-3">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {results.slice(0, 6).map((item, index) => {
+                        const score = Number(item.score || 0);
+                        return (
+                          <tr key={item.id || index}>
+                            <td className="px-3 py-4 font-bold text-slate-800 dark:text-white">{item.examTitle || `Bài thi #${item.examId || index + 1}`}</td>
+                            <td className="px-3 py-4 font-black text-sky-600">{score.toFixed(1)}</td>
+                            <td className="px-3 py-4 text-sm text-slate-500">{formatDateTime(item.submittedAt) || "--"}</td>
+                            <td className="px-3 py-4">
+                              <span className={`rounded-full px-3 py-1 text-xs font-black ${score >= 5 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                                {score >= 5 ? "Đạt" : "Chưa đạt"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <EmptyState icon="assignment_late" text="Chưa có kết quả thi nào." />
+              )}
+            </Panel>
+          </div>
+
+          <div className="space-y-6">
+            <Panel title="Bảo mật" icon="lock">
+              <div className="mb-5 space-y-3">
+                <SecurityActionRow
+                  label="Email"
+                  value={user?.emailVerified ? "Đã xác minh" : "Chưa xác minh"}
+                  ok={!!user?.emailVerified}
+                  actionLabel={!user?.emailVerified ? (isSendingVerification ? "Đang gửi..." : "Xác minh") : undefined}
+                  onAction={!user?.emailVerified ? handleSendEmailVerification : undefined}
+                  disabled={isSendingVerification}
+                />
+                <SecurityActionRow label="Đăng nhập" value={user?.provider ? `Qua ${user.provider}` : "Mật khẩu"} ok />
+                <SecurityActionRow
+                  label="2FA"
+                  value={user?.twoFactorEnabled ? "Đang bật" : "Chưa bật"}
+                  ok={!!user?.twoFactorEnabled}
+                  actionLabel={user?.twoFactorEnabled ? "Gửi mã tắt" : "Gửi mã bật"}
+                  onAction={handleSendTwoFactorOtp}
+                  disabled={isTwoFactorBusy}
+                />
+
+                {(twoFactorPending || user?.twoFactorEnabled) && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/60">
+                    {twoFactorPending && (
+                      <div className="mb-4 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                        Mã OTP 6 số đã được gửi về email. Nhập mã bên dưới để {user?.twoFactorEnabled ? "tắt" : "bật"} 2FA.
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <input
+                        value={twoFactorCode}
+                        onChange={event => setTwoFactorCode(event.target.value)}
+                        maxLength={6}
+                        inputMode="numeric"
+                        placeholder="Mã 6 số"
+                        className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-black tracking-[0.3em] outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleConfirmTwoFactor}
+                        disabled={isTwoFactorBusy}
+                        className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-black text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {user?.twoFactorEnabled ? "Tắt" : "Xác nhận"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleChangePassword} className="space-y-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+                <Input label="Mật khẩu hiện tại" type="password" value={passwordForm.currentPassword} onChange={value => setPasswordForm({ ...passwordForm, currentPassword: value })} required />
+                <Input label="Mật khẩu mới" type="password" value={passwordForm.newPassword} onChange={value => setPasswordForm({ ...passwordForm, newPassword: value })} required />
+                <Input label="Nhập lại mật khẩu mới" type="password" value={passwordForm.confirmPassword} onChange={value => setPasswordForm({ ...passwordForm, confirmPassword: value })} required />
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-black text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  {isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}
+                </button>
+              </form>
+            </Panel>
+          </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+function Badge({ icon, text }: { icon: string; text: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-black text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300">
+      <span className="material-symbols-outlined text-[16px]">{icon}</span>
+      {text}
+    </span>
+  );
+}
+
+function StatCard({ icon, label, value, tone }: { icon: string; label: string; value: string; tone: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between">
+        <span className={`material-symbols-outlined text-[28px] ${tone}`}>{icon}</span>
+        <p className={`text-3xl font-black ${tone}`}>{value}</p>
+      </div>
+      <p className="mt-3 text-sm font-black uppercase tracking-wide text-slate-400">{label}</p>
+    </div>
+  );
+}
+
+function Panel({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="material-symbols-outlined text-[24px] text-sky-600 dark:text-sky-300">{icon}</span>
+        <h2 className="text-lg font-black">{title}</h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function EmptyState({ icon, text }: { icon: string; text: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-400 dark:border-slate-700">
+      <span className="material-symbols-outlined text-[40px]">{icon}</span>
+      <p className="mt-2 font-bold">{text}</p>
+    </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        required={required}
+        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-sky-500/10"
+      />
+    </label>
+  );
+}
+
+function Select({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <select
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-sky-500/10"
+      >
+        <option value="">Chưa cập nhật</option>
+        <option value="Nam">Nam</option>
+        <option value="Nữ">Nữ</option>
+        <option value="Khác">Khác</option>
+      </select>
+    </label>
+  );
+}
+
+function SecurityActionRow({
+  label,
+  value,
+  ok,
+  actionLabel,
+  onAction,
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  ok: boolean;
+  actionLabel?: string;
+  onAction?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/60">
+      <div className="min-w-0">
+        <p className="font-bold text-slate-600 dark:text-slate-300">{label}</p>
+        <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-black ${ok ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+          {value}
+        </span>
+      </div>
+      {actionLabel && onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          disabled={disabled}
+          className="shrink-0 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-black text-sky-700 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300"
+        >
+          {actionLabel}
+        </button>
+      )}
     </div>
   );
 }

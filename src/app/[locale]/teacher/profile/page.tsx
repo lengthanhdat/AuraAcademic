@@ -1,678 +1,877 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { API_BASE, getAuthHeaders } from "@/lib/api";
+import { classroomApi } from "@/lib/classroomApi";
 import { useAlert } from "@/components/ui/AlertProvider";
 
-const TRANS: Record<string, string> = {
-  file_error: "Lỗi tệp",
-  avatar_type_error: "Chỉ chấp nhận file ảnh",
-  file_large: "Tệp quá lớn",
-  avatar_size_error: "Ảnh đại diện không được vượt quá 2MB",
-  success: "Thành công",
-  avatar_success: "Cập nhật ảnh đại diện thành công",
-  avatar_error: "Lỗi",
-  avatar_error_msg: "Không thể cập nhật ảnh",
-  connect_error: "Lỗi kết nối",
-  server_error: "Không thể kết nối đến máy chủ",
-  profile_success: "Cập nhật hồ sơ thành công",
-  update_error: "Lỗi cập nhật",
-  profile_error_msg: "Không thể lưu thông tin",
-  pw_mismatch: "Mật khẩu xác nhận không khớp",
-  pw_success: "Đổi mật khẩu thành công",
-  pw_error: "Đổi mật khẩu thất bại",
-  server_conn_error: "Lỗi kết nối máy chủ",
-  ended: "Đã kết thúc",
-  draft: "Bản nháp",
-  ongoing: "Đang diễn ra",
-  instructor: "Giảng viên",
-  department: "Chưa cập nhật khoa/bộ môn",
-  cancel_update: "Hủy cập nhật",
-  update_profile: "Cập nhật hồ sơ",
-  select_gender: "Chọn giới tính...",
-  female: "Nữ",
-  other: "Khác",
-  certificates: "Chứng chỉ & Giải thưởng",
-  saving: "Đang lưu...",
-  save_changes: "Lưu thay đổi",
-  no_experience: "Chưa cập nhật kinh nghiệm làm việc",
-  no_certificates: "Chưa cập nhật chứng chỉ & giải thưởng"
+type VerificationStatus = "STANDARD" | "PENDING" | "VERIFIED" | "REJECTED";
+
+type TeacherProfile = {
+  id?: string;
+  fullName?: string;
+  email?: string;
+  role?: string;
+  phoneNumber?: string;
+  birthDate?: string;
+  gender?: string;
+  title?: string;
+  department?: string;
+  workplace?: string;
+  schedule?: string;
+  avatarUrl?: string;
+  bio?: string;
+  certificates?: string;
+  experience?: string;
+  provider?: string;
+  emailVerified?: boolean;
+  twoFactorEnabled?: boolean;
+  createdAt?: string;
+  lastLoginAt?: string;
+  verificationStatus?: VerificationStatus;
 };
-const t = (key: string) => TRANS[key] ?? key;
 
+type ProfileForm = {
+  fullName: string;
+  phoneNumber: string;
+  birthDate: string;
+  gender: string;
+  title: string;
+  department: string;
+  workplace: string;
+  schedule: string;
+  bio: string;
+  certificates: string;
+  experience: string;
+};
 
-export default function TeacherProfile() {
+const emptyForm: ProfileForm = {
+  fullName: "",
+  phoneNumber: "",
+  birthDate: "",
+  gender: "",
+  title: "",
+  department: "",
+  workplace: "",
+  schedule: "",
+  bio: "",
+  certificates: "",
+  experience: "",
+};
+
+const statusUi: Record<VerificationStatus, {
+  label: string;
+  title: string;
+  description: string;
+  icon: string;
+  avatarRing: string;
+  badge: string;
+  panel: string;
+  action?: string;
+}> = {
+  VERIFIED: {
+    label: "Đã xác thực",
+    title: "Tài khoản giáo viên đã xác thực",
+    description: "Hồ sơ đã được duyệt. Ảnh đại diện có viền nổi bật để phân biệt với tài khoản chưa xác thực.",
+    icon: "verified",
+    avatarRing: "bg-gradient-to-tr from-emerald-400 via-cyan-400 to-blue-500 shadow-[0_0_30px_rgba(16,185,129,0.35)]",
+    badge: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+    panel: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+  },
+  PENDING: {
+    label: "Chờ duyệt",
+    title: "Yêu cầu xác thực đang được duyệt",
+    description: "Quản trị viên đang kiểm tra minh chứng. Tài khoản sẽ đổi sang trạng thái đã xác thực sau khi được duyệt.",
+    icon: "pending",
+    avatarRing: "bg-gradient-to-tr from-sky-300 via-blue-400 to-cyan-400 shadow-[0_0_22px_rgba(14,165,233,0.25)]",
+    badge: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300",
+    panel: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300",
+  },
+  REJECTED: {
+    label: "Bị từ chối",
+    title: "Yêu cầu xác thực chưa được duyệt",
+    description: "Hãy kiểm tra ghi chú phản hồi và gửi lại minh chứng phù hợp hơn.",
+    icon: "cancel",
+    avatarRing: "bg-gradient-to-tr from-rose-300 via-red-400 to-orange-400 shadow-[0_0_22px_rgba(244,63,94,0.25)]",
+    badge: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300",
+    panel: "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300",
+    action: "Gửi lại xác thực",
+  },
+  STANDARD: {
+    label: "Chưa xác thực",
+    title: "Tài khoản giáo viên chưa xác thực",
+    description: "Tài khoản thường chưa có viền xác thực. Gửi minh chứng để bật dấu xác thực và mở đầy đủ quyền giáo viên.",
+    icon: "shield",
+    avatarRing: "bg-slate-200 dark:bg-slate-700",
+    badge: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300",
+    panel: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300",
+    action: "Xác thực ngay",
+  },
+};
+
+const hasValue = (value: unknown) => typeof value === "string" ? value.trim().length > 0 : value !== null && value !== undefined;
+
+const normalizeStatus = (value?: string): VerificationStatus => {
+  if (value === "PENDING" || value === "VERIFIED" || value === "REJECTED") return value;
+  return "STANDARD";
+};
+
+const formatDate = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("vi-VN");
+};
+
+const formatDateTime = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("vi-VN", { hour12: false });
+};
+
+export default function TeacherProfilePage() {
   const router = useRouter();
   const { showAlert } = useAlert();
-  const [user, setUser] = useState<any>(null);
-  const [exams, setExams] = useState<any[]>([]);
-  const [verData, setVerData] = useState<any>(null);
 
-  // States cho form
+  const [user, setUser] = useState<TeacherProfile | null>(null);
+  const [verification, setVerification] = useState<any>(null);
+  const [exams, setExams] = useState<any[]>([]);
+  const [classrooms, setClassrooms] = useState<any[]>([]);
+  const [form, setForm] = useState<ProfileForm>(emptyForm);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState({ 
-    fullName: "", 
-    phoneNumber: "", 
-    birthDate: "", 
-    gender: "",
-    title: "",
-    department: "",
-    workplace: "",
-    schedule: "",
-    certificates: "",
-    experience: ""
-  });
-  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
-  
-  // Trạng thái loading / msg
-  const [saving, setSaving] = useState(false);
-  const [changingPw, setChangingPw] = useState(false);
-  const [pwMsg, setPwMsg] = useState({ type: "", text: "" });
+  const [isSaving, setIsSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isSendingVerification, setIsSendingVerification] = useState(false);
+  const [twoFactorSetup, setTwoFactorSetup] = useState<any>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [isTwoFactorBusy, setIsTwoFactorBusy] = useState(false);
+
+  const updateLocalUser = (nextUser: TeacherProfile) => {
+    setUser(nextUser);
+    localStorage.setItem("user", JSON.stringify(nextUser));
+    window.dispatchEvent(new Event("user-updated"));
+  };
+
+  const fillForm = (nextUser: TeacherProfile) => {
+    setForm({
+      fullName: nextUser.fullName || "",
+      phoneNumber: nextUser.phoneNumber || "",
+      birthDate: nextUser.birthDate || "",
+      gender: nextUser.gender || "",
+      title: nextUser.title || "",
+      department: nextUser.department || "",
+      workplace: nextUser.workplace || "",
+      schedule: nextUser.schedule || "",
+      bio: nextUser.bio || "",
+      certificates: nextUser.certificates || "",
+      experience: nextUser.experience || "",
+    });
+  };
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      const u = JSON.parse(stored);
-      setUser(u);
-      setForm({ 
-        fullName: u.fullName || "", 
-        phoneNumber: u.phoneNumber || "",
-        birthDate: u.birthDate || "",
-        gender: u.gender || "",
-        title: u.title || "",
-        department: u.department || "",
-        workplace: u.workplace || "",
-        schedule: u.schedule || "",
-        certificates: u.certificates || "",
-        experience: u.experience || ""
-      });
+    let ignore = false;
 
-      const token = localStorage.getItem("accessToken");
-
-      // Fetch danh sách kỳ thi của giảng viên
-      fetch(`http://localhost:8088/api/exams/teacher/${u.id}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) setExams(data);
-        })
-        .catch(err => console.error("Error fetching teacher exams:", err));
-
-      // Fetch trạng thái xác thực của giáo viên
-      fetch(`http://localhost:8088/api/users/me/verification`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      })
-        .then(res => res.json())
-        .then(data => {
-          setVerData(data);
-          // Đồng bộ lại local storage nếu verificationStatus thay đổi
-          if (data && data.verificationStatus !== u.verificationStatus) {
-            const updated = { ...u, verificationStatus: data.verificationStatus };
-            localStorage.setItem("user", JSON.stringify(updated));
-            setUser(updated);
-            window.dispatchEvent(new Event("user-updated"));
-          }
-        })
-        .catch(err => console.error("Error fetching verification:", err));
-    }
-  }, []);
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      showAlert({
-        title: t("file_error"),
-        message: t("avatar_type_error"),
-        type: "error"
-      });
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      showAlert({
-        title: t("file_large"),
-        message: t("avatar_size_error"),
-        type: "error"
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      const base64 = reader.result as string;
+    const loadProfile = async () => {
+      setIsLoading(true);
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch("http://localhost:8088/api/users/me/avatar", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ avatarUrl: base64 })
-        });
+        const storedRaw = localStorage.getItem("user");
+        const storedUser: TeacherProfile | null = storedRaw ? JSON.parse(storedRaw) : null;
 
-        if (res.ok) {
-          const updatedUser = { ...user, avatarUrl: base64 };
-          setUser(updatedUser);
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-          window.dispatchEvent(new Event("user-updated"));
-          showAlert({
-            title: t("success"),
-            message: t("avatar_success"),
-            type: "success"
-          });
-        } else {
-          showAlert({
-            title: t("avatar_error"),
-            message: t("avatar_error_msg"),
-            type: "error"
-          });
+        if (storedUser && !ignore) {
+          setUser(storedUser);
+          fillForm(storedUser);
         }
+
+        const profileRes = await fetch(`${API_BASE}/users/me`, { headers: getAuthHeaders() });
+        if (!profileRes.ok) throw new Error("PROFILE_FAILED");
+
+        const profile: TeacherProfile = await profileRes.json();
+        if (ignore) return;
+
+        updateLocalUser(profile);
+        fillForm(profile);
+
+        const [verificationRes, teacherClassrooms, teacherExams] = await Promise.all([
+          fetch(`${API_BASE}/users/me/verification`, { headers: getAuthHeaders() }),
+          classroomApi.getTeacherClassrooms().catch(() => []),
+          profile.id
+            ? fetch(`${API_BASE}/exams/teacher/${profile.id}`, { headers: getAuthHeaders() })
+                .then(res => res.ok ? res.json() : [])
+                .catch(() => [])
+            : Promise.resolve([]),
+        ]);
+
+        if (ignore) return;
+
+        if (verificationRes.ok) {
+          const verificationData = await verificationRes.json();
+          setVerification(verificationData);
+          updateLocalUser({ ...profile, verificationStatus: verificationData.verificationStatus });
+        }
+        setClassrooms(Array.isArray(teacherClassrooms) ? teacherClassrooms : []);
+        setExams(Array.isArray(teacherExams) ? teacherExams : []);
       } catch {
-        showAlert({
-          title: t("connect_error"),
-          message: t("server_error"),
-          type: "error"
-        });
+        if (!ignore) {
+          showAlert({ title: "Không tải được hồ sơ", message: "Vui lòng thử lại sau.", type: "error" });
+        }
+      } finally {
+        if (!ignore) setIsLoading(false);
       }
     };
-  };
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/users/me`, {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          fullName: form.fullName,
-          phoneNumber: form.phoneNumber,
-          birthDate: form.birthDate,
-          gender: form.gender,
-          title: form.title,
-          department: form.department,
-          workplace: form.workplace,
-          schedule: form.schedule,
-          certificates: form.certificates,
-          experience: form.experience
-        }),
-      });
-      if (res.ok) {
-        const updated = { 
-          ...user, 
-          fullName: form.fullName,
-          phoneNumber: form.phoneNumber,
-          birthDate: form.birthDate,
-          gender: form.gender,
-          title: form.title,
-          department: form.department,
-          workplace: form.workplace,
-          schedule: form.schedule,
-          certificates: form.certificates,
-          experience: form.experience
-        };
-        localStorage.setItem("user", JSON.stringify(updated));
-        window.dispatchEvent(new Event("user-updated"));
-        setUser(updated);
-        showAlert({
-          title: t("success"),
-          message: t("profile_success"),
-          type: "success"
-        });
-        setIsEditing(false);
-      } else {
-        showAlert({
-          title: t("update_error"),
-          message: t("profile_error_msg"),
-          type: "error"
-        });
-      }
-    } catch {
-      showAlert({
-        title: t("connect_error"),
-        message: t("server_error"),
-        type: "error"
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+    loadProfile();
+    return () => {
+      ignore = true;
+    };
+  }, [showAlert]);
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPwMsg({ type: "", text: "" });
-    if (pwForm.newPassword !== pwForm.confirmPassword) {
-      setPwMsg({ type: "error", text: t("pw_mismatch") });
-      return;
-    }
-    setChangingPw(true);
-    try {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/users/me/password`, {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setPwMsg({ type: "success", text: t("pw_success") });
-        setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-        setTimeout(() => setPwMsg({ type: "", text: "" }), 3000);
-      } else {
-        setPwMsg({ type: "error", text: data.error || t("pw_error") });
-      }
-    } catch {
-      setPwMsg({ type: "error", text: t("server_conn_error") });
-    } finally {
-      setChangingPw(false);
-    }
-  };
-
-  if (!user) return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-    </div>
+  const verificationStatus = useMemo(
+    () => normalizeStatus(verification?.verificationStatus || user?.verificationStatus),
+    [verification?.verificationStatus, user?.verificationStatus]
   );
 
-  const totalExams = exams.length;
-  const totalStudents = exams.reduce((acc, curr) => acc + (curr.submissionCount || 0), 0);
-  const totalClasses = new Set(exams.map(ex => ex.title?.split('-')[0].trim())).size || 0;
+  const currentStatus = statusUi[verificationStatus];
+  const displayName = user?.fullName || user?.email || "Giáo viên";
+  const initials = displayName.trim().slice(0, 2).toUpperCase();
+  const totalSubmissions = exams.reduce((sum, exam) => sum + Number(exam.submissionCount || 0), 0);
+  const activeExams = exams.filter(exam => ["STARTED", "PUBLISHED", "WAITING"].includes(exam.status)).length;
 
-  const getExamStatus = (exam: any) => {
-    if (exam.status === 'FINISHED') return { label: t("ended"), color: 'bg-slate-100 text-slate-600' };
-    if (exam.status === 'DRAFT') return { label: t("draft"), color: 'bg-blue-100 text-blue-800' };
-    
-    if (exam.status === 'PUBLISHED') {
-      if (exam.startTime && exam.duration) {
-        const endTime = exam.startTime + (exam.duration * 60 * 1000);
-        if (Date.now() > endTime) {
-          return { label: t("ended"), color: 'bg-slate-100 text-slate-600' };
-        }
+  const infoItems = [
+    { icon: "mail", label: "Email", value: user?.email },
+    { icon: "call", label: "Số điện thoại", value: user?.phoneNumber },
+    { icon: "badge", label: "Chức danh", value: user?.title },
+    { icon: "hub", label: "Khoa / Bộ môn", value: user?.department },
+    { icon: "apartment", label: "Nơi làm việc", value: user?.workplace },
+    { icon: "event_available", label: "Lịch làm việc", value: user?.schedule },
+    { icon: "cake", label: "Ngày sinh", value: user?.birthDate ? formatDate(user.birthDate) : "" },
+    { icon: "wc", label: "Giới tính", value: user?.gender },
+    { icon: "login", label: "Đăng nhập gần nhất", value: formatDateTime(user?.lastLoginAt) },
+  ].filter(item => hasValue(item.value));
+
+  const recentExams = [...exams]
+    .sort((a, b) => String(b.createdAt || b.scheduledStartTime || "").localeCompare(String(a.createdAt || a.scheduledStartTime || "")))
+    .slice(0, 5);
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/users/me/avatar`, {
+          method: "PUT",
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ avatarUrl: reader.result }),
+        });
+        if (!res.ok) throw new Error("AVATAR_FAILED");
+        const updated = await res.json();
+        updateLocalUser(updated);
+        showAlert({ title: "Đã cập nhật ảnh", message: "Ảnh đại diện đã được lưu.", type: "success" });
+      } catch {
+        showAlert({ title: "Không lưu được ảnh", message: "Vui lòng thử lại với ảnh khác.", type: "error" });
       }
-      return { label: t("ongoing"), color: 'bg-green-100 text-green-800' };
-    }
-    return { label: exam.status || 'N/A', color: 'bg-slate-100 text-slate-600' };
+    };
+    reader.readAsDataURL(file);
   };
 
-  return (
-    <div className="flex-1 p-8 max-w-[1400px] w-full mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
-      {/* Header Profile Card */}
-      <section className="mb-8">
-        <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-          <div className="relative group cursor-pointer">
-            {verData?.verificationStatus === "VERIFIED" ? (
-              <div className="p-[4px] bg-gradient-to-tr from-[#00C6FF] via-[#0072FF] to-[#00F2FE] rounded-full shadow-[0_0_20px_rgba(0,198,255,0.4)] dark:shadow-[0_0_25px_rgba(0,198,255,0.2)] animate-pulse">
-                <div className="w-32 h-32 rounded-full overflow-hidden shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold border-[3px] border-white dark:border-[#0A1F3E]">
-                  {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    user.fullName?.charAt(0).toUpperCase()
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="w-32 h-32 rounded-full border-4 border-surface overflow-hidden shadow-md bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white text-5xl font-bold">
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  user.fullName?.charAt(0).toUpperCase()
-                )}
-              </div>
-            )}
-            <label className="absolute inset-0 bg-black/40 backdrop-blur-xs opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer text-[10px] font-bold text-white flex-col gap-1 z-10">
-              <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-              Đổi ảnh
-              <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-            </label>
-            <div className="absolute bottom-1 right-1 bg-green-500 w-6 h-6 rounded-full border-4 border-white dark:border-[#0A1F3E] z-10"></div>
+  const handleSaveProfile = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSaving(true);
+    try {
+      const payload = Object.fromEntries(
+        Object.entries(form).map(([key, value]) => [key, value.trim()])
+      );
+
+      const res = await fetch(`${API_BASE}/users/me`, {
+        method: "PUT",
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "SAVE_FAILED");
+      }
+
+      const updated = await res.json();
+      updateLocalUser(updated);
+      fillForm(updated);
+      setIsEditing(false);
+      showAlert({ title: "Đã lưu hồ sơ", message: "Thông tin giáo viên đã được cập nhật.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không lưu được hồ sơ", message: error.message || "Vui lòng kiểm tra lại thông tin.", type: "error" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showAlert({ title: "Mật khẩu không khớp", message: "Vui lòng nhập lại mật khẩu xác nhận.", type: "warning" });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const res = await fetch(`${API_BASE}/users/me/password`, {
+        method: "PUT",
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "PASSWORD_FAILED");
+      }
+
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      showAlert({ title: "Đã đổi mật khẩu", message: "Bạn có thể tiếp tục sử dụng tài khoản.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không đổi được mật khẩu", message: error.message || "Vui lòng kiểm tra mật khẩu hiện tại.", type: "error" });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleSendEmailVerification = async () => {
+    if (!user?.email) return;
+    setIsSendingVerification(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = data.message || data.error || "";
+        if (message.includes("được xác thực") || message.includes("đã xác thực")) {
+          if (user) updateLocalUser({ ...user, emailVerified: true });
+          showAlert({
+            title: "Email đã xác minh",
+            message: "Tài khoản này đã được xác minh email trước đó.",
+            type: "info",
+          });
+          return;
+        }
+        throw new Error(message || "VERIFY_EMAIL_FAILED");
+      }
+
+      showAlert({
+        title: "Đã gửi mã xác minh",
+        message: "Vui lòng kiểm tra email và nhập mã OTP để hoàn tất xác minh.",
+        type: "success",
+      });
+      router.push(`/verify-email?email=${encodeURIComponent(user.email)}`);
+    } catch (error: any) {
+      showAlert({
+        title: "Không gửi được mã",
+        message: error.message || "Vui lòng thử lại sau.",
+        type: "error",
+      });
+    } finally {
+      setIsSendingVerification(false);
+    }
+  };
+
+  const handleSetupTwoFactor = async () => {
+    setIsTwoFactorBusy(true);
+    try {
+      const res = await fetch(`${API_BASE}/users/me/2fa/setup`, { headers: getAuthHeaders() });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "2FA_SETUP_FAILED");
+      setTwoFactorSetup({ ...data, emailOtp: true });
+      setTwoFactorCode("");
+      showAlert({ title: "Đã gửi mã 2FA", message: "Mã OTP 6 số đã được gửi tới email của bạn.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không gửi được mã 2FA", message: error.message || "Vui lòng thử lại sau.", type: "error" });
+    } finally {
+      setIsTwoFactorBusy(false);
+    }
+  };
+
+  const handleEnableTwoFactor = async () => {
+    if (!twoFactorCode.trim()) {
+      showAlert({ title: "Thiếu mã 2FA", message: "Nhập mã OTP 6 số đã gửi về email.", type: "warning" });
+      return;
+    }
+
+    setIsTwoFactorBusy(true);
+    try {
+      const res = await fetch(`${API_BASE}/users/me/2fa/enable`, {
+        method: "POST",
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ code: twoFactorCode.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "2FA_ENABLE_FAILED");
+
+      if (user) updateLocalUser({ ...user, twoFactorEnabled: true });
+      setTwoFactorSetup(null);
+      setTwoFactorCode("");
+      showAlert({ title: "Đã bật 2FA", message: "Tài khoản đã được bảo vệ bằng xác thực hai bước.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không bật được 2FA", message: error.message || "Vui lòng kiểm tra lại mã.", type: "error" });
+    } finally {
+      setIsTwoFactorBusy(false);
+    }
+  };
+
+  const handleDisableTwoFactor = async () => {
+    if (!twoFactorCode.trim()) {
+      showAlert({ title: "Thiếu mã 2FA", message: "Nhập mã OTP 6 số đã gửi về email để tắt.", type: "warning" });
+      return;
+    }
+
+    setIsTwoFactorBusy(true);
+    try {
+      const res = await fetch(`${API_BASE}/users/me/2fa/disable`, {
+        method: "POST",
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ code: twoFactorCode.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "2FA_DISABLE_FAILED");
+
+      if (user) updateLocalUser({ ...user, twoFactorEnabled: false });
+      setTwoFactorCode("");
+      showAlert({ title: "Đã tắt 2FA", message: "Xác thực hai bước đã được tắt.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không tắt được 2FA", message: error.message || "Vui lòng kiểm tra lại mã.", type: "error" });
+    } finally {
+      setIsTwoFactorBusy(false);
+    }
+  };
+
+  if (isLoading && !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6 dark:bg-slate-950">
+        <div className="mx-auto max-w-7xl animate-pulse space-y-6">
+          <div className="h-56 rounded-[28px] bg-white dark:bg-slate-900" />
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map(item => <div key={item} className="h-28 rounded-2xl bg-white dark:bg-slate-900" />)}
           </div>
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-extrabold text-primary dark:text-[#E2E8F0] mb-1 tracking-tight">{user.fullName}</h1>
-            <p className="text-lg font-medium text-on-surface-variant dark:text-slate-400 flex items-center justify-center md:justify-start gap-2">
-              <span className="material-symbols-outlined text-primary dark:text-[#00C6FF] text-sm">workspace_premium</span>
-              {user.title || t("instructor")}
-            </p>
-            <p className="text-slate-500 dark:text-slate-300 flex items-center justify-center md:justify-start gap-2 mt-1 text-sm font-medium">
-              <span className="material-symbols-outlined text-slate-400 text-sm">hub</span>
-              {user.department || t("department")}
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => setIsEditing(!isEditing)}
-              className="bg-surface-container-high dark:bg-cyan-950/50 dark:text-slate-200 text-on-surface dark:text-slate-200 font-semibold py-2.5 px-6 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-[20px]">{isEditing ? 'close' : 'edit'}</span>
-              {isEditing ? t("cancel_update") : t("update_profile")}
-            </button>
-            <button className="bg-gradient-to-br from-primary to-primary-container text-white font-semibold py-2.5 px-6 rounded-xl shadow-lg active:scale-95 transition-all flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">share</span>
-              Chia sẻ
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Edit Form */}
-      {isEditing && (
-        <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm border border-primary/10 mb-8 animate-in fade-in slide-in-from-top-4">
-          <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined">edit_document</span>
-            Cập nhật thông tin giảng viên
-          </h4>
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Họ và tên</label>
-                <input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" required />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Chức danh</label>
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder={`VD: ${t('instructor')} Cao cấp`} />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Khoa / Bộ môn</label>
-                <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: Khoa CNTT" />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Số điện thoại</label>
-                <input value={form.phoneNumber} onChange={e => setForm({ ...form, phoneNumber: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Phòng làm việc</label>
-                <input value={form.workplace} onChange={e => setForm({ ...form, workplace: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: Phòng 402, Tòa nhà C1" />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Lịch tiếp SV</label>
-                <input value={form.schedule} onChange={e => setForm({ ...form, schedule: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: Thứ 3 & Thứ 5 (14:00 - 16:30)" />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Ngày sinh</label>
-                <input type="date" value={form.birthDate} onChange={e => setForm({ ...form, birthDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Giới tính</label>
-                <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors">
-                  <option value="">{t('select_gender')}</option>
-                  <option value="Nam">Nam</option>
-                  <option value={t("female")}>{t('female')}</option>
-                  <option value={t("other")}>{t('other')}</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Kinh nghiệm làm việc & Dự án</label>
-                <textarea rows={3} value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: 5 năm giảng dạy bộ môn Kiến trúc phần mềm..." />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">{t('certificates')}</label>
-                <textarea rows={3} value={form.certificates} onChange={e => setForm({ ...form, certificates: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200 transition-colors" placeholder="VD: Chứng chỉ AWS Certified Solutions Architect..." />
-              </div>
-            </div>
-            <div className="flex justify-end pt-2">
-              <button type="submit" disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary-container transition-all">
-                <span className="material-symbols-outlined text-sm">save</span>
-                {saving ? t("saving") : t("save_changes")}
-              </button>
-            </div>
-          </form>
-        </section>
-      )}
-
-      {/* Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* Verification Status Card */}
-          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#00C6FF]">verified_user</span>
-              Trạng thái xác thực
-            </h3>
-            
-            {verData ? (
-              <div className="space-y-4">
-                {verData.verificationStatus === "VERIFIED" && (
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-xl space-y-3 shadow-inner-sm">
-                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold text-sm">
-                      <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                      TÀI KHOẢN ĐÃ XÁC THỰC
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Tài khoản của bạn đã được xác minh chính thức. Toàn bộ tính năng cao cấp và Ngân hàng đề thi chung đã được mở khóa.
-                    </p>
-                    {verData.proofType && (
-                      <div className="border-t border-emerald-100 dark:border-emerald-900/30 pt-2.5 text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5">
-                        <p><strong>Phương thức:</strong> {verData.proofType === "LINK" ? "Liên kết giảng dạy" : "Mô tả tài liệu"}</p>
-                        <p className="break-all"><strong>Minh chứng:</strong> {verData.proofUrl}</p>
-                        {verData.description && <p><strong>Mô tả thêm:</strong> {verData.description}</p>}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {verData.verificationStatus === "PENDING" && (
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl space-y-3">
-                    <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-extrabold text-sm">
-                      <span className="material-symbols-outlined text-xl animate-spin">progress_activity</span>
-                      ĐANG CHỜ XÉT DUYỆT
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Yêu cầu xác thực tài khoản giáo viên của bạn đang được đội ngũ quản trị viên xem xét. Thời gian duyệt thường trong vòng 24 giờ làm việc.
-                    </p>
-                  </div>
-                )}
-
-                {verData.verificationStatus === "REJECTED" && (
-                  <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-xl space-y-3">
-                    <div className="flex items-center gap-2 text-red-700 dark:text-red-400 font-extrabold text-sm">
-                      <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
-                      YÊU CẦU BỊ TỪ CHỐI
-                    </div>
-                    {verData.note && (
-                      <p className="text-xs text-red-600 dark:text-red-400 font-semibold bg-red-50/50 dark:bg-red-950/10 p-2.5 rounded-lg border border-red-100 dark:border-red-950/30 leading-relaxed">
-                        Lý do: {verData.note}
-                      </p>
-                    )}
-                    <button
-                      onClick={() => router.push("/teacher/verify")}
-                      className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm active:scale-95"
-                    >
-                      Gửi lại minh chứng xác thực
-                    </button>
-                  </div>
-                )}
-
-                {verData.verificationStatus === "STANDARD" && (
-                  <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl space-y-3">
-                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold text-sm">
-                      <span className="material-symbols-outlined text-xl">gavel</span>
-                      TÀI KHOẢN CHƯA XÁC THỰC
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Bạn đang sử dụng tài khoản dùng thử và bị giới hạn tạo tối đa 2 lớp học, không được truy cập Ngân hàng đề thi chung.
-                    </p>
-                    <button
-                      onClick={() => router.push("/teacher/verify")}
-                      className="w-full py-2 bg-gradient-to-r from-amber-600 to-orange-500 hover:opacity-95 text-white text-xs font-bold rounded-lg transition-all shadow-sm active:scale-95"
-                    >
-                      Gửi yêu cầu xác thực ngay
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-slate-400 text-xs">Đang tải trạng thái xác thực...</div>
-            )}
-          </div>
-
-          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary-fixed-dim">contact_page</span>
-              Thông tin liên hệ & Công tác
-            </h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-4 p-4 bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-lg">
-                <span className="material-symbols-outlined text-blue-600 mt-1">mail</span>
-                <div>
-                  <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-wider font-bold">Email công vụ</p>
-                  <p className="font-medium text-slate-700 dark:text-[#E2E8F0]">{user.email}</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4 p-4 bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-lg">
-                <span className="material-symbols-outlined text-blue-600 mt-1">call</span>
-                <div>
-                  <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-wider font-bold">Số điện thoại</p>
-                  <p className={`font-medium ${!user.phoneNumber ? "text-slate-400 italic" : ""}`}>{user.phoneNumber || "Chưa cập nhật"}</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4 p-4 bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-lg">
-                <span className="material-symbols-outlined text-blue-600 mt-1">apartment</span>
-                <div>
-                  <p className="text-xs text-on-surface-variant dark:text-slate-400 uppercase tracking-wider font-bold">Phòng làm việc</p>
-                  <p className={`font-medium ${!user.workplace ? "text-slate-400 italic" : ""}`}>{user.workplace || "Chưa cập nhật"}</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4 p-4 bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-lg border-l-4 border-tertiary-container">
-                <span className="material-symbols-outlined text-on-tertiary-container mt-1">event_available</span>
-                <div>
-                  <p className="text-xs text-on-tertiary-container uppercase tracking-wider font-bold">Lịch tiếp sinh viên</p>
-                  <p className={`font-medium ${!user.schedule ? "text-slate-400 italic" : ""}`}>{user.schedule || "Chưa cập nhật"}</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          {/* Work Experience */}
-          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary-fixed-dim">work</span>
-              Kinh nghiệm & Dự án
-            </h3>
-            <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed whitespace-pre-wrap">
-              {user.experience || t("no_experience")}
-            </p>
-          </div>
-
-          {/* Certificates */}
-          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary-fixed-dim">verified</span>
-              Chứng chỉ & Giải thưởng
-            </h3>
-            <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed whitespace-pre-wrap">
-              {user.certificates || t("no_certificates")}
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
-            <h4 className="text-lg font-bold text-primary dark:text-[#E2E8F0] mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined">lock</span>
-              Bảo mật tài khoản
-            </h4>
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <input type="password" value={pwForm.currentPassword} onChange={e => setPwForm({ ...pwForm, currentPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200" placeholder="Mật khẩu hiện tại" required />
-              <input type="password" value={pwForm.newPassword} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-outline-variant dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] transition-all focus:border-blue-400 outline-none focus:outline-none focus:border-primary text-on-surface dark:text-slate-200" placeholder="Mật khẩu mới" required />
-              <button type="submit" className="w-full py-3 bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 text-on-surface dark:text-slate-200 font-bold rounded-xl">{changingPw ? "Đang xử lý..." : "Cập nhật mật khẩu"}</button>
-            </form>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="lg:col-span-7">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-            <div className="bg-gradient-to-br from-primary to-primary-container rounded-xl p-6 text-white flex flex-col justify-between relative overflow-hidden group shadow-lg">
-              <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-white/10 text-9xl group-hover:scale-110 transition-transform">school</span>
-              <div>
-                <p className="text-on-primary-container text-sm font-semibold uppercase tracking-widest">Lớp học</p>
-                <h4 className="text-4xl font-black mt-2">{totalClasses.toString().padStart(2, '0')}</h4>
-              </div>
-              <p className="text-sm text-on-primary-container mt-4">Số lớp đang phụ trách giảng dạy</p>
-            </div>
-            <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-xl p-6 flex flex-col justify-between group shadow-sm">
-              <div>
-                <p className="text-on-surface-variant dark:text-slate-400 text-sm font-semibold uppercase tracking-widest">Kỳ thi</p>
-                <h4 className="text-4xl font-black text-primary dark:text-[#00C6FF] mt-2">{totalExams}</h4>
-              </div>
-              <p className="text-sm text-on-surface-variant dark:text-slate-400 mt-4">Tổng số kỳ thi đã được tạo</p>
-            </div>
-            <div className="md:col-span-2 bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-8 shadow-sm flex items-center justify-between border border-outline-variant/10">
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-3xl">groups</span>
-                </div>
-                <div>
-                  <p className="text-on-surface-variant dark:text-slate-400 text-sm font-semibold uppercase tracking-widest">Sinh viên</p>
-                  <h4 className="text-4xl font-black text-primary dark:text-[#00C6FF]">{totalStudents.toLocaleString()}</h4>
-                </div>
-              </div>
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-on-surface-variant dark:text-slate-400">Số lượt sinh viên nộp bài thi</p>
-              </div>
-            </div>
-          </div>
+          <div className="h-96 rounded-[24px] bg-white dark:bg-slate-900" />
         </div>
       </div>
+    );
+  }
 
-      {/* Managed Exams Table */}
-      <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl shadow-sm overflow-hidden border border-outline-variant/10">
-        <div className="px-8 py-6 flex items-center justify-between bg-slate-50 dark:bg-[#051329] dark:text-slate-200">
-          <h3 className="text-xl font-bold text-primary dark:text-[#E2E8F0] flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary-fixed-dim">assignment</span>
-            Các kỳ thi đang quản lý
-          </h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-[#051329] dark:text-slate-400 text-on-surface-variant dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                <th className="px-8 py-4">Tên bài thi</th>
-                <th className="px-8 py-4">Số lượng thí sinh</th>
-                <th className="px-8 py-4">Trạng thái</th>
-                <th className="px-8 py-4 text-right">Hành động</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-surface-container dark:divide-cyan-950/40">
-              {exams.length > 0 ? exams.map((exam) => (
-                <tr key={exam.id} className="hover:bg-slate-50 dark:bg-[#051329] dark:text-slate-200 transition-colors">
-                  <td className="px-8 py-5">
-                    <p className="font-bold text-on-surface dark:text-slate-200">{exam.title}</p>
-                    <p className="text-xs text-on-surface-variant dark:text-slate-400">Mã phòng: {exam.accessCode}</p>
-                  </td>
-                  <td className="px-8 py-5 font-bold text-primary dark:text-[#E2E8F0]">{exam.submissionCount || 0} nộp</td>
-                  <td className="px-8 py-5">
-                    {(() => {
-                      const status = getExamStatus(exam);
-                      return (
-                        <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full ${status.color}`}>
-                          {status.label}
-                        </span>
-                      );
-                    })()}
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <button onClick={() => router.push(`/teacher/exam-editor/${exam.id}`)} className="text-[#0C2E5E] dark:text-[#00C6FF] hover:underline font-bold text-sm">Chi tiết</button>
-                  </td>
-                </tr>
-              )) : (
-                <tr><td colSpan={4} className="px-8 py-10 text-center text-on-surface-variant dark:text-slate-400 italic">Chưa có bài thi nào.</td></tr>
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 text-slate-900 dark:bg-slate-950 dark:text-white md:p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="grid gap-6 p-6 md:grid-cols-[auto_1fr_auto] md:items-center md:p-8">
+            <div className={`relative h-32 w-32 rounded-full p-1.5 ${currentStatus.avatarRing}`}>
+              <div className="relative h-full w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                {user?.avatarUrl ? (
+                  <Image src={user.avatarUrl} alt={displayName} fill sizes="128px" unoptimized className="object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-4xl font-black text-slate-500">
+                    {initials}
+                  </div>
+                )}
+              </div>
+              <span
+                className={`absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full border-2 shadow-lg ${currentStatus.badge}`}
+                title={currentStatus.label}
+                aria-label={currentStatus.label}
+              >
+                <span className="material-symbols-outlined text-[24px]">{currentStatus.icon}</span>
+              </span>
+            </div>
+
+            <div className="min-w-0 space-y-3">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">Hồ sơ giáo viên</p>
+                <h1 className="mt-2 break-words text-3xl font-black md:text-4xl">{displayName}</h1>
+                <p className="mt-2 text-slate-500 dark:text-slate-400">
+                  {[user?.title, user?.department].filter(Boolean).join(" • ") || user?.email}
+                </p>
+              </div>
+              <div className={`inline-flex max-w-full items-start gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold ${currentStatus.panel}`}>
+                <span className="material-symbols-outlined text-[20px]">{currentStatus.icon}</span>
+                <span>{currentStatus.title}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 md:justify-end">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-extrabold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                Đổi ảnh
+                <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsEditing(prev => !prev)}
+                className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-700"
+              >
+                <span className="material-symbols-outlined text-[20px]">{isEditing ? "close" : "edit"}</span>
+                {isEditing ? "Đóng sửa" : "Sửa hồ sơ"}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-4">
+          <StatCard icon="school" label="Lớp đang quản lý" value={classrooms.length} tone="text-sky-600" />
+          <StatCard icon="assignment" label="Bài thi đã tạo" value={exams.length} tone="text-indigo-600" />
+          <StatCard icon="play_circle" label="Bài thi đang mở" value={activeExams} tone="text-emerald-600" />
+          <StatCard icon="fact_check" label="Lượt nộp bài" value={totalSubmissions} tone="text-rose-600" />
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[1fr_420px]">
+          <div className="space-y-6">
+            <Panel title="Thông tin hiện có" icon="person">
+              {infoItems.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {infoItems.map(item => (
+                    <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60">
+                      <span className="material-symbols-outlined mt-0.5 text-[22px] text-sky-600 dark:text-sky-300">{item.icon}</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black uppercase tracking-wide text-slate-400">{item.label}</p>
+                        <p className="mt-1 break-words font-bold text-slate-700 dark:text-slate-200">{item.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon="person_add" text="Chưa có thông tin hồ sơ để hiển thị." />
               )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+            </Panel>
+
+            {(hasValue(user?.bio) || hasValue(user?.experience) || hasValue(user?.certificates)) && (
+              <Panel title="Giới thiệu chuyên môn" icon="workspace_premium">
+                <div className="space-y-4">
+                  {hasValue(user?.bio) && <TextBlock label="Mô tả" value={user?.bio} />}
+                  {hasValue(user?.experience) && <TextBlock label="Kinh nghiệm" value={user?.experience} />}
+                  {hasValue(user?.certificates) && <TextBlock label="Chứng chỉ" value={user?.certificates} />}
+                </div>
+              </Panel>
+            )}
+
+            <Panel title="Kỳ thi gần đây" icon="assignment">
+              {recentExams.length > 0 ? (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {recentExams.map(exam => (
+                    <div key={exam.id || exam.accessCode} className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0 last:pb-0">
+                      <div className="min-w-0">
+                        <p className="break-words font-extrabold text-slate-800 dark:text-white">{exam.title || "Bài thi chưa đặt tên"}</p>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                          {[exam.questionCount ? `${exam.questionCount} câu` : null, exam.duration ? `${exam.duration} phút` : null, exam.subject].filter(Boolean).join(" • ")}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => exam.accessCode && router.push(`/teacher/exams/results/${exam.accessCode}`)}
+                        disabled={!exam.accessCode}
+                        className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-extrabold text-sky-700 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300"
+                      >
+                        Xem kết quả
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon="assignment_late" text="Chưa có kỳ thi nào được tạo." />
+              )}
+            </Panel>
+          </div>
+
+          <div className="space-y-6">
+            <Panel title="Trạng thái xác thực" icon={currentStatus.icon}>
+              <div className={`rounded-2xl border p-4 ${currentStatus.panel}`}>
+                <p className="font-black">{currentStatus.title}</p>
+                <p className="mt-2 text-sm leading-6 opacity-90">{currentStatus.description}</p>
+                {verification?.note && (
+                  <p className="mt-3 rounded-xl bg-white/70 p-3 text-sm font-semibold dark:bg-slate-950/30">
+                    Ghi chú: {verification.note}
+                  </p>
+                )}
+                <div className="mt-3 space-y-1 text-sm font-semibold opacity-90">
+                  {verification?.submittedAt && <p>Gửi lúc: {formatDateTime(verification.submittedAt)}</p>}
+                  {verification?.verifiedAt && <p>Duyệt lúc: {formatDateTime(verification.verifiedAt)}</p>}
+                </div>
+              </div>
+              {currentStatus.action && (
+                <button
+                  type="button"
+                  onClick={() => router.push("/teacher/verification")}
+                  className="mt-4 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+                >
+                  {currentStatus.action}
+                </button>
+              )}
+            </Panel>
+
+            {isEditing && (
+              <Panel title="Cập nhật hồ sơ" icon="edit">
+                <form onSubmit={handleSaveProfile} className="space-y-4">
+                  <Input label="Họ tên" value={form.fullName} onChange={value => setForm({ ...form, fullName: value })} required />
+                  <Input label="Số điện thoại" value={form.phoneNumber} onChange={value => setForm({ ...form, phoneNumber: value })} />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input label="Ngày sinh" type="date" value={form.birthDate} onChange={value => setForm({ ...form, birthDate: value })} />
+                    <Select label="Giới tính" value={form.gender} onChange={value => setForm({ ...form, gender: value })} />
+                  </div>
+                  <Input label="Chức danh" value={form.title} onChange={value => setForm({ ...form, title: value })} />
+                  <Input label="Khoa / Bộ môn" value={form.department} onChange={value => setForm({ ...form, department: value })} />
+                  <Input label="Nơi làm việc" value={form.workplace} onChange={value => setForm({ ...form, workplace: value })} />
+                  <Input label="Lịch làm việc" value={form.schedule} onChange={value => setForm({ ...form, schedule: value })} />
+                  <Textarea label="Mô tả" value={form.bio} onChange={value => setForm({ ...form, bio: value })} />
+                  <Textarea label="Kinh nghiệm" value={form.experience} onChange={value => setForm({ ...form, experience: value })} />
+                  <Textarea label="Chứng chỉ" value={form.certificates} onChange={value => setForm({ ...form, certificates: value })} />
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="w-full rounded-2xl bg-sky-600 px-4 py-3 font-black text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                  </button>
+                </form>
+              </Panel>
+            )}
+
+            <Panel title="Bảo mật" icon="lock">
+              <div className="mb-5 space-y-3">
+                <SecurityActionRow
+                  label="Email"
+                  value={user?.emailVerified ? "Đã xác minh" : "Chưa xác minh"}
+                  ok={!!user?.emailVerified}
+                  actionLabel={!user?.emailVerified ? (isSendingVerification ? "Đang gửi..." : "Xác minh") : undefined}
+                  onAction={!user?.emailVerified ? handleSendEmailVerification : undefined}
+                  disabled={isSendingVerification}
+                />
+                <SecurityActionRow
+                  label="Đăng nhập"
+                  value={user?.provider ? `Qua ${user.provider}` : "Mật khẩu"}
+                  ok
+                />
+                <SecurityActionRow
+                  label="2FA"
+                  value={user?.twoFactorEnabled ? "Đang bật" : "Chưa bật"}
+                  ok={!!user?.twoFactorEnabled}
+                  actionLabel={user?.twoFactorEnabled ? "Gửi mã tắt" : "Gửi mã bật"}
+                  onAction={handleSetupTwoFactor}
+                  disabled={isTwoFactorBusy}
+                />
+
+                {(twoFactorSetup || user?.twoFactorEnabled) && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/60">
+                    {twoFactorSetup && (
+                      <div className="mb-4 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                        Mã OTP 6 số đã được gửi về email. Nhập mã bên dưới để {user?.twoFactorEnabled ? "tắt" : "bật"} 2FA.
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <input
+                        value={twoFactorCode}
+                        onChange={event => setTwoFactorCode(event.target.value)}
+                        maxLength={6}
+                        inputMode="numeric"
+                        placeholder="Mã 6 số"
+                        className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-black tracking-[0.3em] outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900"
+                      />
+                      <button
+                        type="button"
+                        onClick={user?.twoFactorEnabled ? handleDisableTwoFactor : handleEnableTwoFactor}
+                        disabled={isTwoFactorBusy}
+                        className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-black text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {user?.twoFactorEnabled ? "Tắt" : "Xác nhận"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleChangePassword} className="space-y-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+                <Input label="Mật khẩu hiện tại" type="password" value={passwordForm.currentPassword} onChange={value => setPasswordForm({ ...passwordForm, currentPassword: value })} required />
+                <Input label="Mật khẩu mới" type="password" value={passwordForm.newPassword} onChange={value => setPasswordForm({ ...passwordForm, newPassword: value })} required />
+                <Input label="Nhập lại mật khẩu mới" type="password" value={passwordForm.confirmPassword} onChange={value => setPasswordForm({ ...passwordForm, confirmPassword: value })} required />
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-black text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  {isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}
+                </button>
+              </form>
+            </Panel>
+
+            <Panel title="Lớp gần đây" icon="groups">
+              {classrooms.length > 0 ? (
+                <div className="space-y-3">
+                  {classrooms.slice(0, 4).map(classroom => (
+                    <button
+                      type="button"
+                      key={classroom.id}
+                      onClick={() => router.push(`/teacher/classrooms/${classroom.id}`)}
+                      className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-left hover:border-sky-200 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-950/60 dark:hover:border-sky-500/30 dark:hover:bg-sky-500/10"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-extrabold">{classroom.name || "Lớp học"}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{classroom.classCode || classroom.code || "Chưa có mã lớp"}</p>
+                      </div>
+                      <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon="groups" text="Chưa có lớp học nào." />
+              )}
+            </Panel>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, tone }: { icon: string; label: string; value: number; tone: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between">
+        <span className={`material-symbols-outlined text-[28px] ${tone}`}>{icon}</span>
+        <p className={`text-3xl font-black ${tone}`}>{value}</p>
+      </div>
+      <p className="mt-3 text-sm font-black uppercase tracking-wide text-slate-400">{label}</p>
+    </div>
+  );
+}
+
+function Panel({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="material-symbols-outlined text-[24px] text-sky-600 dark:text-sky-300">{icon}</span>
+        <h2 className="text-lg font-black">{title}</h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function TextBlock({ label, value }: { label: string; value?: string }) {
+  return (
+    <div>
+      <p className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-2 whitespace-pre-line leading-7 text-slate-700 dark:text-slate-200">{value}</p>
+    </div>
+  );
+}
+
+function EmptyState({ icon, text }: { icon: string; text: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-400 dark:border-slate-700">
+      <span className="material-symbols-outlined text-[40px]">{icon}</span>
+      <p className="mt-2 font-bold">{text}</p>
+    </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        required={required}
+        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-sky-500/10"
+      />
+    </label>
+  );
+}
+
+function Select({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <select
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-sky-500/10"
+      >
+        <option value="">Chưa cập nhật</option>
+        <option value="Nam">Nam</option>
+        <option value="Nữ">Nữ</option>
+        <option value="Khác">Khác</option>
+      </select>
+    </label>
+  );
+}
+
+function Textarea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <textarea
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        rows={4}
+        className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-sky-500/10"
+      />
+    </label>
+  );
+}
+
+function SecurityActionRow({
+  label,
+  value,
+  ok,
+  actionLabel,
+  onAction,
+  disabled = false,
+}: {
+  label: string;
+  value: string;
+  ok: boolean;
+  actionLabel?: string;
+  onAction?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/60">
+      <div className="min-w-0">
+        <p className="font-bold text-slate-600 dark:text-slate-300">{label}</p>
+        <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-black ${ok ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+          {value}
+        </span>
+      </div>
+      {actionLabel && onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          disabled={disabled}
+          className="shrink-0 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-black text-sky-700 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300"
+        >
+          {actionLabel}
+        </button>
+      )}
     </div>
   );
 }

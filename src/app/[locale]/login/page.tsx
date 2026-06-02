@@ -17,6 +17,8 @@ export default function LoginPage() {
     email: "",
     password: ""
   });
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,13 +34,19 @@ export default function LoginPage() {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
+          twoFactorCode: twoFactorRequired ? twoFactorCode.trim() : undefined,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        const errMsg = data.message || data.error || "Email hoặc mật khẩu không đúng"; if (errMsg.includes("chưa được xác thực")) { router.push(`/verify-email?email=${formData.email}`); } else { setError(errMsg); }
+        if (data.error === "2FA_REQUIRED") {
+          setTwoFactorRequired(true);
+          setError("Mã OTP 2FA đã được gửi tới email. Vui lòng nhập mã để đăng nhập.");
+        } else {
+          const errMsg = data.message || data.error || "Email hoặc mật khẩu không đúng"; if (errMsg.includes("chưa được xác thực")) { router.push(`/verify-email?email=${formData.email}`); } else { setError(errMsg); }
+        }
       } else {
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("accessToken", data.accessToken);
@@ -214,6 +222,24 @@ export default function LoginPage() {
                   <input value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 dark:bg-cyan-950/30 border border-slate-200/80 dark:border-cyan-900/50 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white dark:focus:bg-[#071829] transition-all outline-none font-bold text-[#0C2E5E] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm" placeholder="••••••••" type="password" required />
                 </div>
               </div>
+
+              {twoFactorRequired && (
+                <div className="space-y-2.5">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Mã OTP 2FA</label>
+                  <div className="relative group">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 dark:text-slate-500 group-focus-within:text-[#0C2E5E] dark:group-focus-within:text-[#00C6FF] transition-colors">pin</span>
+                    <input
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value)}
+                      className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 dark:bg-cyan-950/30 border border-slate-200/80 dark:border-cyan-900/50 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white dark:focus:bg-[#071829] transition-all outline-none font-black tracking-[0.25em] text-center text-[#0C2E5E] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm"
+                      placeholder="------"
+                      inputMode="numeric"
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4">
                 <button disabled={loading} type="submit" className="w-full bg-gradient-to-r from-[#0C2E5E] to-[#00C6FF] text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_10px_30px_rgba(0,198,255,0.25)] hover:shadow-[0_15px_40px_rgba(0,198,255,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:hover:translate-y-0">
