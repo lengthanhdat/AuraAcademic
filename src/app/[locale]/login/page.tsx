@@ -159,7 +159,7 @@ export default function LoginPage() {
             </div>
 
             <div className="w-full mb-8 flex justify-center items-center hover:scale-[1.01] transition-transform duration-200">
-              <GoogleOAuthProvider clientId="800081855688-vvu143d2r2hgoo24h6adsm6j7vaj95mn.apps.googleusercontent.com" locale={currentLocale}>
+              <GoogleOAuthProvider clientId="850775217149-9jm0o8ioj9nbe7v0sfbc7ph9jvda9rga.apps.googleusercontent.com" locale={currentLocale}>
                 <GoogleLogin
                   onSuccess={async (creds) => {
                     try {
