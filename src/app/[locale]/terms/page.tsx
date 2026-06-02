@@ -25,7 +25,7 @@ export default function TermsPage() {
             </p>
           </div>
 
-          <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:text-[#0C2E5E] dark:prose-headings:text-white prose-a:text-[#00C6FF]">
+          <div className="text-slate-600 dark:text-slate-300 leading-relaxed [&>h3]:text-xl [&>h3]:font-bold [&>h3]:text-[#0C2E5E] dark:[&>h3]:text-white [&>h3]:mt-8 [&>h3]:mb-4 [&>p]:mb-4 [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:mb-4 [&>ul>li]:mb-2 [&>p>strong]:text-slate-900 dark:[&>p>strong]:text-white">
             <h3>1. Chấp nhận điều khoản</h3>
             <p>
               Khi đăng ký tài khoản Giáo viên hoặc Học sinh trên AuraAcademic, bạn xác nhận rằng bạn đã đủ 13 tuổi trở lên (hoặc có sự đồng ý của phụ huynh/người giám hộ) và có đủ năng lực hành vi dân sự để đồng ý với các điều khoản này.

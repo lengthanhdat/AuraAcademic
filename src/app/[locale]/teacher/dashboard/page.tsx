@@ -8,6 +8,7 @@ import { StatCardSkeleton, TableRowSkeleton } from "@/components/ui/Skeleton";
 import Link from "next/link";
 import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
+
 const API_BASE = "http://localhost:8088/api";
 
 // ─── Verification Banner ─────────────────────────────────────────────────────
@@ -90,6 +91,19 @@ export default function TeacherDashboard() {
     authFetcher,
     { revalidateOnFocus: false }
   );
+
+  const { data: classrooms = [], isLoading: isClassroomsLoading } = useSWR(
+    user?.id ? `${API_BASE}/classrooms/teacher` : null,
+    authFetcher,
+    { revalidateOnFocus: false }
+  );
+
+  const { data: templates = [], isLoading: isTemplatesLoading } = useSWR(
+    user?.id ? `${API_BASE}/exams/teacher/${user.id}/templates` : null,
+    authFetcher,
+    { revalidateOnFocus: false }
+  );
+
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [examToShare, setExamToShare] = useState<any>(null);
@@ -232,7 +246,19 @@ export default function TeacherDashboard() {
 
   // Memoized stats
   const activeExamsCount = useMemo(() => exams.filter((e: any) => e.status === 'PUBLISHED' || e.status === 'STARTED').length, [exams]);
-  const draftExamsCount = useMemo(() => exams.filter((e: any) => e.status === 'DRAFT').length, [exams]);
+
+  const upcomingExams = useMemo(() => {
+    return [...exams]
+      .filter(e => (e.status === 'PUBLISHED' || e.status === 'STARTED') && e.startTime)
+      .sort((a, b) => a.startTime - b.startTime)
+      .slice(0, 3);
+  }, [exams]);
+
+  const recentActivities = useMemo(() => {
+    return [...exams]
+      .sort((a, b) => new Date(b.createdAt || Date.now()).getTime() - new Date(a.createdAt || Date.now()).getTime())
+      .slice(0, 3);
+  }, [exams]);
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -242,237 +268,317 @@ export default function TeacherDashboard() {
   }, [t]);
 
   return (
-    <main className="p-8 space-y-8 flex-1">
+    <main className="p-6 md:p-8 lg:p-10 space-y-8 min-h-screen bg-[#F4F7FB] dark:bg-[#0A0F1C] text-slate-800 dark:text-slate-100 font-sans">
       {/* Verification Banner */}
       <VerificationBanner onVerifyClick={() => router.push("/teacher/verify")} />
 
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h3 className="text-3xl font-extrabold text-on-surface dark:text-slate-200 font-headline tracking-tight">
-            {greeting}, {user?.fullName || "Teacher"}
-          </h3>
-          <p className="text-on-surface-variant dark:text-slate-400 mt-1">{t('overview')}</p>
+      {/* 1. HERO BANNER */}
+      <div className="relative overflow-hidden bg-white dark:bg-[#111A2C] rounded-3xl p-8 lg:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800/60">
+        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/20 to-cyan-300/20 dark:from-blue-600/10 dark:to-cyan-400/10 blur-[80px] rounded-full pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-4">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">{user?.fullName || "Teacher"}</span> 👋
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 font-medium max-w-xl leading-relaxed">
+              Chào mừng bạn quay trở lại nền tảng. Dưới đây là tổng quan về các hoạt động giảng dạy và đánh giá học sinh của bạn trong hôm nay.
+            </p>
+            
+            <div className="flex flex-wrap gap-6 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <span className="material-symbols-outlined text-[20px]">task</span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 leading-none">{exams.length}</p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">Tổng Đề Thi</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <span className="material-symbols-outlined text-[20px]">groups</span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 leading-none">{classrooms.length}</p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">Lớp Học</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-shrink-0">
+            <button onClick={() => router.push("/teacher/exams?mode=ai")} className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-bold rounded-2xl shadow-[0_8px_20px_rgba(14,165,233,0.25)] transition-all hover:scale-[1.02] active:scale-95 overflow-hidden">
+              <div className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+              <span className="material-symbols-outlined text-[22px]">auto_awesome</span>
+              <span className="text-[15px]">Tạo Đề Thi Mới</span>
+            </button>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <button className="px-5 py-2.5 bg-surface-container-high dark:bg-cyan-950/50 dark:text-slate-200 text-on-surface font-bold rounded-xl text-sm flex items-center gap-2 hover:bg-surface-container-highest transition-all duration-200 active:scale-95">
-            <span className="material-symbols-outlined text-lg">calendar_today</span>
-            {t('calendar_btn')}
+      </div>
+
+      {/* 2. QUICK ACTIONS */}
+      <div>
+        <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-blue-500 text-[20px]">bolt</span>
+          Thao tác nhanh
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <button onClick={() => router.push("/teacher/exams?mode=ai")} className="flex flex-col items-start p-5 bg-white dark:bg-[#111A2C] border border-slate-200/60 dark:border-slate-800/60 rounded-2xl hover:border-blue-300 dark:hover:border-blue-500/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all group text-left">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">psychology</span>
+            </div>
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-1">Tạo Đề Bằng AI</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Tự động hóa từ tài liệu</p>
+          </button>
+          
+          <button onClick={() => router.push("/teacher/materials")} className="flex flex-col items-start p-5 bg-white dark:bg-[#111A2C] border border-slate-200/60 dark:border-slate-800/60 rounded-2xl hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all group text-left">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">library_books</span>
+            </div>
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-1">Tài liệu giảng dạy</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Quản lý bài giảng & tài liệu</p>
+          </button>
+          
+          <button onClick={() => router.push("/teacher/reports")} className="flex flex-col items-start p-5 bg-white dark:bg-[#111A2C] border border-slate-200/60 dark:border-slate-800/60 rounded-2xl hover:border-amber-300 dark:hover:border-amber-500/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all group text-left">
+            <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">analytics</span>
+            </div>
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-1">Báo cáo phân tích</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Đánh giá quá trình học tập</p>
+          </button>
+
+          <button onClick={() => router.push("/teacher/exam-bank")} className="flex flex-col items-start p-5 bg-white dark:bg-[#111A2C] border border-slate-200/60 dark:border-slate-800/60 rounded-2xl hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all group text-left">
+            <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">local_library</span>
+            </div>
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-1">Ngân Hàng Đề</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Khám phá kho dữ liệu chung</p>
           </button>
         </div>
       </div>
 
-      {/* Stats Grid - Bento Style */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {isLoading ? (
-          <>
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-          </>
-        ) : (
-          <>
-            {/* Stat Card 1 */}
-            <div className="bg-white dark:bg-[#0A1F3E] backdrop-blur-md p-7 rounded-2xl relative overflow-hidden group shadow-sm border border-slate-200/50 hover:shadow-[0_20px_50px_-12px_rgba(0,198,255,0.1)] hover:border-[#00C6FF]/20 transition-all duration-500">
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                <span className="material-symbols-outlined text-8xl" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
-              </div>
-              <p className="text-sm font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">{t('stats.live_exams')}</p>
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-5xl font-black text-[#0C2E5E] dark:text-[#E2E8F0] font-headline tracking-tight">{activeExamsCount}</span>
-                <span className="text-xs font-extrabold px-2.5 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full">{t('stats.live_now')}</span>
-              </div>
-              <div
-                onClick={() => router.push("/teacher/my-exams")}
-                className="mt-6 flex items-center gap-2 text-[#0C2E5E] dark:text-[#E2E8F0] hover:text-[#00C6FF] text-sm font-bold cursor-pointer hover:underline transition-colors duration-200"
-              >
-                <span>{t('stats.details')}</span>
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </div>
+      {/* 3. MAIN CONTENT GRID */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        
+        {/* LEFT COLUMN: EXAM BANK PREVIEW */}
+        <div className="xl:col-span-8">
+          <div className="bg-white dark:bg-[#111A2C] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-slate-200/60 dark:border-slate-800/60 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-blue-500">folder_open</span>
+                Kho đề của tôi
+              </h2>
+              <button onClick={() => router.push('/teacher/exam-templates')} className="text-sm font-semibold text-blue-600 dark:text-cyan-400 hover:underline">
+                Xem tất cả
+              </button>
             </div>
+            
+            <div className="p-2">
+              {isTemplatesLoading ? (
+                <div className="p-4 space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-md w-1/3"></div>
+                        <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-md w-1/4"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : templates.length > 0 ? (
+                <div className="flex flex-col">
+                  {[...templates].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3).map((exam: any, idx: number, arr: any[]) => (
+                    <div key={exam.id} className={`group flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-[#162137] rounded-2xl transition-colors ${idx !== arr.length - 1 ? 'border-b border-slate-50 dark:border-slate-800/30' : ''}`}>
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                          <span className="material-symbols-outlined">folder</span>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-1 group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-1" title={exam.title}>{exam.title}</h3>
+                          <div className="flex items-center gap-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">school</span> {exam.subject || "Chung"} - Khối {exam.grade || "Chung"}</span>
+                            {exam.versions?.[0]?.questions?.length > 0 && (
+                              <>
+                                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">format_list_numbered</span> {exam.versions[0].questions.length} câu</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 sm:mt-0 ml-16 sm:ml-0 flex items-center justify-between sm:justify-end gap-4">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700">
+                          {exam.difficulty === 'EASY' ? '🟢 Dễ' : exam.difficulty === 'MEDIUM' ? '🟡 Vừa' : exam.difficulty === 'HARD' ? '🔴 Khó' : exam.difficulty === 'EXPERT' ? '🟣 Chuyên' : 'Chưa phân loại'}
+                        </span>
+                        
+                        <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => router.push('/teacher/exam-templates')} className="px-3 py-1.5 flex items-center gap-1 rounded-lg bg-[#0C2E5E] text-white hover:bg-blue-700 font-semibold text-xs transition-colors">
+                            <span className="material-symbols-outlined text-[14px]">send</span> Sử dụng
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-12 flex flex-col items-center justify-center text-center">
+                  <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                    <span className="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600">inbox</span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300 font-semibold mb-1">Kho đề của bạn đang trống</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Hãy thiết kế đề thi mới hoặc lưu từ ngân hàng chung.</p>
+                  <button onClick={() => router.push("/teacher/exams?mode=manual")} className="px-5 py-2.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-cyan-400 font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors text-sm">
+                    Thiết kế Đề thi
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-            {/* Stat Card 2 */}
-            <div className="bg-white dark:bg-[#0A1F3E] backdrop-blur-md p-7 rounded-2xl relative overflow-hidden group shadow-sm border border-slate-200/50 hover:shadow-[0_20px_50px_-12px_rgba(0,198,255,0.1)] hover:border-[#00C6FF]/20 transition-all duration-500">
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                <span className="material-symbols-outlined text-8xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-              </div>
-              <p className="text-sm font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">{t('stats.drafts')}</p>
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-5xl font-black text-on-surface dark:text-slate-200 font-headline">{draftExamsCount}</span>
-                <span className="text-on-surface-variant dark:text-slate-400 text-sm font-medium">{t('stats.editing')}</span>
-              </div>
-              <div
-                onClick={() => router.push("/teacher/reports")}
-                className="mt-6 flex items-center gap-2 text-on-surface-variant dark:text-slate-400 text-sm font-semibold cursor-pointer hover:underline transition-colors duration-200"
-              >
-                <span>{t('stats.view_reports')}</span>
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </div>
+        {/* RIGHT COLUMN: CLASSROOMS & STATS */}
+        <div className="xl:col-span-4 space-y-8">
+          
+          {/* Classrooms Card */}
+          <div className="bg-white dark:bg-[#111A2C] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-slate-200/60 dark:border-slate-800/60 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-slate-400">school</span>
+                Lớp học của tôi
+              </h2>
+              <button onClick={() => router.push('/teacher/classrooms')} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <span className="material-symbols-outlined text-[18px]">add</span>
+              </button>
             </div>
-
-            {/* Stat Card 3 */}
-            <div className="bg-white dark:bg-[#0A1F3E] backdrop-blur-md p-7 rounded-2xl relative overflow-hidden group shadow-sm border border-slate-200/50 hover:shadow-[0_20px_50px_-12px_rgba(0,198,255,0.1)] hover:border-[#00C6FF]/20 transition-all duration-500">
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                <span className="material-symbols-outlined text-8xl" style={{ fontVariationSettings: "'FILL' 1" }}>groups</span>
-              </div>
-              <p className="text-sm font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-widest">{t('stats.total_exams')}</p>
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-5xl font-black text-on-surface dark:text-slate-200 font-headline">{exams.length}</span>
-                <span className="text-on-surface-variant dark:text-slate-400 text-sm font-medium">{t('stats.created')}</span>
-              </div>
-              <div className="mt-6 flex items-center gap-2 text-on-surface-variant dark:text-slate-400 text-sm font-semibold cursor-pointer hover:underline transition-colors duration-200">
-                <span>{t('stats.manage_classes')}</span>
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </div>
+            
+            <div className="p-4 space-y-3">
+              {isClassroomsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse h-20 bg-slate-50 dark:bg-[#162137] rounded-2xl"></div>
+                  ))}
+                </div>
+              ) : classrooms.length > 0 ? (
+                classrooms.slice(0, 4).map((cls: any) => (
+                  <div key={cls.id} onClick={() => router.push(`/teacher/classrooms/${cls.id}`)} className="group p-4 bg-slate-50 dark:bg-[#162137] rounded-2xl border border-slate-100 dark:border-slate-800/50 hover:border-blue-300 dark:hover:border-blue-500/50 hover:bg-white dark:hover:bg-[#1A263D] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md">
+                    <div>
+                      <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-1 group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors">{cls.name}</h3>
+                      <div className="flex items-center gap-3 text-xs font-medium text-slate-500">
+                        <span className="flex items-center gap-1 text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-md font-mono">{cls.code}</span>
+                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">group</span> {cls.studentIds?.length || 0} học sinh</span>
+                      </div>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-white dark:bg-[#0A0F1C] border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200 dark:group-hover:text-cyan-400 dark:group-hover:border-cyan-800 transition-all shadow-sm">
+                      <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center p-6 bg-slate-50 dark:bg-[#162137] rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">Bạn chưa quản lý lớp nào</p>
+                  <button onClick={() => router.push("/teacher/classrooms")} className="text-xs font-bold text-blue-600 dark:text-cyan-400 hover:underline">Tạo lớp học mới &rarr;</button>
+                </div>
+              )}
             </div>
-          </>
-        )}
+            {classrooms.length > 4 && (
+              <div className="px-4 pb-4">
+                <button onClick={() => router.push('/teacher/classrooms')} className="w-full py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#162137] rounded-xl transition-colors">
+                  Xem tất cả {classrooms.length} lớp
+                </button>
+              </div>
+            )}
+        </div>
       </div>
-
-      {/* Full-width container: Quick Actions */}
-      <div className="w-full space-y-5 pb-12">
-        {/* Quick action cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button
-            onClick={() => router.push("/teacher/exams?mode=ai")}
-            className="group bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 text-left hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(0,198,255,0.08)] transition-all duration-300 active:scale-[0.98]"
-          >
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="material-symbols-outlined text-blue-600 dark:text-cyan-400" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-            </div>
-            <p className="font-extrabold text-on-surface dark:text-slate-100 text-sm">AI Tạo Đề</p>
-            <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 font-medium">Upload tài liệu, AI biên soạn câu hỏi</p>
-          </button>
-
-          <button
-            onClick={() => router.push("/teacher/exams?mode=manual")}
-            className="group bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 text-left hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(0,198,255,0.08)] transition-all duration-300 active:scale-[0.98]"
-          >
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>edit_document</span>
-            </div>
-            <p className="font-extrabold text-on-surface dark:text-slate-100 text-sm">Nhập Tay</p>
-            <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 font-medium">Tự soạn từng câu hỏi chi tiết</p>
-          </button>
-
-          <button
-            onClick={() => router.push("/teacher/exams/import")}
-            className="group bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 text-left hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(0,198,255,0.08)] transition-all duration-300 active:scale-[0.98]"
-          >
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400" style={{ fontVariationSettings: "'FILL' 1" }}>upload_file</span>
-            </div>
-            <p className="font-extrabold text-on-surface dark:text-slate-100 text-sm">Import File</p>
-            <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 font-medium">Tải lên file đề thi có sẵn</p>
-          </button>
-
-          <button
-            onClick={() => router.push("/teacher/exam-bank")}
-            className="group bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-5 text-left hover:border-[#00C6FF]/40 hover:shadow-[0_8px_30px_rgba(0,198,255,0.08)] transition-all duration-300 active:scale-[0.98]"
-          >
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500/10 to-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-              <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400" style={{ fontVariationSettings: "'FILL' 1" }}>library_books</span>
-            </div>
-            <p className="font-extrabold text-on-surface dark:text-slate-100 text-sm">Ngân Hàng Đề</p>
-            <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 font-medium">Kho đề thi của cộng đồng</p>
-          </button>
-        </div>
-
-        {/* Notification placeholder */}
-        <div className="bg-white/80 dark:bg-[#0A1F3E]/80 p-5 rounded-2xl flex items-center gap-3 shadow-sm border border-outline-variant/10 text-on-surface-variant dark:text-slate-400/50">
-          <span className="material-symbols-outlined opacity-40">notifications_none</span>
-          <span className="text-sm">{t('notifications.empty')}</span>
-        </div>
       </div>
 
       {/* Share to Bank Modal */}
       {isShareModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => !isSharing && setIsShareModalOpen(false)}></div>
-          <div className="relative bg-white dark:bg-[#0A1F3E] w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-slate-100 dark:border-cyan-950/40">
-              <h3 className="text-xl font-bold text-on-surface dark:text-slate-200 flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-600">publish</span>
-                Đưa đề thi vào Ngân hàng
+          <div className="relative bg-white dark:bg-[#111A2C] w-full max-w-md rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.1)] overflow-hidden animate-in fade-in zoom-in-95 duration-300 border border-slate-200/50 dark:border-slate-800/60">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <span className="material-symbols-outlined text-blue-500">publish</span>
+                Đưa vào Ngân Hàng
               </h3>
+              <button onClick={() => !isSharing && setIsShareModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
             
-            <form onSubmit={handleShareToBank} className="p-6 space-y-5">
-              <div className="bg-slate-50 dark:bg-cyan-950/20 p-4 rounded-xl border border-slate-100 dark:border-cyan-950/40">
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Đề thi đang chọn:</p>
-                <p className="font-bold text-on-surface dark:text-slate-200 mt-1 line-clamp-1">{examToShare?.title}</p>
+            <form onSubmit={handleShareToBank} className="p-6 space-y-6">
+              <div className="bg-slate-50 dark:bg-[#162137] p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Đề thi đang chọn</p>
+                <p className="font-bold text-slate-900 dark:text-slate-100 line-clamp-1">{examToShare?.title}</p>
               </div>
 
-              <div className="space-y-4 bg-blue-50/50 dark:bg-cyan-950/15 p-4 rounded-2xl border border-blue-100/50 dark:border-cyan-950/40">
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
-                  Vui lòng chọn cấp bậc và môn học để phân loại đề thi trong Ngân hàng đề thi. Học sinh sẽ tìm thấy đề thi này khi lọc theo các tiêu chí dưới đây.
-                </p>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Cấp bậc *</label>
-                    <select
-                      value={shareGrade}
-                      onChange={e => {
-                        setShareGrade(e.target.value);
-                        setShareSubject("");
-                      }}
-                      required
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#0A1F3E] text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/50 outline-none"
-                    >
-                      <option value="">-- Chọn --</option>
-                      <optgroup label="Phổ Thông (K-12)">
-                        {EDUCATION_HIERARCHY.filter(l => l.type === "K12").map(l => (
-                          <option key={l.id} value={l.name}>{l.name}</option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Đại Học & Cao Đẳng">
-                        {EDUCATION_HIERARCHY.filter(l => l.type === "UNIVERSITY").map(l => (
-                          <option key={l.id} value={l.name}>{l.name}</option>
-                        ))}
-                      </optgroup>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">Môn học *</label>
-                    <select
-                      value={shareSubject}
-                      onChange={e => setShareSubject(e.target.value)}
-                      required
-                      disabled={!shareGrade}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#0A1F3E] text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/50 outline-none disabled:opacity-50"
-                    >
-                      <option value="">-- Chọn --</option>
-                      {EDUCATION_HIERARCHY.find(l => l.name === shareGrade)?.subjects.map(s => (
-                        <option key={s.id} value={s.name}>{s.name}</option>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-2">Cấp bậc <span className="text-red-500">*</span></label>
+                  <select
+                    value={shareGrade}
+                    onChange={e => {
+                      setShareGrade(e.target.value);
+                      setShareSubject("");
+                    }}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0A0F1C] text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  >
+                    <option value="">-- Chọn Cấp Bậc --</option>
+                    <optgroup label="Phổ Thông (K-12)">
+                      {EDUCATION_HIERARCHY.filter(l => l.type === "K12").map(l => (
+                        <option key={l.id} value={l.name}>{l.name}</option>
                       ))}
-                    </select>
-                  </div>
+                    </optgroup>
+                    <optgroup label="Đại Học & Cao Đẳng">
+                      {EDUCATION_HIERARCHY.filter(l => l.type === "UNIVERSITY").map(l => (
+                        <option key={l.id} value={l.name}>{l.name}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-2">Môn học <span className="text-red-500">*</span></label>
+                  <select
+                    value={shareSubject}
+                    onChange={e => setShareSubject(e.target.value)}
+                    required
+                    disabled={!shareGrade}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0A0F1C] text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-[#162137]"
+                  >
+                    <option value="">-- Chọn Môn Học --</option>
+                    {EDUCATION_HIERARCHY.find(l => l.name === shareGrade)?.subjects.map(s => (
+                      <option key={s.id} value={s.name}>{s.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
-              <div className="pt-4 flex items-center justify-end gap-3">
+              <div className="pt-2 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setIsShareModalOpen(false)}
                   disabled={isSharing}
-                  className="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={isSharing}
-                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:from-blue-700 hover:to-cyan-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isSharing ? (
                     <>
-                      <span className="material-symbols-outlined animate-spin">refresh</span>
-                      Đang xử lý...
+                      <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                      Đang xử lý
                     </>
                   ) : (
-                    "Xác nhận đưa vào"
+                    "Xác nhận"
                   )}
                 </button>
               </div>

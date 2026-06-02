@@ -68,15 +68,15 @@ export function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
                 <MapPin className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">Khu Công Nghệ Cao, Thành phố Thủ Đức, TP.HCM</span>
+                <span className="leading-relaxed">175/2A Đường Số 2, Tăng Nhơn Phú B, Thủ Đức</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
                 <Phone className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
-                <span>+84 123 456 789</span>
+                <span>+84 979 2202 48</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
                 <Mail className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
-                <span>support@auraacademic.edu.vn</span>
+                <span>auraacademicteam@gmail.com</span>
               </li>
             </ul>
           </div>

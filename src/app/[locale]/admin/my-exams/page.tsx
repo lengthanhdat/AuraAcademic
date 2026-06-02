@@ -54,6 +54,7 @@ function ExamBuilderContent() {
 
   // Flag để tránh autosave ghi đè trong khi đang load từ URL
   const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(false);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 
   // 1a. Load từ URL query param ?edit=<examId> (uu tiên cao nhất, fetch từ API)
   useEffect(() => {
@@ -706,43 +707,73 @@ function ExamBuilderContent() {
 
             {/* ── Sub-mode: FROM FILE ── */}
             {aiSubMode === "file" && (
-              <div
-                onClick={() => fileRef.current?.click()}
-                className={`relative border-2 border-dashed m-6 rounded-2xl p-10 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 dark:border-cyan-950/40 hover:border-blue-400 hover:bg-blue-50/10"
-                  }`}
-              >
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 text-slate-400 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-3xl">cloud_upload</span>
-                </div>
-                <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">
-                  {file ? file.name : t('upload.title_ai')}
-                </h3>
-                <p className="text-sm text-slate-400 mt-1">{t('upload.hint')}</p>
-                <button className="mt-3 text-blue-600 font-bold text-sm hover:underline">{t('upload.btn_choose')}</button>
-                <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
-
-                {file && !questions.length && (
-                  <div className="mt-5 flex flex-col items-center gap-3">
-                    <div className="w-56">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('upload.label_count')}</label>
-                      <input
-                        type="number"
-                        value={questionCount}
-                        onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
-                        placeholder={t('upload.placeholder_count')}
-                        className="w-full px-4 py-2 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-center font-bold text-blue-900 dark:text-[#00C6FF] outline-none"
-                        onClick={e => e.stopPropagation()}
-                      />
+              <div className="p-6 space-y-5">
+                {/* Hướng dẫn sử dụng */}
+                <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-900/40 rounded-2xl p-5 mb-2">
+                  <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 mb-3">
+                    <span className="material-symbols-outlined text-[20px]">lightbulb</span>
+                    Hướng dẫn chi tiết tạo đề từ tài liệu
+                  </h4>
+                  <div className="text-xs text-blue-900/80 dark:text-blue-300/80 space-y-3 font-medium leading-relaxed">
+                    <p>AI (Trí tuệ nhân tạo) có khả năng đọc và hiểu nội dung từ tài liệu bạn tải lên để tự động biên soạn câu hỏi trắc nghiệm tương ứng. Để đạt hiệu quả tốt nhất, Thầy/Cô vui lòng lưu ý:</p>
+                    
+                    <div className="bg-white/60 dark:bg-black/20 rounded-xl p-4 border border-blue-100/50 dark:border-white/5 shadow-sm">
+                      <p className="font-bold text-blue-800 dark:text-blue-400 mb-1">Các định dạng tệp được hỗ trợ:</p>
+                      <p className="text-blue-700 dark:text-blue-300 mb-3 bg-blue-100/50 dark:bg-blue-900/40 py-1.5 px-3 rounded-lg font-mono text-[10px]">PDF, Word (.docx), Văn bản thuần túy (.txt) — Dung lượng tối đa 25MB</p>
+                      
+                      <p className="font-bold text-blue-800 dark:text-blue-400 mb-1">Quy trình thực hiện:</p>
+                      <ol className="list-decimal list-outside ml-4 space-y-1.5 text-blue-800/90 dark:text-blue-300/90">
+                        <li>Thầy/Cô kéo thả hoặc nhấp chọn tài liệu bài học, đề cương, sách giáo khoa hoặc tệp tài nguyên từ máy tính.</li>
+                        <li>Sau khi tệp được tải lên thành công, nhập số lượng câu hỏi mong muốn AI biên soạn dựa trên nội dung tài liệu.</li>
+                        <li>Nhấn nút <b>Aura AI — Bắt đầu tạo câu hỏi từ tài liệu</b> để hệ thống tiến hành phân tích và trích xuất.</li>
+                      </ol>
                     </div>
-                    <button
-                      onClick={e => { e.stopPropagation(); handleGenerate(); }}
-                      className="px-8 py-3 bg-blue-900 text-white rounded-xl font-bold text-sm shadow-xl hover:bg-blue-800 transition-all flex items-center gap-2"
-                    >
-                      <span className="material-symbols-outlined text-sm">auto_awesome</span>
-                      {t('upload.btn_generate')}
-                    </button>
+                    
+                    <ul className="list-disc list-outside ml-4 space-y-1.5 pt-1">
+                      <li>Nội dung tài liệu tải lên cần rõ ràng, không bị lỗi font hoặc chứa quá nhiều ký tự đặc biệt không đọc được.</li>
+                      <li>Sau khi AI hoàn tất tạo câu hỏi, vui lòng kiểm tra và rà soát kỹ lại nội dung cũng như đáp án trước khi lưu bài.</li>
+                    </ul>
                   </div>
-                )}
+                </div>
+
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 dark:border-cyan-950/40 hover:border-blue-400 hover:bg-blue-50/10"
+                    }`}
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 text-slate-400 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-3xl">cloud_upload</span>
+                  </div>
+                  <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">
+                    {file ? file.name : t('upload.title_ai')}
+                  </h3>
+                  <p className="text-sm text-slate-400 mt-1">{t('upload.hint')}</p>
+                  <button className="mt-3 text-blue-600 font-bold text-sm hover:underline">{t('upload.btn_choose')}</button>
+                  <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+
+                  {file && !questions.length && (
+                    <div className="mt-5 flex flex-col items-center gap-3">
+                      <div className="w-56">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('upload.label_count')}</label>
+                        <input
+                          type="number"
+                          value={questionCount}
+                          onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
+                          placeholder={t('upload.placeholder_count')}
+                          className="w-full px-4 py-2 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-center font-bold text-blue-900 dark:text-[#00C6FF] outline-none"
+                          onClick={e => e.stopPropagation()}
+                        />
+                      </div>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleGenerate(); }}
+                        className="px-8 py-3 bg-blue-900 text-white rounded-xl font-bold text-sm shadow-xl hover:bg-blue-800 transition-all flex items-center gap-2"
+                      >
+                        <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                        {t('upload.btn_generate')}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -819,13 +850,70 @@ function ExamBuilderContent() {
                       <option value="EXPERT">🟣 Chuyên gia</option>
                     </select>
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Ngôn ngữ</label>
-                    <select value={language} onChange={e => setLanguage(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-violet-400">
-                      <option value="vi">🆻🇳 Tiếng Việt</option>
-                      <option value="en">🇺🇸 English</option>
-                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-violet-400 flex items-center justify-between"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {language === "vi" ? (
+                          <>
+                            <svg viewBox="0 0 30 20" className="w-5 h-3.5 rounded-sm object-cover shrink-0">
+                              <rect width="30" height="20" fill="#da251d"/>
+                              <polygon points="15,4 16.18,7.63 20,7.63 16.91,9.88 18.09,13.51 15,11.25 11.91,13.51 13.09,9.88 10,7.63 13.82,7.63" fill="#ffff00"/>
+                            </svg>
+                            Tiếng Việt
+                          </>
+                        ) : (
+                          <>
+                            <svg viewBox="0 0 30 20" className="w-5 h-3.5 rounded-sm object-cover shrink-0">
+                              <rect width="30" height="20" fill="#00247d"/>
+                              <path d="M0,0 L30,20 M30,0 L0,20" stroke="#ffffff" strokeWidth="4"/>
+                              <path d="M0,0 L30,20 M30,0 L0,20" stroke="#cf142b" strokeWidth="1.5"/>
+                              <path d="M15,0 V20 M0,10 H30" stroke="#ffffff" strokeWidth="6"/>
+                              <path d="M15,0 V20 M0,10 H30" stroke="#cf142b" strokeWidth="3.6"/>
+                            </svg>
+                            English
+                          </>
+                        )}
+                      </span>
+                      <span className="material-symbols-outlined text-[16px] text-slate-400">expand_more</span>
+                    </button>
+
+                    {isLangDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setIsLangDropdownOpen(false)} />
+                        <div className="absolute right-0 left-0 mt-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl shadow-xl z-40 overflow-hidden py-1">
+                          <button
+                            type="button"
+                            onClick={() => { setLanguage("vi"); setIsLangDropdownOpen(false); }}
+                            className={`w-full px-3 py-2 text-left text-sm font-bold flex items-center gap-1.5 transition-colors ${language === "vi" ? "bg-slate-100 dark:bg-cyan-950/40 text-blue-700 dark:text-[#00C6FF]" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-cyan-950/20"}`}
+                          >
+                            <svg viewBox="0 0 30 20" className="w-5 h-3.5 rounded-sm object-cover shrink-0">
+                              <rect width="30" height="20" fill="#da251d"/>
+                              <polygon points="15,4 16.18,7.63 20,7.63 16.91,9.88 18.09,13.51 15,11.25 11.91,13.51 13.09,9.88 10,7.63 13.82,7.63" fill="#ffff00"/>
+                            </svg>
+                            Tiếng Việt
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setLanguage("en"); setIsLangDropdownOpen(false); }}
+                            className={`w-full px-3 py-2 text-left text-sm font-bold flex items-center gap-1.5 transition-colors ${language === "en" ? "bg-slate-100 dark:bg-cyan-950/40 text-blue-700 dark:text-[#00C6FF]" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-cyan-950/20"}`}
+                          >
+                            <svg viewBox="0 0 30 20" className="w-5 h-3.5 rounded-sm object-cover shrink-0">
+                              <rect width="30" height="20" fill="#00247d"/>
+                              <path d="M0,0 L30,20 M30,0 L0,20" stroke="#ffffff" strokeWidth="4"/>
+                              <path d="M0,0 L30,20 M30,0 L0,20" stroke="#cf142b" strokeWidth="1.5"/>
+                              <path d="M15,0 V20 M0,10 H30" stroke="#ffffff" strokeWidth="6"/>
+                              <path d="M15,0 V20 M0,10 H30" stroke="#cf142b" strokeWidth="3.6"/>
+                            </svg>
+                            English
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Số câu</label>
