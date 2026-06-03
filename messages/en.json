@@ -290,9 +290,7 @@
     "logout": "Sign Out"
   },
   "StudentHeader": {
-    "available": "Available to test: 59:00",
-    "guest": "Guest",
-    "check_in": "Check-in:"
+    "guest": "Guest"
   },
   "StudentDashboard": {
     "greeting": "Hello, {name}.",

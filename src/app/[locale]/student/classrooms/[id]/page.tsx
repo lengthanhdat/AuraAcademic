@@ -20,6 +20,7 @@ interface ClassroomMsg {
   classroomId: string;
   senderId: string;
   senderName: string;
+  senderAvatarUrl?: string;
   senderRole: string;
   content: string;
   timestamp?: string;
@@ -27,13 +28,33 @@ interface ClassroomMsg {
 
 // Embedded exam state interface removed
 
+const getInitials = (name?: string) => {
+  const words = (name || "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "HS";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+};
+
+function Avatar({ name, src, className = "w-10 h-10", tone = "cyan" }: { name?: string; src?: string; className?: string; tone?: "cyan" | "amber" }) {
+  const ringClass = tone === "amber" ? "ring-2 ring-amber-300 dark:ring-amber-500/60" : "";
+  if (src) {
+    return <img src={src} alt={name || "Avatar"} className={`${className} rounded-full object-cover border border-white dark:border-slate-900 shadow-sm shrink-0 ${ringClass}`} />;
+  }
+
+  return (
+    <div className={`${className} rounded-full ${tone === "amber" ? "bg-amber-500/20 text-amber-600 dark:text-amber-300" : "bg-cyan-500/15 text-cyan-600 dark:text-cyan-300"} flex items-center justify-center font-black text-xs shrink-0 ${ringClass}`}>
+      {getInitials(name)}
+    </div>
+  );
+}
+
 export default function StudentClassroomDetailPage() {
   const params = useParams();
   const router = useRouter();
   const classroomId = params.id as string;
 
   const [tab, setTab] = useState<Tab>("timeline");
-  const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; posts?: any[] } | null>(null);
+  const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; posts?: any[]; teacherAvatarUrl?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [resultsByExamCode, setResultsByExamCode] = useState<Record<string, any>>({});
   const [chatMsgs, setChatMsgs] = useState<ClassroomMsg[]>([]);
@@ -49,6 +70,22 @@ export default function StudentClassroomDetailPage() {
       if (u) userRef.current = JSON.parse(u);
     } catch {}
     fetchData();
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") fetchData(false);
+    };
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") fetchData(false);
+    }, 5000);
+
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("focus", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("focus", refreshWhenVisible);
+    };
   }, [classroomId]);
 
   useEffect(() => {
@@ -65,16 +102,16 @@ export default function StudentClassroomDetailPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMsgs]);
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const d = await classroomApi.getClassroomDetails(classroomId);
       setData(d);
       await fetchStudentResults();
     } catch (e: any) {
-      toast.error(e.message);
+      if (showLoading) toast.error(e.message);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 
@@ -209,11 +246,16 @@ export default function StudentClassroomDetailPage() {
   );
 
   const { classroom, exams, students = [], posts = [] } = data;
+  const getChatAvatar = (msg: ClassroomMsg) => {
+    if (msg.senderId === userRef.current?.id) return userRef.current?.avatarUrl;
+    if (msg.senderRole === "teacher") return data?.teacherAvatarUrl;
+    return students.find((student: any) => student.id === msg.senderId)?.avatarUrl || msg.senderAvatarUrl;
+  };
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { key: "timeline",  label: "Bảng tin",   icon: <Radio className="w-4 h-4" /> },
-    { key: "members",   label: "Thành viên", icon: <BookOpen className="w-4 h-4" />, badge: students.length },
-    { key: "exams",     label: "Bài thi",    icon: <Trophy className="w-4 h-4" />, badge: exams.length },
+    { key: "members",   label: "Thành viên", icon: <BookOpen className="w-4 h-4" /> },
+    { key: "exams",     label: "Bài thi",    icon: <Trophy className="w-4 h-4" /> },
     { key: "gradebook", label: "Bảng điểm",  icon: <BarChart3 className="w-4 h-4" /> },
     { key: "chat",      label: "Thảo luận",  icon: <MessageSquare className="w-4 h-4" /> },
   ];
@@ -314,9 +356,7 @@ export default function StudentClassroomDetailPage() {
                 <div className="divide-y divide-slate-100 dark:divide-cyan-950/40">
                   {students.map((student: any) => (
                     <div key={student.id} className="flex items-center gap-4 py-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-cyan-950/40 flex items-center justify-center text-slate-500 dark:text-slate-300 font-black text-xs">
-                        {(student.fullName || student.email || "HS").slice(0, 2).toUpperCase()}
-                      </div>
+                      <Avatar name={student.fullName || student.email} src={student.avatarUrl} />
                       <div className="min-w-0">
                         <p className="font-bold text-slate-800 dark:text-white truncate">{student.fullName || student.email || "Học sinh"}</p>
                         {student.email && <p className="text-xs text-slate-400 truncate">{student.email}</p>}
@@ -517,7 +557,8 @@ export default function StudentClassroomDetailPage() {
                   const isMe = msg.senderId === userRef.current?.id;
                   const isTeacher = msg.senderRole === "teacher";
                   return (
-                    <div key={msg.id || i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                    <div key={msg.id || i} className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {!isMe && <Avatar name={msg.senderName} src={getChatAvatar(msg)} className="w-8 h-8" tone={isTeacher ? "amber" : "cyan"} />}
                       <div className={`max-w-xs md:max-w-md rounded-2xl px-4 py-2.5 ${
                         isMe
                           ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-br-sm"
@@ -526,12 +567,20 @@ export default function StudentClassroomDetailPage() {
                           : "bg-slate-100 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 rounded-bl-sm"
                       }`}>
                         {!isMe && (
-                          <p className={`text-xs font-bold mb-1 ${isTeacher ? "text-amber-600 dark:text-amber-400" : "text-cyan-600 dark:text-cyan-300"}`}>
-                            {isTeacher ? "👨‍🏫 " : ""}{msg.senderName}
-                          </p>
+                          <div className="mb-1 flex items-center gap-2">
+                            <p className={`text-xs font-bold ${isTeacher ? "text-amber-600 dark:text-amber-400" : "text-cyan-600 dark:text-cyan-300"}`}>
+                              {msg.senderName}
+                            </p>
+                            {isTeacher && (
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                                Giáo viên
+                              </span>
+                            )}
+                          </div>
                         )}
                         <p className="text-sm leading-relaxed">{msg.content}</p>
                       </div>
+                      {isMe && <Avatar name={msg.senderName} src={getChatAvatar(msg)} className="w-8 h-8" />}
                     </div>
                   );
                 })}

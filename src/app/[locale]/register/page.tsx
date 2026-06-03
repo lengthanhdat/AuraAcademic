@@ -8,6 +8,8 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAlert } from "@/components/ui/AlertProvider";
 
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "850775217149-9jm0o8ioj9nbe7v0sfbc7ph9jvda9rga.apps.googleusercontent.com";
+
 export default function Register() {
   const router = useRouter();
   const t = useTranslations("Register");
@@ -26,6 +28,10 @@ export default function Register() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,22 +73,71 @@ export default function Register() {
         }
         setLoading(false);
       } else {
-        // Đăng ký thành công
-        setLoading(false); // Ngừng loading ngay lập tức để hiện Alert
+        setLoading(false);
+        setVerificationEmail(formData.email);
+        setVerificationCode("");
         showAlert({
-          title: t("success_title"),
-          message: t("success_msg_login") || "Đăng ký thành công. Vui lòng kiểm tra email (nếu có) và đăng nhập.",
+          title: "Đã gửi mã xác thực",
+          message: "Nhập mã OTP trong email để xác thực tài khoản.",
           type: "success",
-          confirmText: t("login_now") || "Đăng nhập ngay",
-          onConfirm: () => {
-            router.push("/login");
-          }
         });
-        return; // Dừng lại ở đây để không chạy vào finally (tránh bị chèn UI)
+        return;
       }
     } catch (err) {
       setError(t("server_error"));
       setLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verificationEmail || verificationCode.trim().length !== 6) {
+      setError("Vui lòng nhập mã OTP 6 số.");
+      return;
+    }
+
+    setError("");
+    setVerifying(true);
+    try {
+      const res = await fetch("http://localhost:8088/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: verificationEmail, token: verificationCode.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "VERIFY_FAILED");
+
+      showAlert({
+        title: "Xác thực thành công",
+        message: "Tài khoản đã được xác thực. Bạn có thể đăng nhập ngay.",
+        type: "success",
+        confirmText: "Đăng nhập",
+        onConfirm: () => router.push("/login"),
+      });
+    } catch (err: any) {
+      setError(err.message || "Mã xác thực không hợp lệ hoặc đã hết hạn.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!verificationEmail) return;
+    setError("");
+    setResending(true);
+    try {
+      const res = await fetch("http://localhost:8088/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: verificationEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "RESEND_FAILED");
+      showAlert({ title: "Đã gửi lại mã", message: "Kiểm tra email để lấy mã OTP mới.", type: "success" });
+    } catch (err: any) {
+      setError(err.message || "Không gửi lại được mã xác thực.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -190,7 +245,7 @@ export default function Register() {
             </div>
 
             <div className="w-full mb-8 flex justify-center items-center hover:scale-[1.01] transition-transform duration-200">
-              <GoogleOAuthProvider clientId="850775217149-9jm0o8ioj9nbe7v0sfbc7ph9jvda9rga.apps.googleusercontent.com" locale={currentLocale}>
+              <GoogleOAuthProvider clientId={googleClientId} locale={currentLocale}>
                 <GoogleLogin
                   onSuccess={async (creds) => {
                     try {
@@ -231,6 +286,45 @@ export default function Register() {
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">{t('or')}</span>
               <div className="flex-grow h-[1px] bg-slate-200 dark:bg-cyan-900/40"></div>
             </div>
+
+            {verificationEmail && (
+              <form onSubmit={handleVerifyEmail} className="mb-8 rounded-3xl border border-cyan-200 bg-cyan-50/70 p-5 shadow-sm dark:border-cyan-900/50 dark:bg-cyan-950/20">
+                <div className="mb-4 flex items-start gap-3">
+                  <span className="material-symbols-outlined text-cyan-600 dark:text-cyan-300">mark_email_read</span>
+                  <div>
+                    <h3 className="font-black text-[#0C2E5E] dark:text-white">Xác thực email</h3>
+                    <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                      Mã OTP đã được gửi tới <span className="text-cyan-700 dark:text-cyan-300">{verificationEmail}</span>.
+                    </p>
+                  </div>
+                </div>
+                <input
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  className="w-full rounded-2xl border border-cyan-200 bg-white px-5 py-4 text-center font-mono text-2xl font-black tracking-[0.35em] text-[#0C2E5E] outline-none transition-all focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 dark:border-cyan-900/50 dark:bg-[#071829] dark:text-white"
+                />
+                <div className="mt-4 flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={verifying || verificationCode.length !== 6}
+                    className="flex-1 rounded-2xl bg-gradient-to-r from-[#0C2E5E] to-[#00C6FF] px-4 py-3 text-sm font-black text-white transition-all disabled:opacity-60"
+                  >
+                    {verifying ? "Đang xác thực..." : "Xác thực"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resending}
+                    className="rounded-2xl border border-cyan-200 bg-white px-4 py-3 text-sm font-black text-cyan-700 transition-all hover:bg-cyan-50 disabled:opacity-60 dark:border-cyan-900/50 dark:bg-[#071829] dark:text-cyan-300"
+                  >
+                    {resending ? "Đang gửi..." : "Gửi lại"}
+                  </button>
+                </div>
+              </form>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-semibold shadow-sm flex items-center gap-3"><span className="material-symbols-outlined text-red-500">error</span>{error}</div>}

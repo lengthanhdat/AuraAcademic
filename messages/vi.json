@@ -290,9 +290,7 @@
     "logout": "Đăng xuất"
   },
   "StudentHeader": {
-    "available": "Có thể thi: 59:00",
-    "guest": "Khách",
-    "check_in": "Báo danh:"
+    "guest": "Khách"
   },
   "StudentDashboard": {
     "greeting": "Xin chào, {name}.",

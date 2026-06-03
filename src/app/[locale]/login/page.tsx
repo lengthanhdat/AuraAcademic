@@ -8,6 +8,8 @@ import { useAlert } from "@/components/ui/AlertProvider";
 import { useTranslations, useLocale } from "next-intl";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "850775217149-9jm0o8ioj9nbe7v0sfbc7ph9jvda9rga.apps.googleusercontent.com";
+
 export default function LoginPage() {
   const router = useRouter();
   const { showAlert } = useAlert();
@@ -41,11 +43,12 @@ export default function LoginPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        if (data.error === "2FA_REQUIRED") {
+        if (res.status === 428 || data.error === "2FA_REQUIRED") {
           setTwoFactorRequired(true);
-          setError("Mã OTP 2FA đã được gửi tới email. Vui lòng nhập mã để đăng nhập.");
+          setError(data.message || "Mã OTP 2FA đã được gửi tới email. Vui lòng nhập mã để đăng nhập.");
         } else {
-          const errMsg = data.message || data.error || "Email hoặc mật khẩu không đúng"; if (errMsg.includes("chưa được xác thực")) { router.push(`/verify-email?email=${formData.email}`); } else { setError(errMsg); }
+          const errMsg = data.message || data.error || "Email hoặc mật khẩu không đúng";
+          setError(errMsg);
         }
       } else {
         localStorage.setItem("user", JSON.stringify(data.user));
@@ -159,7 +162,7 @@ export default function LoginPage() {
             </div>
 
             <div className="w-full mb-8 flex justify-center items-center hover:scale-[1.01] transition-transform duration-200">
-              <GoogleOAuthProvider clientId="850775217149-9jm0o8ioj9nbe7v0sfbc7ph9jvda9rga.apps.googleusercontent.com" locale={currentLocale}>
+              <GoogleOAuthProvider clientId={googleClientId} locale={currentLocale}>
                 <GoogleLogin
                   onSuccess={async (creds) => {
                     try {

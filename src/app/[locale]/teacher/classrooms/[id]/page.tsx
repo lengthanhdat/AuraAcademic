@@ -22,9 +22,36 @@ interface ClassroomMsg {
   classroomId: string;
   senderId: string;
   senderName: string;
+  senderAvatarUrl?: string;
   senderRole: string;
   content: string;
   timestamp?: string;
+}
+
+const getInitials = (name?: string) => {
+  const words = (name || "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "U";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+};
+
+function Avatar({ name, src, className = "w-9 h-9", tone = "cyan" }: { name?: string; src?: string; className?: string; tone?: "cyan" | "amber" | "slate" }) {
+  const ringClass = tone === "amber" ? "ring-2 ring-amber-300 dark:ring-amber-500/60" : "";
+  const toneClass = tone === "amber"
+    ? "bg-amber-500/20 text-amber-600 dark:text-amber-300"
+    : tone === "slate"
+      ? "bg-slate-200/70 dark:bg-slate-800/70 text-slate-500 dark:text-slate-300"
+      : "bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-600 dark:text-cyan-400";
+
+  if (src) {
+    return <img src={src} alt={name || "Avatar"} className={`${className} rounded-full object-cover border border-white dark:border-[#0A1F3E] shadow-sm shrink-0 ${ringClass}`} />;
+  }
+
+  return (
+    <div className={`${className} rounded-full ${toneClass} flex items-center justify-center text-xs font-black shrink-0 ${ringClass}`}>
+      {getInitials(name)}
+    </div>
+  );
 }
 
 export default function TeacherClassroomDetailPage() {
@@ -33,7 +60,7 @@ export default function TeacherClassroomDetailPage() {
   const classroomId = params.id as string;
 
   const [tab, setTab] = useState<Tab>("stream");
-  const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; pendingStudents?: any[]; removedStudents?: any[]; posts?: any[] } | null>(null);
+  const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; pendingStudents?: any[]; removedStudents?: any[]; posts?: any[]; teacherAvatarUrl?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -77,6 +104,22 @@ export default function TeacherClassroomDetailPage() {
       if (u) userRef.current = JSON.parse(u);
     } catch {}
     fetchData();
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") fetchData(false);
+    };
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") fetchData(false);
+    }, 5000);
+
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("focus", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("focus", refreshWhenVisible);
+    };
   }, [classroomId]);
 
   useEffect(() => {
@@ -93,15 +136,15 @@ export default function TeacherClassroomDetailPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMsgs]);
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const d = await classroomApi.getClassroomDetails(classroomId);
       setData(d);
     } catch (e: any) {
-      toast.error(e.message);
+      if (showLoading) toast.error(e.message);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 
@@ -250,11 +293,17 @@ export default function TeacherClassroomDetailPage() {
   );
 
   const { classroom, exams, students = [], pendingStudents = [], removedStudents = [], posts = [] } = data;
+  const memberLogs = classroom?.memberLogs || [];
+  const getChatAvatar = (msg: ClassroomMsg) => {
+    if (msg.senderId === userRef.current?.id) return userRef.current?.avatarUrl;
+    if (msg.senderRole === "teacher") return data?.teacherAvatarUrl;
+    return students.find((student: any) => student.id === msg.senderId)?.avatarUrl || msg.senderAvatarUrl;
+  };
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { key: "stream",    label: "Bảng tin",   icon: <Radio className="w-4 h-4" /> },
-    { key: "members",   label: "Thành viên", icon: <Users className="w-4 h-4" />, badge: classroom?.pendingStudentIds?.length || 0 },
-    { key: "exams",     label: "Bài thi",    icon: <Trophy className="w-4 h-4" />, badge: exams?.length || 0 },
+    { key: "members",   label: "Thành viên", icon: <Users className="w-4 h-4" />, badge: pendingStudents.length || undefined },
+    { key: "exams",     label: "Bài thi",    icon: <Trophy className="w-4 h-4" /> },
     { key: "chat",      label: "Thảo luận",  icon: <MessageSquare className="w-4 h-4" /> },
     { key: "gradebook", label: "Bảng điểm",  icon: <BarChart3 className="w-4 h-4" /> },
   ];
@@ -397,7 +446,7 @@ export default function TeacherClassroomDetailPage() {
                 <span className="font-mono text-cyan-600 dark:text-cyan-400 font-black tracking-widest">{classroom?.code}</span>
                 <Copy className="w-3 h-3 text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" />
               </button>
-              <button onClick={fetchData} className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700/60 text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors border border-slate-200/50 dark:border-transparent">
+              <button onClick={() => fetchData()} className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700/60 text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors border border-slate-200/50 dark:border-transparent">
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -498,7 +547,8 @@ export default function TeacherClassroomDetailPage() {
 
         {/* THÀNH VIÊN */}
         {tab === "members" && (
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+            <div className="space-y-6">
             {/* Invite */}
             <div className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm">
               <h3 className="text-slate-800 dark:text-white font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
@@ -533,7 +583,7 @@ export default function TeacherClassroomDetailPage() {
                   {pendingStudents.map((stud: any) => (
                     <div key={stud.id} className="flex items-center justify-between bg-white dark:bg-[#0A1F3E]/60 rounded-xl px-4 py-3 border border-slate-150 dark:border-transparent">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 text-sm font-bold">?</div>
+                        <Avatar name={stud.fullName || stud.email} src={stud.avatarUrl} tone="amber" />
                         <div>
                           <p className="text-slate-800 dark:text-slate-100 text-sm font-bold">{stud.fullName}</p>
                           <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold">{stud.email}</p>
@@ -570,7 +620,7 @@ export default function TeacherClassroomDetailPage() {
                 <div className="space-y-2">
                   {students.map((stud: any) => (
                     <div key={stud.id} className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-[#051329]/60 rounded-xl border border-slate-200/50 dark:border-transparent group">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 text-xs font-black">H</div>
+                      <Avatar name={stud.fullName || stud.email} src={stud.avatarUrl} />
                       <div>
                         <p className="text-slate-800 dark:text-slate-100 text-sm font-bold">{stud.fullName}</p>
                         <p className="text-slate-450 dark:text-slate-500 text-xs font-semibold">{stud.email}</p>
@@ -600,25 +650,51 @@ export default function TeacherClassroomDetailPage() {
               )}
             </div>
 
-            {/* Removed students */}
-            {removedStudents.length > 0 && (
-              <div className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-6 shadow-sm opacity-75">
-                <h3 className="text-slate-800 dark:text-slate-300 font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-                  <Users className="w-4 h-4 text-slate-500" /> Học sinh đã rời lớp ({removedStudents.length})
+            </div>
+
+            {/* Member logs */}
+            {memberLogs.length > 0 && (
+              <aside className="bg-white dark:bg-[#0A1F3E]/80 border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-4 shadow-sm xl:sticky xl:top-24">
+                <h3 className="text-slate-800 dark:text-white font-bold mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
+                  <Clock className="w-3.5 h-3.5 text-cyan-500" /> Nhật ký thành viên
                 </h3>
                 <div className="space-y-2">
-                  {removedStudents.map((stud: any) => (
-                    <div key={stud.id} className="flex items-center gap-3 px-4 py-3 bg-slate-100 dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-transparent">
-                      <div className="w-9 h-9 rounded-full bg-slate-200/50 dark:bg-slate-800/50 flex items-center justify-center text-slate-500 text-xs font-black">H</div>
-                      <div>
-                        <p className="text-slate-700 dark:text-slate-400 text-sm font-bold">{stud.fullName}</p>
-                        <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold">{stud.email}</p>
+                  {memberLogs.slice(0, 8).map((log: any, idx: number) => {
+                    const isRemoved = log.action === "REMOVED";
+                    const createdAt = log.createdAt ? new Date(log.createdAt).toLocaleString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }) : "";
+
+                    return (
+                      <div key={`${log.studentId}-${log.createdAt || idx}`} className="flex items-start gap-2.5 px-3 py-2.5 bg-slate-50 dark:bg-[#051329]/60 rounded-xl border border-slate-200/50 dark:border-transparent">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black ${
+                          isRemoved
+                            ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300"
+                            : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
+                        }`}>
+                          {isRemoved ? "-" : "+"}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-slate-800 dark:text-slate-100 text-xs font-bold truncate">
+                            {log.studentName || log.studentEmail || "Học sinh"}
+                          </p>
+                          <p className="text-slate-450 dark:text-slate-500 text-[11px] font-semibold leading-snug">
+                            {isRemoved ? "Được mời ra khỏi lớp" : "Được thêm vào lớp"}
+                            {log.actorName ? ` bởi ${log.actorName}` : ""}
+                          </p>
+                          <p className={`mt-1 text-[10px] font-bold ${isRemoved ? "text-rose-500" : "text-emerald-500"}`}>
+                            {createdAt}
+                          </p>
+                        </div>
                       </div>
-                      <span className="ml-auto text-xs px-2.5 py-1 bg-slate-200 dark:bg-slate-800 text-slate-500 rounded-full font-bold">Đã xóa</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-              </div>
+              </aside>
             )}
           </div>
         )}
@@ -642,15 +718,26 @@ export default function TeacherClassroomDetailPage() {
                 {chatMsgs.map((msg, i) => {
                   const isMe = msg.senderId === userRef.current?.id;
                   return (
-                    <div key={msg.id || i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                    <div key={msg.id || i} className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {!isMe && <Avatar name={msg.senderName} src={getChatAvatar(msg)} className="w-8 h-8" tone={msg.senderRole === "teacher" ? "amber" : "cyan"} />}
                       <div className={`max-w-xs md:max-w-md rounded-2xl px-4 py-2.5 shadow-sm ${
                         isMe
                           ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-br-sm font-medium"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-850 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-transparent font-medium"
                       }`}>
-                        {!isMe && <p className="text-xs text-cyan-600 dark:text-cyan-400 font-extrabold mb-1">{msg.senderName}</p>}
+                        {!isMe && (
+                          <div className="mb-1 flex items-center gap-2">
+                            <p className={`text-xs font-extrabold ${msg.senderRole === "teacher" ? "text-amber-600 dark:text-amber-400" : "text-cyan-600 dark:text-cyan-400"}`}>{msg.senderName}</p>
+                            {msg.senderRole === "teacher" && (
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                                Giáo viên
+                              </span>
+                            )}
+                          </div>
+                        )}
                         <p className="text-sm leading-relaxed">{msg.content}</p>
                       </div>
+                      {isMe && <Avatar name={msg.senderName} src={getChatAvatar(msg)} className="w-8 h-8" />}
                     </div>
                   );
                 })}

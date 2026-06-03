@@ -15,7 +15,25 @@ export default function StudentClassroomsPage() {
   const [code, setCode] = useState("");
   const [joining, setJoining] = useState(false);
 
-  useEffect(() => { fetchClassrooms(); }, []);
+  useEffect(() => {
+    fetchClassrooms();
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") fetchClassrooms();
+    };
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") fetchClassrooms();
+    }, 5000);
+
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("focus", fetchClassrooms);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("focus", fetchClassrooms);
+    };
+  }, []);
 
   const fetchClassrooms = async () => {
     try {

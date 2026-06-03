@@ -61,6 +61,34 @@ const formatDateTime = (value?: string) => {
   return date.toLocaleString("vi-VN", { hour12: false });
 };
 
+const compressAvatar = (file: File): Promise<string> => new Promise((resolve, reject) => {
+  const img = new window.Image();
+  const url = URL.createObjectURL(file);
+
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    const maxSize = 512;
+    const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      reject(new Error("Không thể xử lý ảnh này."));
+      return;
+    }
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    resolve(canvas.toDataURL("image/webp", 0.82));
+  };
+
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    reject(new Error("Không đọc được ảnh này."));
+  };
+
+  img.src = url;
+});
+
 export default function StudentProfilePage() {
   const router = useRouter();
   const { showAlert } = useAlert();
@@ -166,23 +194,24 @@ export default function StudentProfilePage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
+    (async () => {
       try {
+        const avatarUrl = await compressAvatar(file);
         const res = await fetch(`${API_BASE}/users/me/avatar`, {
           method: "PUT",
           headers: getAuthHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ avatarUrl: reader.result }),
+          body: JSON.stringify({ avatarUrl }),
         });
-        if (!res.ok) throw new Error("AVATAR_FAILED");
-        const updated = await res.json();
-        updateLocalUser(updated);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || data.error || "AVATAR_FAILED");
+        updateLocalUser(data);
         showAlert({ title: "Đã cập nhật ảnh", message: "Ảnh đại diện đã được lưu.", type: "success" });
-      } catch {
-        showAlert({ title: "Không lưu được ảnh", message: "Vui lòng thử lại với ảnh khác.", type: "error" });
+      } catch (error: any) {
+        showAlert({ title: "Không lưu được ảnh", message: error.message || "Vui lòng thử lại với ảnh khác.", type: "error" });
+      } finally {
+        event.target.value = "";
       }
-    };
-    reader.readAsDataURL(file);
+    })();
   };
 
   const handleSaveProfile = async (event: React.FormEvent) => {
