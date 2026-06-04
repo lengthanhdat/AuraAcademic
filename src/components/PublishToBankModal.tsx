@@ -80,15 +80,6 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
   const handlePublish = async () => {
     if (selectedExams.length === 0) return;
     
-    // Validate that all selected exams have both grade and subject set
-    for (const id of selectedExams) {
-      const cat = categories[id];
-      if (!cat || !cat.grade || !cat.subject) {
-        setError("Vui lòng phân loại đầy đủ Cấp học và Môn học cho các đề thi đã chọn để lưu vào đúng thư mục chuyên đề.");
-        return;
-      }
-    }
-
     setPublishing(true);
     setError("");
     try {
@@ -96,7 +87,7 @@ export default function PublishToBankModal({ isOpen, onClose, onSuccess }: Publi
       
       // Step 1: Update grade & subject of the template exams if they changed
       const updatePromises = selectedExams.map(async (id) => {
-        const cat = categories[id];
+        const cat = categories[id] || { grade: "", subject: "" };
         const exam = exams.find(e => e.id === id);
         if (exam && (exam.grade !== cat.grade || exam.subject !== cat.subject)) {
           const detailRes = await fetch(`${API_BASE}/exams/${id}`, {

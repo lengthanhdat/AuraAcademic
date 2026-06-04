@@ -202,13 +202,13 @@ export default function StudentLobby() {
 
   // ── Early returns (sau tất cả hooks) ───────────────────────
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-2xl p-10 text-center max-w-sm shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#06111f] p-6">
+      <div className="bg-white dark:bg-[#0b1d33] text-slate-900 dark:text-slate-100 rounded-2xl p-10 text-center max-w-sm shadow-lg border border-slate-200 dark:border-cyan-500/20">
         <div className="w-16 h-16 rounded-full bg-error-container flex items-center justify-center mx-auto mb-4">
           <span className="material-symbols-outlined text-on-error-container text-3xl">error</span>
         </div>
         <h2 className="text-xl font-extrabold text-primary mb-2">{t('error_title')}</h2>
-        <p className="text-on-surface-variant dark:text-slate-400 text-sm mb-6">{error}</p>
+        <p className="text-slate-500 dark:text-slate-300 text-sm mb-6">{error}</p>
         <button onClick={() => router.push("/student/dashboard")} className="w-full py-3 bg-primary text-on-primary font-bold rounded-xl">
           Quay về trang chủ
         </button>
@@ -217,7 +217,7 @@ export default function StudentLobby() {
   );
 
   if (!examInfo) return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#06111f]">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
   );
@@ -226,12 +226,12 @@ export default function StudentLobby() {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background text-on-surface dark:text-slate-200 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#06111f] dark:text-slate-100 flex flex-col">
       {/* Header */}
-      <header className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est border-b border-outline-variant/20 px-6 py-3 flex items-center justify-between">
+      <header className="bg-white/95 dark:bg-[#0b1d33]/95 text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-cyan-500/20 px-6 py-3 flex items-center justify-between shadow-sm">
         <span className="text-primary font-black tracking-tighter text-2xl font-headline">Aura Academic</span>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
             <span className="material-symbols-outlined text-sm">assignment</span>
             <span className="font-bold">{examInfo.title}</span>
             <span className="text-outline">·</span>
@@ -244,7 +244,7 @@ export default function StudentLobby() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 bg-slate-50 dark:bg-[#06111f]">
         {examInfo?.isPreviewMode && (
           <div className="max-w-6xl w-full mb-6 bg-gradient-to-r from-amber-500/15 to-orange-500/10 border-l-4 border-amber-500 rounded-xl p-4 flex items-center gap-3 shadow-sm animate-in slide-in-from-top duration-300">
             <span className="material-symbols-outlined text-amber-500 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>gavel</span>
@@ -262,8 +262,8 @@ export default function StudentLobby() {
           <div className="space-y-4">
             <div>
               <p className="text-xs text-primary font-bold uppercase tracking-widest mb-1">{t('room_code')} {code}</p>
-              <h1 className="text-2xl font-extrabold text-on-surface dark:text-slate-200">{examInfo.title}</h1>
-              <p className="text-on-surface-variant dark:text-slate-400 text-sm mt-1">{t('duration_label')}<strong>{examInfo.duration}{t('duration_unit')}</strong></p>
+              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{examInfo.title}</h1>
+              <p className="text-slate-500 dark:text-slate-300 text-sm mt-1">{t('duration_label')}<strong>{examInfo.duration}{t('duration_unit')}</strong></p>
             </div>
 
             {examInfo.aiProctoring ? (
@@ -292,7 +292,7 @@ export default function StudentLobby() {
                           </div>
                           <div className="flex flex-col gap-1">
                             {currentViolations.map((v: string) => (
-                              <span key={v} className="bg-surface-container-high dark:bg-cyan-950/50 dark:text-slate-200est/90 text-error backdrop-blur-md px-3 py-1.5 rounded-lg font-medium text-sm shadow-sm border border-error/20">
+                              <span key={v} className="bg-white/90 dark:bg-red-950/80 text-red-600 dark:text-red-200 backdrop-blur-md px-3 py-1.5 rounded-lg font-medium text-sm shadow-sm border border-red-200 dark:border-red-500/40">
                                 {VIOLATION_LABELS[v as keyof typeof VIOLATION_LABELS]}
                               </span>
                             ))}
@@ -326,21 +326,21 @@ export default function StudentLobby() {
                 </div>
               </>
             ) : (
-              <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est p-8 rounded-2xl border border-outline-variant/20 shadow-sm flex flex-col items-center justify-center text-center aspect-video relative overflow-hidden group">
+              <div className="bg-white dark:bg-[#0b1d33] text-slate-900 dark:text-slate-100 p-8 rounded-2xl border border-slate-200 dark:border-cyan-500/20 shadow-sm flex flex-col items-center justify-center text-center aspect-video relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
                   <span className="material-symbols-outlined text-4xl">security_update_good</span>
                 </div>
-                <h3 className="text-xl font-bold text-on-surface dark:text-slate-200 mb-2">Sẵn sàng tham gia</h3>
-                <p className="text-on-surface-variant dark:text-slate-400 text-sm max-w-xs">Kỳ thi này không kích hoạt chế độ giám sát bằng Camera. Vui lòng chuẩn bị tâm lý tốt nhất để làm bài.</p>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Sẵn sàng tham gia</h3>
+                <p className="text-slate-500 dark:text-slate-300 text-sm max-w-xs">Kỳ thi này không kích hoạt chế độ giám sát bằng Camera. Vui lòng chuẩn bị tâm lý tốt nhất để làm bài.</p>
               </div>
             )}
           </div>
 
           {/* RIGHT — Rules + Action */}
           <div className="space-y-5">
-            <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-xl p-5 shadow-sm border border-outline-variant/20">
-              <h3 className="text-on-surface dark:text-slate-200 font-bold mb-4 flex items-center gap-2">
+            <div className="bg-white dark:bg-[#0b1d33] text-slate-900 dark:text-slate-100 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-cyan-500/20">
+              <h3 className="text-slate-900 dark:text-slate-100 font-bold mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">rule</span>
                 Nội quy phòng thi
               </h3>
@@ -354,16 +354,16 @@ export default function StudentLobby() {
                 ].map((rule, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5">check_circle</span>
-                    <span className="text-on-surface-variant dark:text-slate-400 text-sm">{rule}</span>
+                    <span className="text-slate-600 dark:text-slate-300 text-sm">{rule}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:text-slate-300est rounded-xl p-5 shadow-sm border border-outline-variant/20 space-y-4">
+            <div className="bg-white dark:bg-[#0b1d33] text-slate-900 dark:text-slate-100 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-cyan-500/20 space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="w-5 h-5 accent-primary rounded" />
-                <span className="text-sm font-medium text-on-surface dark:text-slate-200">{t('agree_label')}</span>
+                <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{t('agree_label')}</span>
               </label>
 
               {!isStarted ? (
@@ -371,11 +371,11 @@ export default function StudentLobby() {
                   <div className="flex items-center gap-3">
                     <div className="w-7 h-7 rounded-full border-2 border-outline-variant border-t-primary animate-spin shrink-0"></div>
                     <div>
-                      <p className="font-bold text-sm text-on-surface dark:text-slate-200">{t('waiting_teacher')}</p>
-                      <p className="text-xs text-on-surface-variant dark:text-slate-400/60">{t('waiting_hint')}</p>
+                      <p className="font-bold text-sm text-slate-900 dark:text-slate-100">{t('waiting_teacher')}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{t('waiting_hint')}</p>
                     </div>
                   </div>
-                  <p className="text-[10px] text-on-surface-variant dark:text-slate-400/40 font-bold tracking-widest uppercase">{t('secured_by')}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold tracking-widest uppercase">{t('secured_by')}</p>
                 </div>
               ) : (
                 <button
@@ -391,7 +391,7 @@ export default function StudentLobby() {
               )}
             </div>
 
-            <p className="text-center text-[10px] text-on-surface-variant dark:text-slate-400/40 font-bold tracking-widest uppercase">
+            <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold tracking-widest uppercase">
               Secured by Aura Academic · YOLO Proctoring v1.0
             </p>
           </div>

@@ -8,7 +8,7 @@ type Stats = Record<string, number>;
 
 function StatCard({ icon, label, value, sub, color }: any) {
   const g: any = { 
-    violet: "from-violet-600 to-indigo-600 shadow-violet-500/20", 
+    indigo: "from-indigo-600 to-blue-600 shadow-indigo-500/20", 
     emerald: "from-emerald-500 to-teal-600 shadow-emerald-500/20", 
     amber: "from-amber-500 to-orange-500 shadow-amber-500/20", 
     blue: "from-blue-500 to-cyan-500 shadow-blue-500/20", 
@@ -113,26 +113,38 @@ export default function AdminDashboard() {
   useEffect(() => { const t = setTimeout(loadUsers, 300); return () => clearTimeout(t); }, [loadUsers]);
 
   const handleDelete = async (u: User) => {
+    if (u.email === currentUser?.email) {
+      showToast("Bạn không thể tự xoá chính mình!");
+      return;
+    }
     if (!confirm(`Xoá tài khoản "${u.fullName}"?`)) return;
     try { await deleteUser(u.id); setUsers(p => p.filter(x => x.id !== u.id)); showToast("Đã xoá tài khoản"); }
     catch (e: any) { alert(e.message); }
   };
 
-  const handleRoleChange = async (id: string, role: string) => {
+  const handleRoleChange = async (id: string, role: string, userEmail: string) => {
+    if (userEmail === currentUser?.email) {
+      showToast("Bạn không thể tự thay đổi vai trò chính mình!");
+      return;
+    }
     try { await updateUserRole(id, role); setUsers(p => p.map(u => u.id === id ? { ...u, role } : u)); showToast("Đã cập nhật vai trò"); }
     catch (e: any) { alert(e.message); }
   };
 
   const handleLock = async (u: User) => {
+    if (u.email === currentUser?.email) {
+      showToast("Bạn không thể tự khoá chính mình!");
+      return;
+    }
     const lock = !u.accountLocked;
     try { await toggleUserLock(u.id, lock); setUsers(p => p.map(x => x.id === u.id ? { ...x, accountLocked: lock } : x)); showToast(lock ? "Đã khoá tài khoản" : "Đã mở khoá"); }
     catch (e: any) { alert(e.message); }
   };
 
   const roleBadge = (r: string) => ({ 
-    admin: "bg-violet-50 text-violet-700 border-violet-200", 
-    teacher: "bg-blue-50 text-blue-700 border-blue-200", 
-    student: "bg-emerald-50 text-emerald-700 border-emerald-200" 
+    admin: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/50", 
+    teacher: "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400 border-blue-200 dark:border-blue-900/50", 
+    student: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50" 
   } as any)[r] || "bg-slate-100 text-slate-500 border-slate-200";
 
   const roleLabel = (r: string) => ({ admin: "Admin", teacher: "Giáo viên", student: "Học sinh" } as any)[r] || r;
@@ -314,58 +326,71 @@ export default function AdminDashboard() {
                     </td></tr>
                   ) : users.length === 0 ? (
                     <tr><td colSpan={6} className="px-6 py-16 text-center text-slate-400 font-bold">Không tìm thấy tài khoản phù hợp với điều kiện lọc.</td></tr>
-                  ) : users.map(u => (
-                    <tr key={u.id} className="hover:bg-slate-50/60 dark:hover:bg-[#0C2E5E]/20 transition-all group">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0 bg-gradient-to-br ${
-                            u.role === "admin" ? "from-violet-500 to-indigo-500" : u.role === "teacher" ? "from-blue-500 to-cyan-500" : "from-emerald-500 to-teal-500"
-                          }`}>
-                            {u.fullName?.charAt(0)?.toUpperCase() || "?"}
+                  ) : users.map(u => {
+                    const isSelf = u.email === currentUser?.email;
+                    return (
+                      <tr key={u.id} className="hover:bg-slate-50/60 dark:hover:bg-[#0C2E5E]/20 transition-all group">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0 bg-gradient-to-br ${
+                              u.role === "admin" ? "from-indigo-500 to-sky-500" : u.role === "teacher" ? "from-blue-500 to-cyan-500" : "from-emerald-500 to-teal-500"
+                            }`}>
+                              {u.fullName?.charAt(0)?.toUpperCase() || "?"}
+                            </div>
+                            <div>
+                              <p className="font-extrabold text-[#0C2E5E] dark:text-[#E2E8F0] text-sm tracking-tight leading-tight">
+                                {u.fullName} {isSelf && <span className="text-[10px] text-[#00C6FF] font-black ml-1">(BẠN)</span>}
+                              </p>
+                              {u.accountLocked && <span className="text-[9px] font-black bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400 border border-red-100 dark:border-red-950/30 rounded px-1.5 py-0.5 inline-block mt-0.5 uppercase tracking-wider">🔒 Đã khoá</span>}
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-extrabold text-[#0C2E5E] dark:text-[#E2E8F0] dark:text-[#E2E8F0] text-sm tracking-tight leading-tight">
-                              {u.fullName} {u.email === currentUser?.email && <span className="text-[10px] text-[#00C6FF] font-black ml-1">(BẠN)</span>}
-                            </p>
-                            {u.accountLocked && <span className="text-[9px] font-black bg-red-50 text-red-600 border border-red-100 rounded px-1.5 py-0.5 inline-block mt-0.5 uppercase tracking-wider">🔒 TÀI KHOẢN ĐÃ KHOÁ</span>}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-medium">{u.email}</td>
+                        <td className="px-6 py-4">
+                          <select value={u.role} disabled={isSelf} onChange={e => handleRoleChange(u.id, e.target.value, u.email)}
+                            className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider bg-transparent outline-none transition-all ${
+                              isSelf 
+                                ? "opacity-50 cursor-not-allowed " + roleBadge(u.role) 
+                                : "cursor-pointer hover:brightness-95 " + roleBadge(u.role)
+                            }`}>
+                            <option value="student">Học sinh</option>
+                            <option value="teacher">Giáo viên</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4">
+                          {u.emailVerified
+                            ? <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-extrabold bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-950/30 rounded-full px-2 py-0.5"><span className="material-symbols-outlined text-sm" style={{fontVariationSettings:"'FILL' 1"}}>check_circle</span>ĐÃ XÁC THỰC</span>
+                            : <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-extrabold bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-950/30 rounded-full px-2 py-0.5"><span className="material-symbols-outlined text-sm">pending</span>ĐANG CHỜ</span>}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-semibold text-[#0C2E5E] dark:text-[#E2E8F0] whitespace-nowrap">
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit', year: 'numeric' }) : "—"}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button disabled={isSelf} onClick={() => handleLock(u)} title={isSelf ? "Không thể tự khoá chính mình" : u.accountLocked ? "Mở khoá tài khoản" : "Khoá tài khoản"}
+                              className={`p-1.5 rounded-lg border transition-all ${
+                                isSelf 
+                                  ? "text-slate-300 dark:text-slate-600 border-transparent cursor-not-allowed opacity-30" 
+                                  : u.accountLocked 
+                                    ? "text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/20 dark:border-emerald-900/40 dark:hover:bg-emerald-950/40" 
+                                    : "text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-100 dark:text-amber-400 dark:bg-amber-950/20 dark:border-amber-900/40 dark:hover:bg-amber-950/40"
+                              }`}>
+                              <span className="material-symbols-outlined text-lg">{u.accountLocked ? "lock_open" : "lock"}</span>
+                            </button>
+                            <button disabled={isSelf} onClick={() => handleDelete(u)} title={isSelf ? "Không thể tự xoá chính mình" : "Xoá vĩnh viễn"}
+                              className={`p-1.5 rounded-lg border border-transparent transition-all ${
+                                isSelf 
+                                  ? "text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30" 
+                                  : "text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 dark:hover:text-red-400"
+                              }`}>
+                              <span className="material-symbols-outlined text-lg">delete</span>
+                            </button>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500 font-medium">{u.email}</td>
-                      <td className="px-6 py-4">
-                        <select value={u.role} disabled={u.email === currentUser?.email} onChange={e => handleRoleChange(u.id, e.target.value)}
-                          className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all ${
-                            u.email === currentUser?.email 
-                              ? "opacity-50 cursor-not-allowed " + roleBadge(u.role) 
-                              : "cursor-pointer hover:brightness-95 " + roleBadge(u.role)
-                          } outline-none`}>
-                          <option value="student">Học sinh</option>
-                          <option value="teacher">Giáo viên</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4">
-                        {u.emailVerified
-                          ? <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-extrabold bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5"><span className="material-symbols-outlined text-sm" style={{fontVariationSettings:"'FILL' 1"}}>check_circle</span>ĐÃ XÁC THỰC</span>
-                          : <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 font-extrabold bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5"><span className="material-symbols-outlined text-sm">pending</span>ĐANG CHỜ</span>}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-[#0C2E5E] dark:text-[#E2E8F0] whitespace-nowrap">
-                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString("vi-VN", { day: '2-digit', month: '2-digit', year: 'numeric' }) : "—"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <button disabled={u.email === currentUser?.email} onClick={() => handleLock(u)} title={u.accountLocked ? "Mở khoá tài khoản" : "Khoá tài khoản"}
-                            className={`p-1.5 rounded-lg border transition-all ${u.email === currentUser?.email ? "text-slate-300 border-transparent cursor-not-allowed" : u.accountLocked ? "text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-100" : "text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-100"}`}>
-                            <span className="material-symbols-outlined text-lg">{u.accountLocked ? "lock_open" : "lock"}</span>
-                          </button>
-                          <button disabled={u.email === currentUser?.email} onClick={() => handleDelete(u)} title="Xoá vĩnh viễn"
-                            className={`p-1.5 rounded-lg border border-transparent transition-all ${u.email === currentUser?.email ? "text-slate-300 cursor-not-allowed" : "text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100"}`}>
-                            <span className="material-symbols-outlined text-lg">delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

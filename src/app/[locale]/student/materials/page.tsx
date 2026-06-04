@@ -247,41 +247,78 @@ export default function StudentMaterials() {
       : b.downloadCount-a.downloadCount);
 
   const fmt = (b: number) => b>=1048576?`${(b/1048576).toFixed(1)}MB`:`${(b/1024).toFixed(0)}KB`;
+  const totalDownloads = materials.reduce((sum, m) => sum + (m.downloadCount || 0), 0);
+  const recentCount = materials.filter(m => Date.now() - new Date(m.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000).length;
+  const fileTypeLabel = (type?: string) => ({
+    pdf: "PDF",
+    pptx: "Slide",
+    docx: "Word",
+    video: "Video",
+    link: "Link",
+  }[type || ""] || (type || "Tệp").toUpperCase());
+  const formatDate = (value?: string) => value ? new Date(value).toLocaleDateString("vi-VN") : "—";
 
   return (
-    <main className="flex-1 p-8 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <section>
-        <h1 className="text-3xl font-extrabold text-on-surface dark:text-slate-200 tracking-tight mb-1">{t('title')}</h1>
-        <p className="text-on-surface-variant dark:text-slate-400">{t('subtitle')}</p>
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200/70 dark:border-cyan-900/40 bg-white dark:bg-[#071A33] shadow-sm">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400 via-blue-500 to-emerald-400" />
+        <div className="grid gap-6 p-6 lg:grid-cols-[1fr_420px] lg:p-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-bold uppercase tracking-widest text-sky-700 dark:border-cyan-800/60 dark:bg-cyan-950/40 dark:text-cyan-200">
+              <span className="material-symbols-outlined text-base">auto_stories</span>
+              Kho tài liệu học tập
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">{t('title')}</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">{t('subtitle')}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: "folder_open", label: "Tài liệu", value: materials.length },
+              { icon: "school", label: "Môn học", value: subjects.length - 1 },
+              { icon: "download", label: "Lượt tải", value: totalDownloads },
+              { icon: "new_releases", label: "Mới tuần này", value: recentCount },
+            ].map(item => (
+              <div key={item.label} className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 dark:border-cyan-900/40 dark:bg-[#0B2445]">
+                <span className="material-symbols-outlined text-xl text-sky-600 dark:text-cyan-300">{item.icon}</span>
+                <p className="mt-3 text-2xl font-black text-slate-950 dark:text-white">{item.value}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Featured */}
       {!loading && featured.length > 0 && (
-        <section>
-          <h2 className="text-sm font-black text-on-surface-variant dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <section className="space-y-3">
+          <h2 className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
             <span className="material-symbols-outlined text-amber-500 text-lg">star</span>Tài liệu nổi bật
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {featured.map(m => {
               const ft = FILE_TYPES[m.fileType]||FILE_TYPES.pdf;
               return (
-                <div key={m.id} className="group bg-white dark:bg-[#0A1F3E]/90 hover:bg-slate-50 dark:hover:bg-[#0C2E5E]/60 rounded-2xl p-6 border border-slate-200/60 dark:border-cyan-950/40 flex gap-4 transition-all hover:shadow-md">
-                  <div className={`w-12 h-12 rounded-xl ${ft.bg} flex items-center justify-center flex-shrink-0`}>
+                <div key={m.id} className="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md dark:border-cyan-900/40 dark:bg-[#071A33] dark:hover:border-cyan-700/50">
+                  <div className="flex gap-4">
+                  <div className={`w-12 h-12 rounded-2xl ${ft.bg} flex items-center justify-center flex-shrink-0`}>
                     <span className={`material-symbols-outlined ${ft.color} text-2xl`}>{ft.icon}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-on-surface dark:text-slate-200 group-hover:text-primary transition-colors leading-snug">{m.title}</h3>
-                    <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-1 line-clamp-2">{m.description}</p>
-                    <p className="text-[10px] text-on-surface-variant dark:text-slate-300 mt-2">{m.uploaderName} · {CAT_LABELS[m.category]||m.category}</p>
+                    <h3 className="font-bold text-slate-950 transition-colors group-hover:text-sky-700 dark:text-white dark:group-hover:text-cyan-200 leading-snug">{m.title}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{m.description}</p>
+                    <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-2">{m.uploaderName} · {CAT_LABELS[m.category]||m.category}</p>
                   </div>
                   <div className="flex flex-col gap-2 flex-shrink-0">
-                    <button onClick={()=>setPreviewItem(m)} className="p-2 rounded-xl bg-surface/80 hover:bg-white dark:bg-[#0A1F3E] text-on-surface-variant dark:text-slate-400 hover:text-primary transition-all" title={t('btn_download')}>
+                    <button onClick={()=>setPreviewItem(m)} className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-sky-50 hover:text-sky-700 dark:bg-[#0B2445] dark:text-slate-300 dark:hover:bg-cyan-950/50 dark:hover:text-cyan-200 transition-all" title="Xem trước">
                       <span className="material-symbols-outlined text-lg">visibility</span>
                     </button>
-                    <button onClick={()=>trackDownload(m)} className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all" title={t('btn_download')}>
+                    <button onClick={()=>trackDownload(m)} className="p-2 rounded-xl bg-sky-600 text-white hover:bg-sky-700 dark:bg-cyan-400 dark:text-[#06172E] dark:hover:bg-cyan-300 transition-all" title={t('btn_download')}>
                       <span className="material-symbols-outlined text-lg">download</span>
                     </button>
+                  </div>
                   </div>
                 </div>
               );
@@ -291,42 +328,21 @@ export default function StudentMaterials() {
       )}
 
       {/* Search & Filters */}
-      <section className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 shadow-sm rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 text-lg">search</span>
-          <input value={search} onChange={e=>setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary transition-colors"
-            placeholder={t('search_placeholder')} />
-        </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">{t('subject_label')}</span>
-          {subjects.map(s=>(
-            <button key={s} onClick={()=>setSubject(s)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 border ${
-                subject===s
-                  ? "bg-[#0C2E5E] dark:bg-[#00C6FF] text-white dark:text-[#051329] border-[#0C2E5E] dark:border-[#00C6FF] shadow-sm"
-                  : "bg-slate-100 dark:bg-[#0A1F3E] text-slate-600 dark:text-slate-300 border-slate-200/60 dark:border-cyan-950/50 hover:bg-slate-200 dark:hover:bg-cyan-950/50"
-              }`}>
-              {s==="all"?t("all"):s}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-2 items-center justify-between">
-          <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-xs font-bold text-on-surface-variant dark:text-slate-400">{t('type_label')}</span>
-            {categories.map(c=>(
-              <button key={c} onClick={()=>setCategory(c)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 border ${
-                  category===c
-                    ? "bg-[#0C2E5E] dark:bg-[#00C6FF] text-white dark:text-[#051329] border-[#0C2E5E] dark:border-[#00C6FF] shadow-sm"
-                    : "bg-slate-100 dark:bg-[#0A1F3E] text-slate-600 dark:text-slate-300 border-slate-200/60 dark:border-cyan-950/50 hover:bg-slate-200 dark:hover:bg-cyan-950/50"
-                }`}>
-                {c==="all"?t("all"):(CAT_LABELS[c]||c)}
-              </button>
-            ))}
-          </div>
+      <section className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-cyan-900/40 dark:bg-[#071A33]">
+        <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_190px_190px_170px]">
+          <label className="relative block">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+            <input value={search} onChange={e=>setSearch(e.target.value)}
+              className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-semibold text-slate-800 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-slate-100 dark:focus:border-cyan-500 dark:focus:ring-cyan-950"
+              placeholder={t('search_placeholder')} />
+          </label>
+          
+          <select value={category} onChange={e=>setCategory(e.target.value)}
+            className="h-12 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-slate-100 dark:focus:border-cyan-500 dark:focus:ring-cyan-950">
+            {categories.map(c => <option key={c} value={c}>{c==="all"?t("all"):(CAT_LABELS[c]||c)}</option>)}
+          </select>
           <select value={sortBy} onChange={e=>setSortBy(e.target.value as any)}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-xs font-bold focus:outline-none focus:border-primary">
+            className="h-12 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-slate-100 dark:focus:border-cyan-500 dark:focus:ring-cyan-950">
             <option value="date">{t('sort_date')}</option>
             <option value="downloads">{t('sort_downloads')}</option>
           </select>
@@ -334,57 +350,58 @@ export default function StudentMaterials() {
       </section>
 
       {/* Grid */}
-      <section>
+      <section className="space-y-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-on-surface dark:text-slate-200">{t('all_title')}</h2>
-          <span className="text-xs text-on-surface-variant dark:text-slate-400">{filtered.length} {t('materials_count')}</span>
+          <h2 className="font-bold text-slate-950 dark:text-white">{t('all_title')}</h2>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 dark:bg-[#0B2445] dark:text-slate-300">{filtered.length} {t('materials_count')}</span>
         </div>
 
         {loading ? (
           <div className="p-16 text-center">
-            <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
-            <p className="text-on-surface-variant dark:text-slate-400 text-sm">{t('loading')}</p>
+            <div className="w-10 h-10 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">{t('loading')}</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-16 text-center shadow-sm">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant dark:text-slate-400/30 block mb-4">search_off</span>
-            <p className="text-on-surface-variant dark:text-slate-400 font-medium">{t('empty')}</p>
+          <div className="rounded-2xl border border-slate-200/70 bg-white p-16 text-center shadow-sm dark:border-cyan-900/40 dark:bg-[#071A33]">
+            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 block mb-4">search_off</span>
+            <p className="text-slate-500 dark:text-slate-400 font-medium">{t('empty')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {filtered.map(m => {
               const ft = FILE_TYPES[m.fileType]||FILE_TYPES.pdf;
               return (
-                <div key={m.id} className="group bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 shadow-sm rounded-2xl p-5 shadow-sm hover:shadow-md border border-transparent hover:border-primary/10 transition-all hover:-translate-y-0.5 flex flex-col gap-4">
+                <div key={m.id} className="group flex min-h-[230px] flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md dark:border-cyan-900/40 dark:bg-[#071A33] dark:hover:border-cyan-700/50">
                   <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-xl ${ft.bg} flex items-center justify-center flex-shrink-0`}>
+                    <div className={`w-11 h-11 rounded-2xl ${ft.bg} flex items-center justify-center flex-shrink-0`}>
                       <span className={`material-symbols-outlined ${ft.color}`}>{ft.icon}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-on-surface dark:text-slate-200 text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">{m.title}</h3>
-                      <p className="text-[10px] text-on-surface-variant dark:text-slate-400 mt-0.5">{m.subject} {m.subject&&"·"} {CAT_LABELS[m.category]||m.category}</p>
+                      <h3 className="font-bold text-slate-950 dark:text-white text-sm leading-snug group-hover:text-sky-700 dark:group-hover:text-cyan-200 transition-colors line-clamp-2">{m.title}</h3>
+                      <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-1">{m.subject || "Chưa phân loại"} {m.subject&&"·"} {CAT_LABELS[m.category]||m.category}</p>
                     </div>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black uppercase text-slate-500 dark:bg-[#0B2445] dark:text-slate-300">{fileTypeLabel(m.fileType)}</span>
                   </div>
-                  {m.description && <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed line-clamp-2">{m.description}</p>}
+                  {m.description && <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{m.description}</p>}
                   {m.tags?.length>0 && (
                     <div className="flex flex-wrap gap-1">
                       {m.tags.slice(0,3).map(t=>(
-                        <span key={t} className="px-2 py-0.5 bg-surface-container dark:bg-cyan-950/50 rounded-full text-[10px] font-bold text-on-surface-variant dark:text-cyan-300">#{t}</span>
+                        <span key={t} className="px-2 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 dark:bg-cyan-950/50 dark:text-cyan-300">#{t}</span>
                       ))}
                     </div>
                   )}
-                  <div className="pt-3 border-t border-slate-100 dark:border-cyan-950/50 flex items-center justify-between mt-auto">
+                  <div className="pt-3 border-t border-slate-100 dark:border-cyan-950/50 flex items-center justify-between mt-auto gap-3">
                     <div>
-                      <p className="text-[10px] text-on-surface-variant dark:text-slate-300 font-medium">{m.uploaderName}</p>
-                      <p className="text-[10px] text-on-surface-variant dark:text-slate-300">{m.fileSizeBytes?fmt(m.fileSizeBytes):""} · {m.downloadCount} {t('downloads')}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold">{m.uploaderName}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(m.createdAt)} · {m.fileSizeBytes?fmt(m.fileSizeBytes):"—"} · {m.downloadCount} {t('downloads')}</p>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={()=>setPreviewItem(m)}
-                        className="p-2 rounded-xl hover:bg-surface-container dark:bg-cyan-950/20 text-on-surface-variant dark:text-slate-400 hover:text-primary transition-all" title={t('btn_download')}>
+                        className="p-2 rounded-xl text-slate-500 hover:bg-sky-50 hover:text-sky-700 dark:text-slate-400 dark:hover:bg-cyan-950/50 dark:hover:text-cyan-200 transition-all" title="Xem trước">
                         <span className="material-symbols-outlined text-lg">visibility</span>
                       </button>
                       <button onClick={()=>trackDownload(m)}
-                        className="p-2 rounded-xl hover:bg-primary/10 text-on-surface-variant dark:text-slate-400 hover:text-primary transition-all" title={t('btn_download')}>
+                        className="p-2 rounded-xl text-slate-500 hover:bg-sky-50 hover:text-sky-700 dark:text-slate-400 dark:hover:bg-cyan-950/50 dark:hover:text-cyan-200 transition-all" title={t('btn_download')}>
                         <span className="material-symbols-outlined text-lg">download</span>
                       </button>
                     </div>

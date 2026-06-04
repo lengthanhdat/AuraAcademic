@@ -121,7 +121,7 @@ export default function TeacherClassroomsPage() {
                 <div className="flex items-center gap-4 text-sm font-semibold">
                   <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                     <Users className="w-4 h-4 text-cyan-500" />
-                    <span>{cls.studentIds?.length || 0} học sinh</span>
+                    <span>{cls.studentIds?.length || 0} thành viên</span>
                   </div>
                   {cls.pendingStudentIds?.length > 0 && (
                     <div className="px-2.5 py-0.5 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold animate-pulse">

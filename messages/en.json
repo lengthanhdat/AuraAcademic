@@ -674,7 +674,7 @@
   "Register": {
     "register_error": "An error occurred during registration",
     "success_title": "Registration Successful!",
-    "success_msg": "Please check your email to verify your account.",
+    "success_msg": "Your account has been created. You can sign in now.",
     "verify_now": "Verify Now",
     "server_error": "Cannot connect to server",
     "hero_title": "Shape the future \n with digital knowledge.",
@@ -708,6 +708,6 @@
     "password_min_length": "Password must be at least 6 characters",
     "password_mismatch": "Passwords do not match",
     "agree_terms_required": "You must agree to the Terms & Conditions.",
-    "success_msg_login": "Registration successful. Please verify email (if any) and login."
+    "success_msg_login": "Registration successful. You can sign in now."
   }
 }

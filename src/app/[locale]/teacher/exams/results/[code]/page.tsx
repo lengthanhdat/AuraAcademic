@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 
 export default function ExamResults() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const code = params.code as string;
+  const returnTo = searchParams.get("returnTo");
   
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,7 +108,7 @@ export default function ExamResults() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button 
-          onClick={() => router.push("/teacher/dashboard")}
+          onClick={() => router.push(returnTo || "/teacher/my-exams")}
           className="p-2 hover:bg-slate-200 rounded-xl transition-colors"
         >
           <span className="material-symbols-outlined text-slate-600">arrow_back</span>

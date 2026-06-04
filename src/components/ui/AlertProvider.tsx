@@ -100,10 +100,8 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (isOpen) {
       setIsRendered(true);
-      document.body.style.overflow = "hidden";
     } else {
       const timer = setTimeout(() => setIsRendered(false), 300); // match transition duration
-      document.body.style.overflow = "unset";
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -145,26 +143,8 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
   const getIcon = () => {
     switch (type) {
       case "success": return (
-        <div className="relative w-8 h-8 flex items-center justify-center">
-          <svg className="absolute inset-0 w-full h-full -rotate-90 animate-[spin_1.5s_linear_infinite]">
-            <circle
-              cx="16"
-              cy="16"
-              r="14"
-              className="stroke-emerald-500/10 fill-none"
-              strokeWidth="2"
-            />
-            <circle
-              cx="16"
-              cy="16"
-              r="14"
-              className="stroke-emerald-400 fill-none"
-              strokeWidth="2"
-              strokeDasharray="88"
-              strokeDashoffset="30"
-            />
-          </svg>
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 scale-110" />
+        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-400/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
+          <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-300" />
         </div>
       );
       case "warning": return <AlertTriangle className="w-5 h-5 text-amber-400" />;
@@ -174,98 +154,88 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const getIconBg = () => {
+  const getAlertTheme = () => {
     switch (type) {
-      case "success": return "bg-emerald-500/10 border-emerald-500/20 p-0"; // remove padding for success since SVG is styled inside
-      case "warning": return "bg-amber-500/10 border-amber-500/20 p-2";
-      case "error": return "bg-rose-500/10 border-rose-500/20 p-2";
-      case "confirm": return "bg-primary/10 border-primary/20 p-2";
-      default: return "bg-blue-500/10 border-blue-500/20 p-2";
+      case "success":
+        return { color: "#34d399", gradient: "linear-gradient(to bottom, #22c55e, #14b8a6, #2eadff)" };
+      case "warning":
+        return { color: "#fbbf24", gradient: "linear-gradient(to bottom, #f59e0b, #f97316, #ef4444)" };
+      case "error":
+        return { color: "#fb7185", gradient: "linear-gradient(to bottom, #fb7185, #ef4444, #be123c)" };
+      case "confirm":
+        return { color: "#a78bfa", gradient: "linear-gradient(to bottom, #2eadff, #7c3aed, #a855f7)" };
+      default:
+        return { color: "#32a6ff", gradient: "linear-gradient(to bottom, #2eadff, #3d83ff, #7e61ff)" };
     }
   };
+
+  const alertTheme = getAlertTheme();
 
   return (
     <AlertContext.Provider value={{ showAlert, closeAlert }}>
       {children}
       
       {isRendered && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
+        <div className="pointer-events-none fixed right-4 top-4 z-[100] flex w-[calc(100%-2rem)] justify-end sm:right-6 sm:top-6 sm:w-auto">
+          <div
             className={cn(
-              "absolute inset-0 bg-surface/60 backdrop-blur-sm transition-opacity duration-300",
-              isOpen ? "opacity-100" : "opacity-0"
+              "pointer-events-auto group isolate relative min-h-24 w-full max-w-[17rem] overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-[0_18px_45px_-22px_rgba(12,46,94,0.45)] backdrop-blur-2xl transition-all duration-300 dark:border-white/10 dark:bg-slate-950/65 dark:shadow-[0_18px_45px_-20px_rgba(0,0,0,0.75)]",
+              isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-3 scale-95"
             )}
-            onClick={!isConfirm && !shouldAutoClose ? closeAlert : undefined}
-          />
-
-          {/* Modal */}
-          <div 
-            className={cn(
-              "relative w-full max-w-[300px] overflow-hidden rounded-2xl bg-surface-container border border-outline-variant/20 shadow-xl transition-all duration-300 transform",
-              isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95"
-            )}
-            role="dialog"
-            aria-modal="true"
+            style={{
+              "--alert-gradient": alertTheme.gradient,
+              "--alert-color": alertTheme.color,
+            } as React.CSSProperties}
+            role={isConfirm ? "dialog" : "status"}
+            aria-live={isConfirm ? undefined : "polite"}
           >
-            {/* Top Glow Accent */}
-            <div className={cn(
-              "absolute top-0 left-0 right-0 h-[3px]",
-              type === "success" ? "bg-emerald-500" : 
-              type === "warning" ? "bg-amber-500" : 
-              type === "error" ? "bg-rose-500" : 
-              type === "confirm" ? "bg-primary" : "bg-blue-500"
-            )} />
+            <div className="absolute bottom-2 left-1.5 top-2 z-[4] w-1 rounded-full bg-[image:var(--alert-gradient)] transition-transform duration-300 group-hover:translate-x-0.5" />
+            <div className="absolute inset-0 z-[1] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(255,255,255,0.24)_45%,rgba(255,255,255,0.08))] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.14),rgba(255,255,255,0.05)_45%,rgba(255,255,255,0.02))]" />
+            <div className="absolute inset-px z-[2] rounded-[0.9375rem] border border-white/40 bg-white/40 dark:border-white/10 dark:bg-slate-950/35" />
+            <div className="absolute -left-20 -top-24 z-[3] h-56 w-56 rounded-full bg-[radial-gradient(circle_closest-side_at_center,white,transparent)] opacity-40 blur-sm transition-opacity duration-300 group-hover:opacity-60 dark:opacity-10 dark:group-hover:opacity-20" />
+            <div className="absolute -bottom-28 right-0 z-[3] h-64 w-64 rounded-full bg-[radial-gradient(circle_closest-side_at_center,var(--alert-color),transparent)] opacity-10 transition-opacity duration-300 group-hover:opacity-20 dark:opacity-15 dark:group-hover:opacity-25" />
 
-            {/* Close Button (for non-confirm and non-autoclose) */}
             {!isConfirm && !shouldAutoClose && (
-              <button 
+              <button
                 onClick={closeAlert}
-                className="absolute top-2.5 right-2.5 p-1 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                className="absolute right-3 top-3 z-[6] grid h-7 w-7 place-items-center rounded-full text-slate-500 transition-colors hover:bg-white/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </button>
             )}
 
-            <div className="p-5 pb-4 flex flex-col items-center text-center">
-              {/* Icon Container */}
-              <div className={cn("rounded-full border mb-3 flex items-center justify-center", getIconBg())}>
-                {getIcon()}
+            <div className="relative z-[5] flex min-h-24 flex-col px-4 py-3 pl-7">
+              <div className="mb-2 flex items-center gap-2.5 transition-transform duration-300 group-hover:translate-x-0.5">
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-white/60 bg-white/45 text-[var(--alert-color)] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:border-white/10 dark:bg-white/[0.06]">
+                  {getIcon()}
+                </div>
+                <h3 className="min-w-0 pr-6 text-sm font-semibold leading-snug text-[var(--alert-color)]">
+                  {options?.title}
+                </h3>
               </div>
-
-              {/* Typography */}
-              <h3 className="text-sm font-bold text-on-surface mb-1 tracking-tight">
-                {options?.title}
-              </h3>
-              <p className="text-[11px] text-on-surface-variant leading-relaxed">
+              <p className="pr-2 text-xs font-semibold leading-5 text-slate-600 transition-transform duration-300 group-hover:translate-x-1 dark:text-slate-300">
                 {options?.message}
               </p>
-            </div>
 
-            {/* Actions (Hidden for success / auto-closing modals) */}
-            {!shouldAutoClose && (
-              <div className="px-5 pb-5 flex gap-2 w-full">
-                {isConfirm && (
-                  <button 
-                    onClick={handleCancel}
-                    className="flex-1 py-2 px-3 rounded-lg text-xs font-bold text-on-surface bg-surface-container-high hover:bg-surface-container-highest transition-colors"
-                  >
-                    {options?.cancelText || "Hủy bỏ"}
-                  </button>
-                )}
-                <button 
-                  onClick={handleConfirm}
-                  className={cn(
-                    "flex-1 py-2 px-3 rounded-lg text-xs font-bold text-white shadow-md transition-all active:scale-[0.98]",
-                    type === "error" ? "bg-rose-500 hover:bg-rose-600 shadow-rose-500/10" :
-                    options?.type === "success" ? "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/10" :
-                    "signature-gradient shadow-primary/10 hover:opacity-90"
+              {!shouldAutoClose && (
+                <div className="mt-4 flex gap-2">
+                  {isConfirm && (
+                    <button
+                      onClick={handleCancel}
+                      className="flex-1 rounded-xl border border-slate-200 bg-white/60 px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-white dark:border-white/10 dark:bg-white/10 dark:text-slate-200 dark:hover:bg-white/15"
+                    >
+                      {options?.cancelText || "Hủy bỏ"}
+                    </button>
                   )}
-                >
-                  {options?.confirmText || "Xác nhận"}
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={handleConfirm}
+                    className="flex-1 rounded-xl bg-[image:var(--alert-gradient)] px-3 py-2 text-xs font-bold text-white shadow-lg transition-opacity hover:opacity-90"
+                  >
+                    {options?.confirmText || "Xác nhận"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

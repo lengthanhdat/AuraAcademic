@@ -44,7 +44,7 @@ export default function SessionsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#0C2E5E] dark:text-[#E2E8F0] flex items-center gap-2">
-            <span className="material-symbols-outlined text-violet-500">devices</span>
+            <span className="material-symbols-outlined text-[#00C6FF]">devices</span>
             Quản lý phiên đăng nhập
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Theo dõi và thu hồi các phiên truy cập đang hoạt động</p>
@@ -57,7 +57,7 @@ export default function SessionsPage() {
               placeholder="Tìm email, tên, IP..." 
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 rounded-xl text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/50 w-64"
+              className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 rounded-xl text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium focus:outline-none focus:ring-2 focus:ring-[#00C6FF]/30 w-64"
             />
           </div>
           <button onClick={loadSessions} className="p-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 text-slate-600 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-700 transition-all">
@@ -69,7 +69,7 @@ export default function SessionsPage() {
       <div className="grid grid-cols-1 gap-4">
         {loading ? (
           <div className="py-20 text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto"></div>
+            <div className="w-12 h-12 border-4 border-[#00C6FF]/30 border-t-[#00C6FF] rounded-full animate-spin mx-auto"></div>
             <p className="text-slate-500 dark:text-slate-400 animate-pulse">Đang tải danh sách phiên...</p>
           </div>
         ) : filtered.length === 0 ? (
@@ -95,7 +95,7 @@ export default function SessionsPage() {
                   <tr key={s.id} className="hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 font-bold text-xs border border-violet-500/20">
+                        <div className="w-9 h-9 rounded-full bg-[#00C6FF]/10 flex items-center justify-center text-[#00C6FF] font-bold text-xs border border-[#00C6FF]/20">
                           {s.fullName?.charAt(0) || "?"}
                         </div>
                         <div>

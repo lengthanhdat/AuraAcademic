@@ -706,14 +706,6 @@ function ExamBuilderContent() {
 
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {questions.length > 0 && (
-              <button
-                onClick={() => setIsSaveModalOpen(true)}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-95 text-white text-xs font-black rounded-xl shadow-md transition-all hover:scale-105"
-              >
-                Lưu vào Kho đề
-              </button>
-            )}
             {creationMode === "ai" && (
               <div className="flex items-center gap-2 px-4 py-2 bg-[#4c2b00] text-[#FFD700] rounded-full text-xs font-bold shadow-sm border border-[#FFD700]/20">
                 <span className="material-symbols-outlined text-[16px] animate-pulse">auto_awesome</span>
@@ -1008,13 +1000,163 @@ function ExamBuilderContent() {
                   </div>
                 </div>
 
+                <style>{`
+                  .aura-ai-compose-button {
+                    --black-700: hsla(0 0% 12% / 1);
+                    --border_radius: 9999px;
+                    --transition: 0.3s ease-in-out;
+                    --offset: 2px;
+                    cursor: pointer;
+                    position: relative;
+                    display: flex;
+                    width: 100%;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    transform-origin: center;
+                    padding: 0.9rem 2rem;
+                    background-color: transparent;
+                    border: none;
+                    border-radius: var(--border_radius);
+                    transform: scale(1);
+                    transition: transform var(--transition), opacity var(--transition);
+                  }
+
+                  .aura-ai-compose-button::before {
+                    content: "";
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 100%;
+                    height: 100%;
+                    background-color: var(--black-700);
+                    border-radius: var(--border_radius);
+                    box-shadow:
+                      inset 0 0.5px hsl(0, 0%, 100%),
+                      inset 0 -1px 2px 0 hsl(0, 0%, 0%),
+                      0px 4px 10px -4px hsla(0 0% 0% / calc(1 - var(--active, 0))),
+                      0 0 0 calc(var(--active, 0) * 0.15rem) hsl(260 97% 50% / 0.45);
+                    transition: all var(--transition);
+                    z-index: 0;
+                  }
+
+                  .aura-ai-compose-button::after {
+                    content: "";
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 100%;
+                    height: 100%;
+                    background-color: hsla(260 97% 61% / 0.75);
+                    background-image:
+                      radial-gradient(at 51% 89%, hsla(266, 45%, 74%, 1) 0px, transparent 50%),
+                      radial-gradient(at 100% 100%, hsla(266, 36%, 60%, 1) 0px, transparent 50%),
+                      radial-gradient(at 22% 91%, hsla(266, 36%, 60%, 1) 0px, transparent 50%);
+                    background-position: top;
+                    opacity: var(--active, 0);
+                    border-radius: var(--border_radius);
+                    transition: opacity var(--transition);
+                    z-index: 2;
+                  }
+
+                  .aura-ai-compose-button:is(:hover, :focus-visible) {
+                    --active: 1;
+                  }
+
+                  .aura-ai-compose-button:active {
+                    transform: scale(1);
+                  }
+
+                  .aura-ai-compose-button:disabled {
+                    cursor: not-allowed;
+                    opacity: 0.45;
+                    --active: 0;
+                  }
+
+                  .aura-ai-compose-button .dots_border {
+                    --size_border: calc(100% + 2px);
+                    overflow: hidden;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: var(--size_border);
+                    height: var(--size_border);
+                    background-color: transparent;
+                    border-radius: var(--border_radius);
+                    z-index: -10;
+                  }
+
+                  .aura-ai-compose-button .dots_border::before {
+                    content: "";
+                    position: absolute;
+                    top: 30%;
+                    left: 50%;
+                    transform-origin: left;
+                    transform: rotate(0deg);
+                    width: 100%;
+                    height: 2rem;
+                    background-color: white;
+                    mask: linear-gradient(transparent 0%, white 120%);
+                    animation: aura-ai-compose-rotate 2s linear infinite;
+                  }
+
+                  @keyframes aura-ai-compose-rotate {
+                    to { transform: rotate(360deg); }
+                  }
+
+                  .aura-ai-compose-button .sparkle {
+                    position: relative;
+                    z-index: 10;
+                    width: 1.35rem;
+                  }
+
+                  .aura-ai-compose-button .sparkle .path {
+                    fill: currentColor;
+                    stroke: currentColor;
+                    transform-origin: center;
+                    color: hsl(0, 0%, 100%);
+                  }
+
+                  .aura-ai-compose-button:is(:hover, :focus-visible) .sparkle .path {
+                    animation: aura-ai-compose-path 1.5s linear 0.5s infinite;
+                  }
+
+                  .aura-ai-compose-button .sparkle .path:nth-child(1) { --scale_path_1: 1.2; }
+                  .aura-ai-compose-button .sparkle .path:nth-child(2) { --scale_path_2: 1.2; }
+                  .aura-ai-compose-button .sparkle .path:nth-child(3) { --scale_path_3: 1.2; }
+
+                  @keyframes aura-ai-compose-path {
+                    0%, 34%, 71%, 100% { transform: scale(1); }
+                    17% { transform: scale(var(--scale_path_1, 1)); }
+                    49% { transform: scale(var(--scale_path_2, 1)); }
+                    83% { transform: scale(var(--scale_path_3, 1)); }
+                  }
+
+                  .aura-ai-compose-button .text_button {
+                    position: relative;
+                    z-index: 10;
+                    background-image: linear-gradient(90deg, hsla(0 0% 100% / 1) 0%, hsla(0 0% 100% / var(--active, 0)) 120%);
+                    background-clip: text;
+                    font-size: 0.95rem;
+                    font-weight: 900;
+                    color: transparent;
+                  }
+                `}</style>
                 <button
                   onClick={handleGenerateFromPrompt}
                   disabled={!topic.trim()}
-                  className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-violet-500/20 hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+                  className="aura-ai-compose-button"
                 >
-                  <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-                  Aura AI — Biên soạn đề thi ngay
+                  <span className="dots_border" />
+                  <svg className="sparkle" viewBox="0 0 24 24" aria-hidden="true">
+                    <path className="path" d="M12 2l1.45 4.4L18 8l-4.55 1.6L12 14l-1.45-4.4L6 8l4.55-1.6L12 2z" />
+                    <path className="path" d="M19 13l.85 2.15L22 16l-2.15.85L19 19l-.85-2.15L16 16l2.15-.85L19 13z" />
+                    <path className="path" d="M5 14l.75 1.75L7.5 16.5l-1.75.75L5 19l-.75-1.75-1.75-.75 1.75-.75L5 14z" />
+                  </svg>
+                  <span className="text_button">Aura AI — Biên soạn đề thi ngay</span>
                 </button>
               </div>
             )}
@@ -1248,10 +1390,9 @@ function ExamBuilderContent() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                    Cấp bậc *
+                    Cấp bậc
                   </label>
                   <select
-                    required
                     value={grade}
                     onChange={(e) => {
                       setGrade(e.target.value);
@@ -1270,10 +1411,9 @@ function ExamBuilderContent() {
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                    Môn học *
+                    Môn học
                   </label>
                   <select
-                    required
                     disabled={!grade}
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
@@ -1299,8 +1439,8 @@ function ExamBuilderContent() {
                 </button>
                 <button
                   onClick={async () => {
-                    if (!title.trim() || !grade || !subject) {
-                      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc (*)");
+                    if (!title.trim()) {
+                      toast.error("Vui lòng nhập tên đề thi.");
                       return;
                     }
                     setIsSaveModalOpen(false);
@@ -1317,15 +1457,24 @@ function ExamBuilderContent() {
         </div>
       )}
 
-      {/* Floating AI Action Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <button
-          onClick={() => { }}
-          className="w-14 h-14 bg-blue-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all"
-        >
-          <span className="material-symbols-outlined text-3xl">auto_awesome</span>
-        </button>
-      </div>
+      {questions.length > 0 && (
+        <div className="fixed right-8 top-1/2 z-50 -translate-y-1/2">
+          <button
+            type="button"
+            onClick={() => setIsSaveModalOpen(true)}
+            className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-cyan-200/70 bg-white/85 px-5 py-4 text-left shadow-[0_18px_48px_-18px_rgba(14,165,233,0.65)] backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_24px_58px_-20px_rgba(14,165,233,0.85)] active:translate-y-0 dark:border-cyan-500/20 dark:bg-[#06172a]/85"
+          >
+            <span className="absolute inset-0 bg-gradient-to-r from-cyan-500/12 via-blue-500/10 to-violet-500/12 opacity-0 transition-opacity group-hover:opacity-100" />
+            <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-700 to-cyan-400 text-white shadow-lg shadow-cyan-500/30 transition-transform group-hover:scale-105">
+              <span className="material-symbols-outlined text-[24px]">inventory_2</span>
+            </span>
+            <span className="relative">
+              <span className="block text-sm font-black text-slate-900 dark:text-white">Lưu vào Kho đề</span>
+              <span className="block text-[11px] font-bold text-slate-500 dark:text-slate-400">Lưu bộ câu hỏi hiện tại</span>
+            </span>
+          </button>
+        </div>
+      )}
     </main>
   );
 }

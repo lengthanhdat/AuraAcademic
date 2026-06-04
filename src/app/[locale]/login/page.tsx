@@ -19,6 +19,7 @@ export default function LoginPage() {
     email: "",
     password: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
   const [error, setError] = useState("");
@@ -222,7 +223,16 @@ export default function LoginPage() {
                 </div>
                 <div className="relative group">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 dark:text-slate-500 group-focus-within:text-[#0C2E5E] dark:group-focus-within:text-[#00C6FF] transition-colors">lock</span>
-                  <input value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 dark:bg-cyan-950/30 border border-slate-200/80 dark:border-cyan-900/50 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white dark:focus:bg-[#071829] transition-all outline-none font-bold text-[#0C2E5E] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm" placeholder="••••••••" type="password" required />
+                  <input value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full pl-14 pr-14 py-4 rounded-2xl bg-white/70 dark:bg-cyan-950/30 border border-slate-200/80 dark:border-cyan-900/50 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white dark:focus:bg-[#071829] transition-all outline-none font-bold text-[#0C2E5E] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm" placeholder="••••••••" type={showPassword ? "text" : "password"} required />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#0C2E5E] dark:text-slate-500 dark:hover:bg-cyan-950/60 dark:hover:text-[#00C6FF]"
+                  >
+                    <span className="material-symbols-outlined text-[21px]">{showPassword ? "visibility_off" : "visibility"}</span>
+                  </button>
                 </div>
               </div>
 

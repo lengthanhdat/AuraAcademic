@@ -231,35 +231,40 @@ export default function ContentPage() {
 
   return (
     <div className="p-6 space-y-6 bg-transparent min-h-screen relative font-body">
+      {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 px-5 py-3 bg-emerald-600 text-white rounded-xl font-semibold text-sm shadow-xl animate-bounce">
-          ✓ {toast}
+        <div className="fixed bottom-6 right-6 z-50 px-5 py-3 bg-[#0C2E5E] text-white rounded-2xl font-black text-sm shadow-xl border border-cyan-400/20 flex items-center gap-2 animate-slideUp">
+          <span className="material-symbols-outlined text-emerald-400 text-lg">check_circle</span> {toast}
         </div>
       )}
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-[#0C2E5E] dark:text-[#E2E8F0] font-headline">Nội dung & Media</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Quản lý nội dung trang chủ và thư viện tệp tin hệ thống</p>
+          <h1 className="text-2xl font-black text-[#0C2E5E] dark:text-[#E2E8F0] tracking-tight">Nội dung & Media</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 font-medium">Quản lý nội dung trang chủ và thư viện tệp tin hệ thống</p>
         </div>
         
         {/* Native Upload Button Trigger */}
-        <label className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:opacity-90 shadow-lg shadow-violet-500/20 cursor-pointer transition-transform active:scale-95">
-          <span className="material-symbols-outlined text-lg">upload</span>
+        <label className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] text-white rounded-xl text-xs font-black hover:opacity-95 shadow-md shadow-[#0C2E5E]/10 border-l-[3px] border-[#00C6FF] cursor-pointer transition-transform active:scale-95">
+          <span className="material-symbols-outlined text-base">upload</span>
           Tải tệp lên
           <input type="file" onChange={handleFileChange} className="hidden" />
         </label>
       </div>
 
-      <div className="bg-white dark:bg-[#0A1F3E]/80 backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-cyan-950/40 border border-slate-200/50 rounded-2xl overflow-hidden">
-        <div className="flex border-b border-slate-200/50">
+      <div className="bg-white dark:bg-[#0A1F3E]/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 dark:border-cyan-950/40 rounded-2xl overflow-hidden">
+        <div className="flex border-b border-slate-200/50 dark:border-cyan-950/30">
           {[
             { id: "media", icon: "perm_media", label: "Thư viện Media" },
             { id: "pages", icon: "web", label: "Trang tĩnh" },
             { id: "announcements", icon: "campaign", label: "Thông báo chung" },
           ].map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-all ${activeTab === t.id ? "border-violet-500 text-violet-400 bg-violet-500/5" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:text-slate-300 font-semibold"}`}>
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-bold border-b-2 transition-all ${
+                activeTab === t.id 
+                  ? "border-[#00C6FF] text-[#00C6FF] bg-[#00C6FF]/5" 
+                  : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:text-slate-300"
+              }`}>
               <span className="material-symbols-outlined text-lg">{t.icon}</span>{t.label}
             </button>
           ))}
@@ -270,13 +275,13 @@ export default function ContentPage() {
             <div className="space-y-6">
               {loadingMedia ? (
                 <div className="text-center py-16">
-                  <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold animate-pulse">Đang tải tài nguyên Media...</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs font-bold animate-pulse">Đang tải tài nguyên Media...</p>
                 </div>
               ) : mediaList.length === 0 ? (
                 <div className="text-center py-16">
                   <span className="material-symbols-outlined text-5xl text-slate-600 mb-3">folder_open</span>
                   <h3 className="text-[#0C2E5E] dark:text-[#E2E8F0] font-bold mb-1">Thư viện Media trống</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Hãy tải lên tệp tin ảnh, video, tài liệu đầu tiên của bạn.</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Hãy tải lên tệp tin ảnh, video, tài liệu đầu tiên của bạn.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -286,13 +291,13 @@ export default function ContentPage() {
                     const icon = isImg ? "image" : isVideo ? "movie" : "description";
                     
                     return (
-                      <div key={m.id} className="group relative border border-slate-200/50 rounded-xl overflow-hidden bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/30 hover:border-violet-500/50 transition-all flex flex-col justify-between">
-                        <div className="h-32 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/80 flex items-center justify-center relative overflow-hidden">
+                      <div key={m.id} className="group relative border border-slate-200/50 dark:border-cyan-950/40 rounded-xl overflow-hidden bg-slate-50 dark:bg-cyan-950/20 hover:border-[#00C6FF]/50 transition-all flex flex-col justify-between">
+                        <div className="h-32 bg-slate-100 dark:bg-cyan-950/30 flex items-center justify-center relative overflow-hidden">
                           {isImg && m.fileUrl ? (
                             <img src={m.fileUrl} alt={m.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           ) : isVideo && m.fileUrl ? (
-                            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/15 to-indigo-500/15 flex items-center justify-center">
-                              <span className="material-symbols-outlined text-4xl text-violet-400">play_circle</span>
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/15 to-blue-500/15 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-4xl text-indigo-400">play_circle</span>
                             </div>
                           ) : (
                             <div className="absolute inset-0 bg-gradient-to-br from-slate-700/10 to-slate-900/10" />
@@ -305,24 +310,24 @@ export default function ContentPage() {
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
                             <button
                               onClick={() => setSelectedPreview(m)}
-                              className="w-8 h-8 rounded-full bg-slate-700 text-white flex items-center justify-center hover:bg-violet-600 transition-colors"
+                              className="w-8 h-8 rounded-full bg-slate-700 hover:bg-indigo-600 text-white flex items-center justify-center transition-colors"
                             >
                               <span className="material-symbols-outlined text-sm">visibility</span>
                             </button>
                             <button
                               onClick={(e) => handleDeleteMedia(m.id, e)}
-                              className="w-8 h-8 rounded-full bg-slate-700 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+                              className="w-8 h-8 rounded-full bg-slate-700 hover:bg-red-600 text-white flex items-center justify-center transition-colors"
                             >
                               <span className="material-symbols-outlined text-sm">delete</span>
                             </button>
                           </div>
                         </div>
 
-                        <div className="p-3 bg-slate-900/20">
-                          <p className="text-xs font-bold text-white truncate" title={m.title}>{m.title}</p>
+                        <div className="p-3 bg-slate-50 dark:bg-[#051329]/50">
+                          <p className="text-xs font-bold text-[#0C2E5E] dark:text-[#E2E8F0] truncate" title={m.title}>{m.title}</p>
                           <div className="flex justify-between items-center mt-1">
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-widest">{m.fileType || "File"}</span>
-                            <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">{formatSize(m.fileSizeBytes)}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest">{m.fileType || "File"}</span>
+                            <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500">{formatSize(m.fileSizeBytes)}</span>
                           </div>
                         </div>
                       </div>
@@ -337,17 +342,17 @@ export default function ContentPage() {
             <div className="text-center py-16">
               <span className="material-symbols-outlined text-5xl text-slate-600 mb-3">construction</span>
               <h3 className="text-[#0C2E5E] dark:text-[#E2E8F0] font-bold mb-1">Trình quản lý trang đang được phát triển</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mx-auto">Tính năng chỉnh sửa nội dung trang chủ (Hero Banner, Giới thiệu) sẽ sớm có mặt trong phiên bản tới.</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mx-auto font-medium">Tính năng chỉnh sửa nội dung trang chủ (Hero Banner, Giới thiệu) sẽ sớm có mặt trong phiên bản tới.</p>
             </div>
           )}
 
           {activeTab === "announcements" && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-                <h2 className="text-lg font-bold text-[#0C2E5E] dark:text-[#E2E8F0]">Danh sách thông báo hệ thống</h2>
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-cyan-950/30">
+                <h2 className="text-lg font-bold text-[#0C2E5E] dark:text-[#E2E8F0] tracking-tight">Danh sách thông báo hệ thống</h2>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-xs font-bold hover:opacity-90 shadow-lg shadow-violet-500/20"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] text-white rounded-xl text-xs font-black hover:opacity-95 shadow-md shadow-[#0C2E5E]/10 border-l-[3px] border-[#00C6FF] transition-all active:scale-95"
                 >
                   <span className="material-symbols-outlined text-sm">add_alert</span>Tạo thông báo mới
                 </button>
@@ -355,16 +360,16 @@ export default function ContentPage() {
 
               {loadingAnnouncements ? (
                 <div className="text-center py-16">
-                  <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold animate-pulse">Đang tải danh sách thông báo...</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs font-bold animate-pulse">Đang tải danh sách thông báo...</p>
                 </div>
               ) : announcements.length === 0 ? (
                 <div className="text-center py-16">
                   <span className="material-symbols-outlined text-5xl text-slate-600 mb-3">campaign</span>
                   <h3 className="text-[#0C2E5E] dark:text-[#E2E8F0] font-bold mb-1">Chưa có thông báo nào</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Bạn có thể tạo popup thông báo xuất hiện khi người dùng đăng nhập.</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Bạn có thể tạo popup thông báo xuất hiện khi người dùng đăng nhập.</p>
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="mt-4 px-4 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 text-white rounded-lg text-sm font-semibold hover:bg-slate-700"
+                    className="mt-4 px-4 py-2 bg-white dark:bg-[#0C2E5E]/40 border border-slate-200 dark:border-cyan-950/50 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-50 transition-all active:scale-95"
                   >
                     Tạo thông báo mới
                   </button>
@@ -373,13 +378,13 @@ export default function ContentPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {announcements.map((item: any) => {
                     const badgeColor = 
-                      item.type === "SYSTEM" ? "bg-rose-500/10 text-rose-400 border-rose-500/20" :
-                      item.type === "EXAM" ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
-                      item.type === "MATERIAL" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                      "bg-blue-500/10 text-blue-400 border-blue-500/20";
+                      item.type === "SYSTEM" ? "bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20" :
+                      item.type === "EXAM" ? "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-500/20" :
+                      item.type === "MATERIAL" ? "bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20" :
+                      "bg-blue-500/10 text-blue-500 dark:text-blue-400 border-blue-500/20";
                     
                     return (
-                      <div key={item.id} className="p-5 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/30 border border-slate-200/50 rounded-2xl flex flex-col justify-between hover:border-violet-500/30 transition-all">
+                      <div key={item.id} className="p-5 bg-slate-50 dark:bg-cyan-950/20 dark:border-cyan-950/40 border border-slate-200/50 rounded-2xl flex flex-col justify-between hover:border-[#00C6FF]/30 transition-all">
                         <div className="space-y-2">
                           <div className="flex justify-between items-start gap-4">
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider ${badgeColor}`}>
@@ -390,13 +395,13 @@ export default function ContentPage() {
                             </span>
                           </div>
                           <h4 className="text-sm font-bold text-[#0C2E5E] dark:text-[#E2E8F0] tracking-tight">{item.title}</h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{item.content}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{item.content}</p>
                         </div>
 
                         <div className="flex justify-end pt-4 border-t border-slate-200/10 mt-4">
                           <button
                             onClick={() => handleDeleteAnnouncement(item.id)}
-                            className="flex items-center gap-1 text-[11px] font-bold text-rose-400 hover:text-rose-300 transition-colors"
+                            className="flex items-center gap-1 text-[11px] font-bold text-rose-500 hover:text-rose-400 transition-colors"
                           >
                             <span className="material-symbols-outlined text-sm">delete</span>Xóa thông báo
                           </button>
@@ -413,28 +418,28 @@ export default function ContentPage() {
 
       {/* Media Preview Modal */}
       {selectedPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-[#0A1F3E]/80 backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-cyan-950/40 border border-slate-200 max-w-3xl w-full rounded-2xl overflow-hidden shadow-2xl animate-zoom-in">
-            <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-[#0A1F3E] border border-slate-200/50 dark:border-cyan-950/40 max-w-3xl w-full rounded-2xl overflow-hidden shadow-2xl animate-zoom-in">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-cyan-950/30 flex justify-between items-center bg-slate-50 dark:bg-cyan-950/20">
               <h3 className="font-headline font-black text-[#0C2E5E] dark:text-[#E2E8F0] text-base truncate max-w-md">{selectedPreview.title}</h3>
-              <button onClick={() => setSelectedPreview(null)} className="text-slate-500 dark:text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setSelectedPreview(null)} className="text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors p-1 rounded-lg">
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
             
-            <div className="p-6 flex flex-col items-center justify-center bg-slate-950/25 min-h-[300px] max-h-[500px] overflow-y-auto">
+            <div className="p-6 flex flex-col items-center justify-center bg-slate-100/30 dark:bg-slate-950/20 min-h-[300px] max-h-[500px] overflow-y-auto">
               {selectedPreview.fileType === "image" && selectedPreview.fileUrl ? (
-                <img src={selectedPreview.fileUrl} alt={selectedPreview.title} className="max-w-full max-h-[400px] object-contain rounded-lg border border-slate-100" />
+                <img src={selectedPreview.fileUrl} alt={selectedPreview.title} className="max-w-full max-h-[400px] object-contain rounded-lg border border-slate-200/50" />
               ) : selectedPreview.fileType === "video" && selectedPreview.fileUrl ? (
-                <video src={selectedPreview.fileUrl} controls className="max-w-full max-h-[400px] rounded-lg border border-slate-100" />
+                <video src={selectedPreview.fileUrl} controls className="max-w-full max-h-[400px] rounded-lg border border-slate-200/50" />
               ) : (
                 <div className="text-center space-y-4">
-                  <span className="material-symbols-outlined text-6xl text-violet-400 animate-pulse">description</span>
+                  <span className="material-symbols-outlined text-6xl text-indigo-400 animate-pulse">description</span>
                   <p className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Tài liệu không thể xem trước trực tiếp.</p>
                   <a
                     href={selectedPreview.fileUrl}
                     download={selectedPreview.fileName}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white font-bold rounded-xl text-xs hover:bg-violet-500 transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs hover:bg-indigo-500 transition-colors"
                   >
                     <span className="material-symbols-outlined text-sm">download</span>Tải xuống tệp tin ({formatSize(selectedPreview.fileSizeBytes)})
                   </a>
@@ -445,36 +450,36 @@ export default function ContentPage() {
         </div>
       )}
 
-      {/* Create Announcement Premium Modal */}
+      {/* Create Announcement Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-[#0A1F3E]/80 backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-cyan-950/40 border border-slate-200 max-w-lg w-full rounded-2xl overflow-hidden shadow-2xl animate-zoom-in">
-            <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-[#0A1F3E] border border-slate-200/50 dark:border-cyan-950/40 max-w-lg w-full rounded-2xl overflow-hidden shadow-2xl animate-zoom-in">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-cyan-950/30 flex justify-between items-center bg-slate-50 dark:bg-cyan-950/20">
               <h3 className="font-headline font-black text-[#0C2E5E] dark:text-[#E2E8F0] text-base">Phát hành thông báo mới</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors p-1 rounded-lg">
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
 
             <form onSubmit={handleCreateAnnouncement} className="p-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tiêu đề thông báo</label>
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Tiêu đề thông báo</label>
                 <input
                   type="text"
                   value={newTitle}
                   onChange={e => setNewTitle(e.target.value)}
                   placeholder="Nhập tiêu đề ngắn gọn..."
-                  className="w-full bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  className="w-full bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 dark:border-cyan-950/40 rounded-xl px-4 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium focus:outline-none focus:ring-2 focus:ring-[#00C6FF]/30 focus:border-[#00C6FF] transition-all"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phân loại loại thông báo</label>
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Phân loại thông báo</label>
                 <select
                   value={newType}
                   onChange={e => setNewType(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  className="w-full bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 dark:border-cyan-950/40 rounded-xl px-3 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium focus:outline-none focus:ring-2 focus:ring-[#00C6FF]/30 focus:border-[#00C6FF] transition-all"
                 >
                   <option value="SYSTEM">Hệ thống (Toàn cục)</option>
                   <option value="EXAM">Kỳ thi (Khảo thí)</option>
@@ -484,28 +489,28 @@ export default function ContentPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nội dung chi tiết</label>
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Nội dung chi tiết</label>
                 <textarea
                   value={newContent}
                   onChange={e => setNewContent(e.target.value)}
                   rows={4}
                   placeholder="Nhập nội dung đầy đủ để truyền tải thông điệp..."
-                  className="w-full bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/50 resize-none"
+                  className="w-full bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 border border-slate-200 dark:border-cyan-950/40 rounded-xl px-4 py-2.5 text-sm text-[#0C2E5E] dark:text-[#E2E8F0] font-medium focus:outline-none focus:ring-2 focus:ring-[#00C6FF]/30 focus:border-[#00C6FF] transition-all resize-none"
                   required
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/50 mt-4">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/50 dark:border-cyan-950/30 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/50 dark:text-slate-200 hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold font-bold rounded-xl text-xs transition-colors"
+                  className="px-4 py-2 bg-white dark:bg-[#0C2E5E]/40 border border-slate-200 dark:border-cyan-950/50 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-50 transition-all active:scale-95"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-violet-500/20 hover:opacity-90 transition-all"
+                  className="px-5 py-2 bg-gradient-to-r from-[#0C2E5E] to-[#0E3E7A] text-white font-black rounded-xl text-xs shadow-md shadow-[#0C2E5E]/10 border-l-[3px] border-[#00C6FF] transition-all active:scale-95"
                 >
                   Phát hành thông báo
                 </button>

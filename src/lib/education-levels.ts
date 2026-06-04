@@ -65,65 +65,15 @@ export const EDUCATION_HIERARCHY: EducationLevel[] = [
   { id: "grade_11", name: "Lớp 11", type: "K12", subjects: highSchoolSubjects },
   { id: "grade_12", name: "Lớp 12", type: "K12", subjects: highSchoolSubjects },
 
-  // --- UNIVERSITY (Nhóm ngành cơ bản) ---
+  // --- UNIVERSITY ---
   {
-    id: "uni_it",
-    name: "Đại học - Công nghệ thông tin",
+    id: "university",
+    name: "Đại học",
     type: "UNIVERSITY",
     subjects: [
-      { id: "uni_it_cs", name: "Khoa học máy tính" },
-      { id: "uni_it_se", name: "Kỹ thuật phần mềm" },
-      { id: "uni_it_network", name: "Mạng máy tính" },
-      { id: "uni_it_ai", name: "Trí tuệ nhân tạo" },
-      { id: "uni_it_db", name: "Cơ sở dữ liệu" },
-      { id: "uni_it_security", name: "An toàn thông tin" }
-    ]
-  },
-  {
-    id: "uni_econ",
-    name: "Đại học - Kinh tế & Quản trị",
-    type: "UNIVERSITY",
-    subjects: [
-      { id: "uni_eco_micro", name: "Kinh tế vi mô" },
-      { id: "uni_eco_macro", name: "Kinh tế vĩ mô" },
-      { id: "uni_eco_finance", name: "Tài chính - Ngân hàng" },
-      { id: "uni_eco_marketing", name: "Marketing" },
-      { id: "uni_eco_accounting", name: "Kế toán - Kiểm toán" }
-    ]
-  },
-  {
-    id: "uni_med",
-    name: "Đại học - Y Dược",
-    type: "UNIVERSITY",
-    subjects: [
-      { id: "uni_med_anatomy", name: "Giải phẫu học" },
-      { id: "uni_med_pharma", name: "Dược lý học" },
-      { id: "uni_med_pathology", name: "Sinh lý bệnh" },
-      { id: "uni_med_internal", name: "Nội khoa" },
-      { id: "uni_med_surgery", name: "Ngoại khoa" }
-    ]
-  },
-  {
-    id: "uni_lang",
-    name: "Đại học - Ngôn ngữ & Xã hội",
-    type: "UNIVERSITY",
-    subjects: [
-      { id: "uni_lang_eng", name: "Ngôn ngữ Anh" },
-      { id: "uni_lang_jap", name: "Ngôn ngữ Nhật" },
-      { id: "uni_lang_kor", name: "Ngôn ngữ Hàn" },
-      { id: "uni_lang_psy", name: "Tâm lý học" },
-      { id: "uni_lang_law", name: "Luật học" }
-    ]
-  },
-  {
-    id: "uni_eng",
-    name: "Đại học - Kỹ thuật & Công nghệ",
-    type: "UNIVERSITY",
-    subjects: [
-      { id: "uni_eng_mech", name: "Cơ khí" },
-      { id: "uni_eng_elec", name: "Điện - Điện tử" },
-      { id: "uni_eng_civil", name: "Xây dựng" },
-      { id: "uni_eng_auto", name: "Tự động hóa" }
+      { id: "uni_general", name: "Đại cương" },
+      { id: "uni_specialized", name: "Chuyên ngành" },
+      { id: "uni_other", name: "Khác" }
     ]
   }
 ];

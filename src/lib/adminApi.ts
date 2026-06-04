@@ -85,6 +85,18 @@ export function updateSettings(settings: Record<string, any>) {
   return apiFetch<any>("/api/admin/settings", { method: "PUT", body: JSON.stringify(settings) });
 }
 
+export function fetchSettingsHealth() {
+  return apiFetch<{
+    smtpConfigured: boolean;
+    smtpHost: string;
+    smtpUsername: string;
+    smtpConnected: boolean;
+    smtpError: string | null;
+    googleConfigured: boolean;
+    googleClientId: string;
+  }>("/api/admin/settings/health");
+}
+
 export function checkAiToken(type: "gemini" | "groq") {
   return apiFetch<any>(`/api/admin/ai-tokens/check?type=${type}`);
 }

@@ -136,8 +136,16 @@ export default function TeacherMaterials() {
           })
         });
         if (res.ok) {
+          const uploaded = await res.json().catch(() => null);
           setQueue(q => q.map(i => i.key === item.key ? { ...i, status: "done", progress: 100 } : i));
-          showAlert({ title: "Upload thành công", message: `"${item.title}" đã được AI kiểm duyệt và công khai.`, type: "success" });
+          const isPublished = uploaded?.status === "published";
+          showAlert({
+            title: "Upload thành công",
+            message: isPublished
+              ? `"${item.title}" đã được kiểm duyệt và công khai.`
+              : `"${item.title}" đã được tải lên và đang chờ quản trị viên duyệt.`,
+            type: "success"
+          });
           fetchMaterials();
         } else {
           // Đọc lỗi từ server — AI rejection sẽ chứa lý do cụ thể

@@ -68,7 +68,7 @@ export function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
                 <MapPin className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">175/2A Đường Số 2, Tăng Nhơn Phú B, Thủ Đức</span>
+                <span className="leading-relaxed">Ho Chi Minh City, Vietnam</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
                 <Phone className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
@@ -85,7 +85,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-200/50 dark:border-cyan-950/40 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-slate-500 dark:text-slate-500 text-sm font-medium text-center md:text-left">
-            &copy; {new Date().getFullYear()} AuraAcademic. Đã đăng ký bản quyền.
+            &copy; {new Date().getFullYear()} AuraAcademic.
           </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold">

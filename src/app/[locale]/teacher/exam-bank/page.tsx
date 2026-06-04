@@ -7,6 +7,7 @@ import PublishToBankModal from "@/components/PublishToBankModal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
+import { toast } from "sonner";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
 import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
@@ -156,6 +157,7 @@ export default function TeacherExamBankPage() {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
   const [examToView, setExamToView] = useState<any>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   const [user, setUser] = useState<any>(() => {
     if (typeof window !== "undefined") {
@@ -283,6 +285,24 @@ export default function TeacherExamBankPage() {
       alert("Lỗi kết nối.");
     } finally {
       setRemovingId(null);
+    }
+  };
+
+  const handleViewExam = async (exam: any) => {
+    if (!exam?.id || viewingId) return;
+    setViewingId(exam.id);
+    try {
+      const res = await fetch(`${API_BASE}/exams/${exam.id}`, {
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Không thể tải nội dung đề thi.");
+
+      const detail = await res.json();
+      setExamToView({ ...exam, ...detail });
+    } catch (err: any) {
+      toast.error(err?.message || "Không thể tải nội dung đề thi.");
+    } finally {
+      setViewingId(null);
     }
   };
 
@@ -625,11 +645,14 @@ export default function TeacherExamBankPage() {
                         <td className="py-4 px-6 text-right">
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
-                              onClick={() => setExamToView(exam)}
+                              onClick={() => handleViewExam(exam)}
+                              disabled={viewingId === exam.id}
                               title="Xem chi tiết"
-                              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all cursor-pointer"
+                              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all cursor-pointer disabled:opacity-50"
                             >
-                              <span className="material-symbols-outlined text-lg">visibility</span>
+                              <span className={`material-symbols-outlined text-lg ${viewingId === exam.id ? "animate-spin" : ""}`}>
+                                {viewingId === exam.id ? "progress_activity" : "visibility"}
+                              </span>
                             </button>
                             {user?.id === exam.teacherId && (
                               <button
@@ -689,11 +712,14 @@ export default function TeacherExamBankPage() {
                   </div>
                   <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => setExamToView(exam)}
+                      onClick={() => handleViewExam(exam)}
+                      disabled={viewingId === exam.id}
                       title="Xem chi tiết"
-                      className="p-2 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all cursor-pointer"
+                      className="p-2 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                     >
-                      <span className="material-symbols-outlined text-lg">visibility</span>
+                      <span className={`material-symbols-outlined text-lg ${viewingId === exam.id ? "animate-spin" : ""}`}>
+                        {viewingId === exam.id ? "progress_activity" : "visibility"}
+                      </span>
                     </button>
                     {user?.id === exam.teacherId && (
                       <button

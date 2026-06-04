@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
 import { useAlert } from "@/components/ui/AlertProvider";
 
@@ -90,7 +89,6 @@ const compressAvatar = (file: File): Promise<string> => new Promise((resolve, re
 });
 
 export default function StudentProfilePage() {
-  const router = useRouter();
   const { showAlert } = useAlert();
 
   const [user, setUser] = useState<StudentProfile | null>(null);
@@ -102,6 +100,8 @@ export default function StudentProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isSendingVerification, setIsSendingVerification] = useState(false);
+  const [emailVerificationPending, setEmailVerificationPending] = useState(false);
+  const [emailVerificationCode, setEmailVerificationCode] = useState("");
   const [twoFactorPending, setTwoFactorPending] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [isTwoFactorBusy, setIsTwoFactorBusy] = useState(false);
@@ -288,9 +288,38 @@ export default function StudentProfilePage() {
       }
 
       showAlert({ title: "Đã gửi mã xác minh", message: "Vui lòng kiểm tra email và nhập mã OTP.", type: "success" });
-      router.push(`/verify-email?email=${encodeURIComponent(user.email)}`);
+      setEmailVerificationPending(true);
+      setEmailVerificationCode("");
     } catch (error: any) {
       showAlert({ title: "Không gửi được mã", message: error.message || "Vui lòng thử lại sau.", type: "error" });
+    } finally {
+      setIsSendingVerification(false);
+    }
+  };
+
+  const handleConfirmEmailVerification = async () => {
+    if (!user?.email) return;
+    if (emailVerificationCode.trim().length !== 6) {
+      showAlert({ title: "Thiếu mã OTP", message: "Nhập mã OTP 6 số đã gửi về email.", type: "warning" });
+      return;
+    }
+
+    setIsSendingVerification(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, token: emailVerificationCode.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || "VERIFY_EMAIL_FAILED");
+
+      updateLocalUser({ ...user, emailVerified: true });
+      setEmailVerificationPending(false);
+      setEmailVerificationCode("");
+      showAlert({ title: "Email đã xác minh", message: "Tài khoản đã được xác minh email.", type: "success" });
+    } catch (error: any) {
+      showAlert({ title: "Không xác minh được email", message: error.message || "Vui lòng kiểm tra lại mã OTP.", type: "error" });
     } finally {
       setIsSendingVerification(false);
     }
@@ -490,6 +519,31 @@ export default function StudentProfilePage() {
                   onAction={!user?.emailVerified ? handleSendEmailVerification : undefined}
                   disabled={isSendingVerification}
                 />
+                {emailVerificationPending && !user?.emailVerified && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/60">
+                    <div className="mb-4 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                      Mã OTP 6 số đã được gửi về {user?.email}. Nhập mã bên dưới để xác minh email.
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        value={emailVerificationCode}
+                        onChange={event => setEmailVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                        maxLength={6}
+                        inputMode="numeric"
+                        placeholder="Mã 6 số"
+                        className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-black tracking-[0.3em] outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleConfirmEmailVerification}
+                        disabled={isSendingVerification || emailVerificationCode.length !== 6}
+                        className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-black text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Xác nhận
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <SecurityActionRow label="Đăng nhập" value={user?.provider ? `Qua ${user.provider}` : "Mật khẩu"} ok />
                 <SecurityActionRow
                   label="2FA"

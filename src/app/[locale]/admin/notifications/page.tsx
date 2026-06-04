@@ -50,7 +50,7 @@ export default function NotificationsPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <p className={`text-sm font-bold ${n.read ? "text-slate-500 dark:text-slate-400" : "text-white"}`}>{n.title}</p>
-                  {!n.read && <div className="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0 mt-1" />}
+                  {!n.read && <div className="w-2 h-2 rounded-full bg-[#00C6FF] flex-shrink-0 mt-1" />}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{n.body}</p>
                 <p className="text-xs text-slate-600 mt-2">{n.time}</p>

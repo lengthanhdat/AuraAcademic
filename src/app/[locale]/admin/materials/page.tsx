@@ -13,7 +13,7 @@ const FILE_TYPES: Record<string, { icon: string; color: string; bg: string }> = 
   pdf:   { icon: "picture_as_pdf", color: "text-red-600",    bg: "bg-red-50"    },
   pptx:  { icon: "slideshow",      color: "text-orange-500", bg: "bg-orange-50" },
   docx:  { icon: "description",    color: "text-blue-600",   bg: "bg-blue-50"   },
-  video: { icon: "play_circle",    color: "text-violet-600", bg: "bg-violet-50" },
+  video: { icon: "play_circle",    color: "text-indigo-600", bg: "bg-indigo-50" },
   link:  { icon: "link",           color: "text-teal-600",   bg: "bg-teal-50"   },
 };
 

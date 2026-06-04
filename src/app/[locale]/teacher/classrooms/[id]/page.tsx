@@ -12,7 +12,7 @@ import {
   ArrowLeft, Users, BookOpen, MessageSquare, BarChart3,
   Radio, CheckCircle, XCircle, Mail, Send, FileText,
   Clock, Award, Copy, RefreshCw, Trophy, Plus, Trash2, Shield, Shuffle,
-  Link, Eye, DoorOpen, Pencil, KeyRound
+  Link, DoorOpen, KeyRound
 } from "lucide-react";
 
 type Tab = "stream" | "members" | "chat" | "gradebook" | "exams";
@@ -247,7 +247,8 @@ export default function TeacherClassroomDetailPage() {
       
       // Chuyển hướng thẳng tới trang giám sát realtime của giáo viên
       if (exam && exam.accessCode) {
-        router.push(`/teacher/exams/results/${exam.accessCode}`);
+        const returnTo = encodeURIComponent(`/teacher/classrooms/${classroomId}?tab=exams`);
+        router.push(`/teacher/exams/results/${exam.accessCode}?returnTo=${returnTo}`);
       } else {
         fetchData();
       }
@@ -902,17 +903,23 @@ export default function TeacherClassroomDetailPage() {
                             <p>Tạo ngày</p>
                             <p className="mt-1 font-bold text-slate-500 dark:text-slate-400">{createdLabel}</p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => router.push(`/teacher/exams/results/${exam.accessCode}`)}
-                            className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-cyan-300 transition-colors"
-                            title="Xem kết quả"
-                          >
-                            <Eye className="w-6 h-6" />
-                          </button>
                         </div>
 
                         <div className="flex items-center gap-3 flex-wrap justify-start lg:justify-end">
+                          {isFinished && exam.accessCode && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const returnTo = encodeURIComponent(`/teacher/classrooms/${classroomId}?tab=exams`);
+                                router.push(`/teacher/exams/results/${exam.accessCode}?returnTo=${returnTo}`);
+                              }}
+                              className="min-w-[150px] inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 text-sm font-black text-white shadow-lg shadow-cyan-500/25 hover:from-blue-500 hover:to-cyan-400 active:scale-[0.98] transition-all"
+                            >
+                              <BarChart3 className="w-5 h-5" />
+                              Xem kết quả
+                            </button>
+                          )}
+
                           <button
                             type="button"
                             onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
@@ -942,14 +949,6 @@ export default function TeacherClassroomDetailPage() {
                             </button>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={() => router.push(`/teacher/exams?edit=${exam.id}&classroomId=${classroomId}`)}
-                            className="p-3 text-slate-400 hover:text-blue-600 dark:hover:text-cyan-300 transition-colors"
-                            title="Chỉnh sửa bài thi"
-                          >
-                            <Pencil className="w-5 h-5" />
-                          </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteExam(exam.id)}
@@ -1112,7 +1111,6 @@ export default function TeacherClassroomDetailPage() {
           isOpen={isLinkModalOpen}
           onClose={() => setIsLinkModalOpen(false)}
           classroomId={classroomId}
-          classroomExams={exams || []}
           onSuccess={fetchData}
         />
       </div>
@@ -1122,22 +1120,15 @@ export default function TeacherClassroomDetailPage() {
 
 // ── LinkExamFromRepositoryModal Component ──
 const getRepositoryQuestionCount = (exam: any) => exam.questionCount || exam.versions?.[0]?.questions?.length || 0;
-const getRepositoryExamKey = (exam: any) => [
-  (exam.title || "").trim().toLowerCase(),
-  exam.duration || 0,
-  getRepositoryQuestionCount(exam),
-  (exam.subject || "").trim().toLowerCase()
-].join("|");
 
 interface LinkExamModalProps {
   isOpen: boolean;
   onClose: () => void;
   classroomId: string;
-  classroomExams: any[];
   onSuccess: () => void;
 }
 
-function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, classroomExams, onSuccess }: LinkExamModalProps) {
+function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }: LinkExamModalProps) {
   const [exams, setExams] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1156,17 +1147,12 @@ function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, classroomEx
         });
         if (res.ok) {
           const data = await res.json();
-          const assignedKeys = new Set(classroomExams.map(getRepositoryExamKey));
           const unique = new Map<string, any>();
 
-          data.forEach((exam: any) => {
-            if (exam.isPractice || exam.isBankItem) return;
-            if (exam.classroomId === classroomId) return;
-
-            const key = getRepositoryExamKey(exam);
-            if (assignedKeys.has(key) || unique.has(key)) return;
-
-            unique.set(key, exam);
+          (Array.isArray(data) ? data : []).forEach((exam: any) => {
+            const key = exam.id || exam._id || exam.templateId;
+            if (!key || unique.has(key)) return;
+            unique.set(String(key), exam);
           });
 
           setExams(Array.from(unique.values()));
@@ -1177,7 +1163,7 @@ function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, classroomEx
     } finally {
       setLoading(false);
     }
-  }, [classroomExams, classroomId]);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {

@@ -674,7 +674,7 @@
   "Register": {
     "register_error": "Có lỗi xảy ra khi đăng ký",
     "success_title": "Đăng ký thành công!",
-    "success_msg": "Vui lòng kiểm tra email của bạn để xác thực tài khoản.",
+    "success_msg": "Tài khoản đã được tạo. Bạn có thể đăng nhập ngay.",
     "verify_now": "Xác thực ngay",
     "server_error": "Không thể kết nối đến máy chủ",
     "hero_title": "Kiến tạo tương lai \n qua tri thức số.",
@@ -708,6 +708,6 @@
     "password_min_length": "Mật khẩu tối thiểu 6 ký tự",
     "password_mismatch": "Mật khẩu xác nhận không khớp",
     "agree_terms_required": "Bạn phải đồng ý với Điều khoản và Điều kiện.",
-    "success_msg_login": "Đăng ký thành công. Vui lòng kiểm tra email (nếu có) và đăng nhập."
+    "success_msg_login": "Đăng ký thành công. Bạn có thể đăng nhập ngay."
   }
 }

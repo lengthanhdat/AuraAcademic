@@ -11,6 +11,8 @@ export default function ResetPasswordPage() {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -157,11 +159,20 @@ export default function ResetPasswordPage() {
                       <input
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 dark:bg-cyan-950/30 border border-slate-200/80 dark:border-cyan-900/40 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white dark:focus:bg-[#0A1F3E] transition-all outline-none font-bold text-[#0C2E5E] dark:text-[#E2E8F0] placeholder:text-slate-400 shadow-sm"
+                        className="w-full pl-14 pr-14 py-4 rounded-2xl bg-white/70 dark:bg-cyan-950/30 border border-slate-200/80 dark:border-cyan-900/40 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white dark:focus:bg-[#0A1F3E] transition-all outline-none font-bold text-[#0C2E5E] dark:text-[#E2E8F0] placeholder:text-slate-400 shadow-sm"
                         placeholder="••••••••"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((value) => !value)}
+                        aria-label={showPassword ? "Ẩn mật khẩu mới" : "Hiện mật khẩu mới"}
+                        title={showPassword ? "Ẩn mật khẩu mới" : "Hiện mật khẩu mới"}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#0C2E5E] dark:text-slate-500 dark:hover:bg-cyan-950/60 dark:hover:text-[#00C6FF]"
+                      >
+                        <span className="material-symbols-outlined text-[21px]">{showPassword ? "visibility_off" : "visibility"}</span>
+                      </button>
                     </div>
                   </div>
 
@@ -172,11 +183,20 @@ export default function ResetPasswordPage() {
                       <input
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full pl-14 pr-5 py-4 rounded-2xl bg-white/70 dark:bg-cyan-950/30 border border-slate-200/80 dark:border-cyan-900/40 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white dark:focus:bg-[#0A1F3E] transition-all outline-none font-bold text-[#0C2E5E] dark:text-[#E2E8F0] placeholder:text-slate-400 shadow-sm"
+                        className="w-full pl-14 pr-14 py-4 rounded-2xl bg-white/70 dark:bg-cyan-950/30 border border-slate-200/80 dark:border-cyan-900/40 focus:ring-4 focus:ring-[#00C6FF]/10 focus:border-[#00C6FF] focus:bg-white dark:focus:bg-[#0A1F3E] transition-all outline-none font-bold text-[#0C2E5E] dark:text-[#E2E8F0] placeholder:text-slate-400 shadow-sm"
                         placeholder="••••••••"
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((value) => !value)}
+                        aria-label={showConfirmPassword ? "Ẩn mật khẩu xác nhận" : "Hiện mật khẩu xác nhận"}
+                        title={showConfirmPassword ? "Ẩn mật khẩu xác nhận" : "Hiện mật khẩu xác nhận"}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#0C2E5E] dark:text-slate-500 dark:hover:bg-cyan-950/60 dark:hover:text-[#00C6FF]"
+                      >
+                        <span className="material-symbols-outlined text-[21px]">{showConfirmPassword ? "visibility_off" : "visibility"}</span>
+                      </button>
                     </div>
                   </div>
 
