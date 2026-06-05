@@ -82,14 +82,14 @@ export default function ExamResults() {
         </button>
         <div>
           <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Thống kê điểm số</h2>
-          <p className="text-slate-500 font-medium">Mã phòng thi: <span className="text-purple-600 font-bold">{code}</span></p>
+          <p className="text-slate-500 font-medium">Mã phòng thi: <span className="text-sky-600 font-bold">{code}</span></p>
         </div>
       </div>
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
+          <div className="w-14 h-14 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600">
             <span className="material-symbols-outlined text-3xl">groups</span>
           </div>
           <div>

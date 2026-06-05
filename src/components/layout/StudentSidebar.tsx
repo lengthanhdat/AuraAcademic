@@ -2,6 +2,7 @@
 
 import { Link, usePathname } from "@/navigation";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 interface SidebarProps {
   isCollapsed?: boolean;
@@ -16,9 +17,10 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
     { label: t("menu.dashboard"), icon: "dashboard", href: "/student/dashboard" },
     { label: t("menu.exams"), icon: "quiz", href: "/student/exams" },
     { label: t("menu.results"), icon: "assignment_turned_in", href: "/student/results" },
-    { label: "Lớp học", icon: "school", href: "/student/classrooms" },
-    { label: "Ngân hàng đề", icon: "local_library", href: "/student/exam-bank" },
+    { label: t("menu.classrooms"), icon: "school", href: "/student/classrooms" },
+    { label: t("menu.exam_bank"), icon: "local_library", href: "/student/exam-bank" },
     { label: t("menu.materials"), icon: "menu_book", href: "/student/materials" },
+    { label: t("menu.notifications"), icon: "notifications", href: "/student/notifications" },
     { label: t("menu.profile"), icon: "manage_accounts", href: "/student/profile" },
   ];
 
@@ -53,21 +55,25 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
           <Link href="/student/dashboard" className="group flex flex-col items-center justify-center transition-all duration-300">
             {isCollapsed ? (
               <div className="w-12 h-12 flex items-center justify-center hover:scale-105 transition-all">
-                <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain dark:hidden" />
-                <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain hidden dark:block" />
+                <Image src="/logoweb.png" width={180} height={44} alt="AuraAcademic Logo" className="h-5 w-auto object-contain dark:hidden" priority />
+                <Image src="/logoweb-dark.png" width={180} height={44} alt="AuraAcademic Logo" className="h-5 w-auto object-contain hidden dark:block" priority />
               </div>
             ) : (
               /* Center and scale up the vertical logo in a premium card */
               <div className="flex flex-col items-center justify-center py-2 w-full transition-all duration-300">
-                <img 
+                <Image 
                   src="/logoweb.png" 
                   alt="AuraAcademic" 
+                  width={180} height={44}
                   className="h-16 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:hidden" 
+                  priority
                 />
-                <img 
+                <Image 
                   src="/logoweb-dark.png" 
                   alt="AuraAcademic" 
+                  width={180} height={44}
                   className="h-16 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] hidden dark:block" 
+                  priority
                 />
               </div>
             )}

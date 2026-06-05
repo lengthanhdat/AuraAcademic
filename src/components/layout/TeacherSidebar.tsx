@@ -3,6 +3,7 @@
 import { Link, usePathname, useRouter } from "@/navigation";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 interface SidebarProps {
   isCollapsed?: boolean;
@@ -25,12 +26,13 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
   const menuItems = [
     { label: t("menu.dashboard"), icon: "dashboard", href: "/teacher/dashboard" },
     { label: t("menu.exams"), icon: "magic_button", href: "/teacher/exams" },
-    { label: "Kho đề của tôi", icon: "folder_special", href: "/teacher/exam-templates" },
-    { label: "Quản lý kỳ thi", icon: "assignment", href: "/teacher/my-exams" },
-    { label: "Lớp học", icon: "school", href: "/teacher/classrooms" },
-    { label: "Ngân hàng đề", icon: "local_library", href: "/teacher/exam-bank" },
+    { label: t("menu.exam_templates"), icon: "folder_special", href: "/teacher/exam-templates" },
+    { label: t("menu.my_exams"), icon: "assignment", href: "/teacher/my-exams" },
+    { label: t("menu.classrooms"), icon: "school", href: "/teacher/classrooms" },
+    { label: t("menu.exam_bank"), icon: "local_library", href: "/teacher/exam-bank" },
     { label: t("menu.materials"), icon: "menu_book", href: "/teacher/materials" },
     { label: t("menu.reports"), icon: "assessment", href: "/teacher/reports" },
+    { label: t("menu.notifications"), icon: "notifications", href: "/teacher/notifications" },
   ];
 
   const bottomItems = [
@@ -64,20 +66,24 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
           <Link href="/teacher/dashboard" className="group flex flex-col items-center justify-center transition-all duration-300">
             {isCollapsed ? (
               <div className="w-12 h-12 flex items-center justify-center hover:scale-105 transition-all">
-                <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain dark:hidden" />
-                <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain hidden dark:block" />
+                <Image src="/logoweb.png" width={180} height={44} alt="AuraAcademic Logo" className="h-5 w-auto object-contain dark:hidden" priority />
+                <Image src="/logoweb-dark.png" width={180} height={44} alt="AuraAcademic Logo" className="h-5 w-auto object-contain hidden dark:block" priority />
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-2 w-full transition-all duration-300">
-                <img 
+                <Image 
                   src="/logoweb.png" 
                   alt="AuraAcademic" 
+                  width={180} height={44}
                   className="h-16 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:hidden" 
+                  priority
                 />
-                <img 
+                <Image 
                   src="/logoweb-dark.png" 
                   alt="AuraAcademic" 
+                  width={180} height={44}
                   className="h-16 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] hidden dark:block" 
+                  priority
                 />
               </div>
             )}

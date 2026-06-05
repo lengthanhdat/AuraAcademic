@@ -1,16 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-const TRANS: Record<string, string> = {
-  ended: "Đã hoàn thành",
-  closed: "Đã đóng",
-  ongoing: "Đang diễn ra"
-};
-const t = (key: string) => TRANS[key] ?? key;
+import { useTranslations, useLocale } from "next-intl";
 
 export default function ReportsPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("TeacherReports");
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +31,7 @@ export default function ReportsPage() {
         setExams(closed);
       }
     } catch (e) {
-      console.error("Lỗi khi lấy danh sách báo cáo", e);
+      console.error(t("err_fetch"), e);
     } finally {
       setLoading(false);
     }
@@ -48,35 +44,35 @@ export default function ReportsPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-slate-800 dark:text-[#E2E8F0] flex items-center gap-3">
               <span className="material-symbols-outlined text-4xl text-purple-600">assessment</span>
-              Báo Cáo Phân Tích
+              {t("page_title")}
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Xem thống kê kết quả, bảng điểm và phân tích chất lượng kỳ thi.</p>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">{t("page_desc")}</p>
           </div>
         </div>
 
         {loading ? (
           <div className="py-20 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-slate-500 dark:text-slate-400 font-medium">Đang tải dữ liệu báo cáo...</p>
+            <p className="mt-4 text-slate-500 dark:text-slate-400 font-medium">{t("loading")}</p>
           </div>
         ) : exams.length === 0 ? (
           <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl p-16 text-center border border-slate-200 dark:border-cyan-950/40 shadow-sm">
             <div className="w-20 h-20 bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="material-symbols-outlined text-4xl text-slate-400">bar_chart_off</span>
             </div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-[#E2E8F0] mb-2">Chưa có báo cáo nào</h2>
-            <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Các kỳ thi đã kết thúc hoặc có dữ liệu nộp bài sẽ xuất hiện tại đây để bạn phân tích.</p>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-[#E2E8F0] mb-2">{t("no_reports")}</h2>
+            <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">{t("no_reports_desc")}</p>
           </div>
         ) : (
           <div className="bg-white dark:bg-[#0A1F3E] rounded-2xl shadow-sm border border-slate-200 dark:border-cyan-950/40 overflow-hidden">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border-b border-slate-100 dark:border-cyan-950/30">
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Tên kỳ thi</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Mã phòng</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Số lượt nộp</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Trạng thái</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">{t("th_exam_name")}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">{t("th_room_code")}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">{t("th_submissions")}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">{t("th_status")}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">{t("th_actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -102,11 +98,11 @@ export default function ReportsPage() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <button
-                        onClick={() => router.push(`/teacher/exams/results/${exam.accessCode}`)}
+                        onClick={() => router.push(`/${locale}/teacher/exams/results/${exam.accessCode}`)}
                         className="px-4 py-2 bg-purple-50 text-purple-700 font-bold text-sm rounded-lg hover:bg-purple-600 hover:text-white transition-all inline-flex items-center gap-2"
                       >
                         <span className="material-symbols-outlined text-sm">leaderboard</span>
-                        Xem điểm số
+                        {t("view_scores")}
                       </button>
                     </td>
                   </tr>

@@ -14,6 +14,7 @@ import {
   Clock, Award, Copy, RefreshCw, Trophy, Plus, Trash2, Shield, Shuffle,
   Link, DoorOpen, KeyRound
 } from "lucide-react";
+import Image from "next/image";
 
 type Tab = "stream" | "members" | "chat" | "gradebook" | "exams";
 
@@ -44,7 +45,11 @@ function Avatar({ name, src, className = "w-9 h-9", tone = "cyan" }: { name?: st
       : "bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-600 dark:text-cyan-400";
 
   if (src) {
-    return <img src={src} alt={name || "Avatar"} className={`${className} rounded-full object-cover border border-white dark:border-[#0A1F3E] shadow-sm shrink-0 ${ringClass}`} />;
+    return (
+      <div className={`${className} relative rounded-full overflow-hidden border border-white dark:border-[#0A1F3E] shadow-sm shrink-0 ${ringClass}`}>
+        <Image src={src} alt={name || "Avatar"} fill unoptimized className="object-cover" />
+      </div>
+    );
   }
 
   return (

@@ -11,12 +11,14 @@ import { toast } from "sonner";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
 import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
-const DIFFICULTY_CONFIG: Record<string, { label: string; cls: string }> = {
-  EASY:   { label: "Dễ",     cls: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  MEDIUM: { label: "Vừa",    cls: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" },
-  HARD:   { label: "Khó",    cls: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
-  EXPERT: { label: "Chuyên", cls: "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-};
+import { useTranslations } from "next-intl";
+
+const getDifficultyConfig = (t: any) => ({
+  EASY:   { label: t("difficulty_easy"),     cls: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  MEDIUM: { label: t("difficulty_medium"),    cls: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" },
+  HARD:   { label: t("difficulty_hard"),    cls: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
+  EXPERT: { label: t("difficulty_expert"), cls: "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+});
 
 const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
 
@@ -29,6 +31,7 @@ const ExamDetailModal = ({
   onClose: () => void;
   exam: any;
 }) => {
+  const t = useTranslations("TeacherExamBank");
   const questions = exam?.versions?.[0]?.questions || [];
 
   if (!isOpen || !exam) return null;
@@ -44,25 +47,25 @@ const ExamDetailModal = ({
       >
         <div className="flex items-start justify-between p-7 pb-4 border-b border-slate-100 dark:border-cyan-950/40 shrink-0">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Nội dung đề thi</p>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t("modal_title")}</p>
             <h3 className="font-extrabold text-xl text-slate-900 dark:text-slate-100 tracking-tight">{exam.title}</h3>
             <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 font-medium">
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm">help</span>
-                {questions.length} câu hỏi
+                {t("questions_count", { count: questions.length })}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm">schedule</span>
-                {exam.duration} phút
+                {t("duration_minutes", { count: exam.duration })}
               </span>
               {exam.difficulty && (
                 <>
                   <span>•</span>
                   <span>{
-                    exam.difficulty === "EASY" ? "🟢 Dễ" :
-                    exam.difficulty === "MEDIUM" ? "🟡 Trung bình" :
-                    exam.difficulty === "HARD" ? "🔴 Khó" : "🟣 Chuyên gia"
+                    exam.difficulty === "EASY" ? `🟢 ${t("difficulty_easy")}` :
+                    exam.difficulty === "MEDIUM" ? `🟡 ${t("difficulty_medium")}` :
+                    exam.difficulty === "HARD" ? `🔴 ${t("difficulty_hard")}` : `🟣 ${t("difficulty_expert")}`
                   }</span>
                 </>
               )}
@@ -80,7 +83,7 @@ const ExamDetailModal = ({
           {questions.length === 0 ? (
             <div className="py-12 text-center">
               <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2 block">article</span>
-              <p className="text-sm text-slate-400">Chưa có câu hỏi nào trong đề thi này.</p>
+              <p className="text-sm text-slate-400">{t("no_questions")}</p>
             </div>
           ) : (
             questions.map((q: any, idx: number) => {
@@ -94,7 +97,7 @@ const ExamDetailModal = ({
                       {idx + 1}
                     </span>
                     <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
-                      {q.text || <em className="text-slate-400">Không có nội dung</em>}
+                      {q.text || <em className="text-slate-400">{t("no_content")}</em>}
                     </p>
                   </div>
 
@@ -118,7 +121,7 @@ const ExamDetailModal = ({
                             }`}>
                               {OPTION_LABELS[oIdx] || oIdx + 1}
                             </span>
-                            <span className="leading-relaxed">{opt.text || "(Trống)"}</span>
+                            <span className="leading-relaxed">{opt.text || t("empty_option")}</span>
                           </div>
                         );
                       })}
@@ -132,13 +135,13 @@ const ExamDetailModal = ({
 
         <div className="p-7 pt-4 border-t border-slate-100 dark:border-cyan-950/40 flex justify-between items-center shrink-0">
           <p className="text-[10px] text-slate-400 font-medium">
-            ✓ Đáp án đúng được highlight màu xanh lá
+            {t("correct_note")}
           </p>
           <button
             onClick={onClose}
             className="px-5 py-2 bg-slate-100 dark:bg-cyan-950/40 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-cyan-950/60 transition-all"
           >
-            Đóng
+            {t("close")}
           </button>
         </div>
       </div>
@@ -147,12 +150,14 @@ const ExamDetailModal = ({
 };
 
 export default function TeacherExamBankPage() {
+  const t = useTranslations("TeacherExamBank");
+  const DIFFICULTY_CONFIG = getDifficultyConfig(t) as Record<string, { label: string; cls: string }>;
   const router = useRouter();
   const locale = useLocale();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState("Tất cả");
-  const [selectedSubject, setSelectedSubject] = useState("Tất cả");
-  const [selectedDifficulty, setSelectedDifficulty] = useState("Tất cả");
+  const [selectedGrade, setSelectedGrade] = useState("all");
+  const [selectedSubject, setSelectedSubject] = useState("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
@@ -261,18 +266,18 @@ export default function TeacherExamBankPage() {
 
   const filtered = items.filter((item: any) => {
     const matchSearch = item.title?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchGrade = selectedGrade === "Tất cả" || item.grade === selectedGrade;
-    const matchSubject = selectedSubject === "Tất cả" || item.subject === selectedSubject;
-    const matchDifficulty = selectedDifficulty === "Tất cả" || item.difficulty === selectedDifficulty;
+    const matchGrade = selectedGrade === "all" || item.grade === selectedGrade;
+    const matchSubject = selectedSubject === "all" || item.subject === selectedSubject;
+    const matchDifficulty = selectedDifficulty === "all" || item.difficulty === selectedDifficulty;
     return matchSearch && matchGrade && matchSubject && matchDifficulty;
   });
 
-  const availableSubjects = selectedGrade === "Tất cả" 
+  const availableSubjects = selectedGrade === "all" 
     ? Array.from(new Set(EDUCATION_HIERARCHY.flatMap(l => l.subjects.map(s => s.name))))
     : EDUCATION_HIERARCHY.find(l => l.name === selectedGrade)?.subjects.map(s => s.name) || [];
 
   const handleRemoveExam = async (examId: string) => {
-    if (!confirm("Xác nhận gỡ đề thi này khỏi ngân hàng? (Chỉ gỡ nhãn luyện tập)")) return;
+    if (!confirm(t("confirm_remove"))) return;
     setRemovingId(examId);
     try {
       const res = await fetch(`${API_BASE}/exams/${examId}/remove-from-bank`, {
@@ -280,9 +285,9 @@ export default function TeacherExamBankPage() {
         headers: getAuthHeaders({ "Content-Type": "application/json" }),
       });
       if (res.ok) mutate();
-      else alert("Lỗi khi gỡ đề thi.");
+      else toast.error(t("err_remove"));
     } catch {
-      alert("Lỗi kết nối.");
+      toast.error(t("err_network"));
     } finally {
       setRemovingId(null);
     }
@@ -295,12 +300,12 @@ export default function TeacherExamBankPage() {
       const res = await fetch(`${API_BASE}/exams/${exam.id}`, {
         headers: getAuthHeaders(),
       });
-      if (!res.ok) throw new Error("Không thể tải nội dung đề thi.");
+      if (!res.ok) throw new Error(t("err_load"));
 
       const detail = await res.json();
       setExamToView({ ...exam, ...detail });
     } catch (err: any) {
-      toast.error(err?.message || "Không thể tải nội dung đề thi.");
+      toast.error(err?.message || t("err_load"));
     } finally {
       setViewingId(null);
     }
@@ -323,15 +328,15 @@ export default function TeacherExamBankPage() {
 
           <div className="space-y-2.5">
             <h2 className="font-headline font-black text-2xl text-on-surface dark:text-slate-100 tracking-tight">
-              Tính năng bảo mật giới hạn
+              {t("lock_title")}
             </h2>
             <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 px-4 py-1.5 rounded-full border border-amber-200/50 dark:border-amber-900/40">
-              Yêu cầu tài khoản giáo viên đã xác thực
+              {t("lock_req")}
             </p>
           </div>
 
           <p className="text-xs text-on-surface-variant dark:text-slate-400 max-w-md leading-relaxed">
-            Ngân hàng đề thi chung chứa đề luyện tập, chuyên đề học tập chính thức và đáp án chi tiết. Tính năng này được giới hạn nghiêm ngặt nhằm bảo mật tuyệt đối đề thi, tránh tình trạng học sinh giả mạo giáo viên để xem đáp án trước khi thi.
+            {t("lock_desc")}
           </p>
 
           <div className="w-full border-t border-slate-100 dark:border-cyan-950/40 pt-6 mt-2 flex flex-col gap-3">
@@ -340,13 +345,13 @@ export default function TeacherExamBankPage() {
               className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-orange-500 hover:opacity-95 text-white font-black text-sm rounded-2xl shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-base">verified</span>
-              Xác thực tài khoản ngay
+              {t("btn_verify")}
             </button>
             <button
               onClick={() => router.push(`/${locale}/teacher/dashboard`)}
               className="w-full py-3.5 bg-slate-100 dark:bg-cyan-950/30 dark:text-slate-300 text-slate-600 font-bold text-sm rounded-2xl hover:bg-slate-200 transition-colors"
             >
-              Quay về Bảng điều khiển
+              {t("btn_dashboard")}
             </button>
           </div>
         </section>
@@ -364,10 +369,10 @@ export default function TeacherExamBankPage() {
                 <span className="material-symbols-outlined text-3xl text-white">account_balance</span>
               </div>
               <h1 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight mb-3">
-                Ngân hàng Đề thi
+                {t("page_title")}
               </h1>
               <p className="text-white/85 max-w-2xl leading-relaxed text-sm sm:text-base">
-                Quản lý đề luyện tập được chia sẻ trong hệ thống, lọc nhanh theo cấp bậc và môn học.
+                {t("page_desc")}
               </p>
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <button
@@ -375,7 +380,7 @@ export default function TeacherExamBankPage() {
                   className="h-12 px-5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-colors flex items-center justify-center gap-2 hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-white/70 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-lg">library_add</span>
-                  Thêm từ Kho đề
+                  {t("btn_add")}
                 </button>
               </div>
             </div>
@@ -383,15 +388,15 @@ export default function TeacherExamBankPage() {
             <div className="grid grid-cols-3 gap-3 rounded-2xl bg-white/12 p-3 ring-1 ring-white/15 backdrop-blur-sm">
               <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
                 <p className="text-2xl font-black leading-none">{items.length}</p>
-                <p className="mt-1 text-xs font-bold text-slate-500">Tổng đề</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">{t("stat_total")}</p>
               </div>
               <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
                 <p className="text-2xl font-black leading-none">{filtered.length}</p>
-                <p className="mt-1 text-xs font-bold text-slate-500">Đang lọc</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">{t("stat_filtered")}</p>
               </div>
               <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
                 <p className="text-2xl font-black leading-none">{availableSubjects.length}</p>
-                <p className="mt-1 text-xs font-bold text-slate-500">Môn học</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">{t("stat_subjects")}</p>
               </div>
             </div>
           </div>
@@ -412,14 +417,14 @@ export default function TeacherExamBankPage() {
             <div className="bg-white dark:bg-[#0A1F3E]/70 border border-slate-200/70 dark:border-cyan-950/40 rounded-2xl p-5 shadow-sm">
               <h2 className="text-sm font-extrabold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-indigo-500 text-[18px]">bar_chart</span>
-                Phân tích Độ khó Đề thi
+                {t("analysis_title")}
               </h2>
               <div className="space-y-3">
                 {[
-                  { key: 'EASY', label: 'Dễ', color: 'bg-emerald-500' },
-                  { key: 'MEDIUM', label: 'Trung bình', color: 'bg-amber-500' },
-                  { key: 'HARD', label: 'Khó', color: 'bg-red-500' },
-                  { key: 'EXPERT', label: 'Chuyên gia', color: 'bg-purple-500' }
+                  { key: 'EASY', label: t('difficulty_easy'), color: 'bg-emerald-500' },
+                  { key: 'MEDIUM', label: t('difficulty_medium'), color: 'bg-amber-500' },
+                  { key: 'HARD', label: t('difficulty_hard'), color: 'bg-red-500' },
+                  { key: 'EXPERT', label: t('difficulty_expert'), color: 'bg-purple-500' }
                 ].map((diff) => {
                   const count = items.filter((e: any) => e.difficulty === diff.key).length;
                   const percent = Math.round((count / Math.max(items.length, 1)) * 100);
@@ -429,7 +434,7 @@ export default function TeacherExamBankPage() {
                       <div className="flex-1 h-2.5 bg-slate-100 dark:bg-cyan-950/40 rounded-full overflow-hidden flex">
                         <div className={`h-full ${diff.color} rounded-full transition-all duration-1000`} style={{ width: `${percent}%` }} />
                       </div>
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 w-12 text-right">{count} đề</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 w-12 text-right">{t("exams_count", { count })}</span>
                     </div>
                   );
                 })}
@@ -440,7 +445,7 @@ export default function TeacherExamBankPage() {
             <div className="bg-white dark:bg-[#0A1F3E]/70 border border-slate-200/70 dark:border-cyan-950/40 rounded-2xl p-5 shadow-sm">
               <h2 className="text-sm font-extrabold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-sky-500 text-[18px]">pie_chart</span>
-                Top 4 Môn học phổ biến nhất
+                {t("top_subjects_title")}
               </h2>
               <div className="grid grid-cols-2 gap-3">
                 {(() => {
@@ -450,10 +455,10 @@ export default function TeacherExamBankPage() {
                   return top.length > 0 ? top.map(([sub, count]) => (
                     <div key={sub} className="bg-slate-50 dark:bg-cyan-950/20 rounded-xl p-3 border border-slate-100 dark:border-cyan-950/30 flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-600 dark:text-slate-300 line-clamp-1">{sub}</span>
-                      <span className="text-[10px] font-black text-sky-600 bg-sky-100 dark:bg-sky-900/30 px-2 py-0.5 rounded-md">{count} đề</span>
+                      <span className="text-[10px] font-black text-sky-600 bg-sky-100 dark:bg-sky-900/30 px-2 py-0.5 rounded-md">{t("exams_count", { count })}</span>
                     </div>
                   )) : (
-                    <div className="col-span-2 text-xs text-slate-400 text-center py-4">Chưa có dữ liệu phân loại môn học</div>
+                    <div className="col-span-2 text-xs text-slate-400 text-center py-4">{t("no_subjects_data")}</div>
                   );
                 })()}
               </div>
@@ -469,7 +474,7 @@ export default function TeacherExamBankPage() {
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
             <input
               type="text"
-              placeholder="Tìm theo tên đề thi..."
+              placeholder={t("search_placeholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="h-12 w-full pl-12 pr-4 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200"
@@ -482,17 +487,17 @@ export default function TeacherExamBankPage() {
                 value={selectedGrade}
                 onChange={(e) => {
                   setSelectedGrade(e.target.value);
-                  setSelectedSubject("Tất cả");
+                  setSelectedSubject("all");
                 }}
                 className="h-12 w-full pl-10 pr-9 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
               >
-                <option value="Tất cả">Tất cả cấp bậc</option>
-                <optgroup label="Phổ Thông (K-12)">
+                <option value="all">{t("all_grades")}</option>
+                <optgroup label={t("grade_k12")}>
                   {EDUCATION_HIERARCHY.filter(l => l.type === "K12").map(l => (
                     <option key={l.id} value={l.name}>{l.name}</option>
                   ))}
                 </optgroup>
-                <optgroup label="Đại Học & Cao Đẳng">
+                <optgroup label={t("grade_uni")}>
                   {EDUCATION_HIERARCHY.filter(l => l.type === "UNIVERSITY").map(l => (
                     <option key={l.id} value={l.name}>{l.name}</option>
                   ))}
@@ -508,7 +513,7 @@ export default function TeacherExamBankPage() {
                 onChange={(e) => setSelectedSubject(e.target.value)}
                 className="h-12 w-full pl-10 pr-9 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
               >
-                <option value="Tất cả">Tất cả môn học</option>
+                <option value="all">{t("all_subjects")}</option>
                 {availableSubjects.map((sub: string) => (
                   <option key={sub} value={sub}>{sub}</option>
                 ))}
@@ -523,11 +528,11 @@ export default function TeacherExamBankPage() {
                 onChange={(e) => setSelectedDifficulty(e.target.value)}
                 className="h-12 w-full pl-10 pr-9 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
               >
-                <option value="Tất cả">Tất cả độ khó</option>
-                <option value="EASY">Dễ</option>
-                <option value="MEDIUM">Trung bình</option>
-                <option value="HARD">Khó</option>
-                <option value="EXPERT">Chuyên gia</option>
+                <option value="all">{t("all_difficulties")}</option>
+                <option value="EASY">{t("difficulty_easy")}</option>
+                <option value="MEDIUM">{t("difficulty_medium")}</option>
+                <option value="HARD">{t("difficulty_hard")}</option>
+                <option value="EXPERT">{t("difficulty_expert")}</option>
               </select>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">expand_more</span>
             </div>
@@ -536,14 +541,14 @@ export default function TeacherExamBankPage() {
               <button
                 onClick={() => setViewMode("list")}
                 className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${viewMode === "list" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
-                title="Dạng danh sách"
+                title={t("view_list")}
               >
                 <span className="material-symbols-outlined text-lg">format_list_bulleted</span>
               </button>
               <button
                 onClick={() => setViewMode("table")}
                 className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${viewMode === "table" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
-                title="Dạng bảng"
+                title={t("view_table")}
               >
                 <span className="material-symbols-outlined text-lg">table_chart</span>
               </button>
@@ -552,7 +557,7 @@ export default function TeacherExamBankPage() {
             <div className="flex h-12 items-center justify-center gap-2 px-4 bg-[#0C2E5E] text-white rounded-xl xl:min-w-[124px]">
               <span className="material-symbols-outlined text-white/80 text-lg">quiz</span>
               <span className="text-sm font-extrabold">
-                {filtered.length} đề thi
+                {t("filtered_count", { count: filtered.length })}
               </span>
             </div>
           </div>
@@ -581,7 +586,7 @@ export default function TeacherExamBankPage() {
               {searchTerm ? "search_off" : "quiz"}
             </span>
             <p className="font-bold text-slate-500 dark:text-slate-400 mb-1">
-              {searchTerm ? "Không tìm thấy đề phù hợp" : "Ngân hàng chưa có đề thi nào"}
+              {searchTerm ? t("no_search_results") : t("empty_bank")}
             </p>
           </div>
         ) : viewMode === "table" ? (
@@ -590,11 +595,11 @@ export default function TeacherExamBankPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-cyan-950/40 bg-slate-50/50 dark:bg-cyan-950/20">
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Đề thi</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Môn học</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Thông số</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Độ khó</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("th_exam")}</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("th_subject")}</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("th_stats")}</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("th_difficulty")}</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-right">{t("th_actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-cyan-950/30">
@@ -618,18 +623,18 @@ export default function TeacherExamBankPage() {
                         </td>
                         <td className="py-4 px-6">
                           <span className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-lg border border-slate-100 dark:border-cyan-950/20">
-                            {exam.subject || "Chưa rõ"}
+                            {exam.subject || t("unknown")}
                           </span>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex flex-col gap-0.5 text-xs text-slate-500 dark:text-slate-400 font-semibold">
                             <span className="flex items-center gap-1">
                               <span className="material-symbols-outlined text-[14px]">format_list_numbered</span>
-                              {exam.questionCount > 0 ? `${exam.questionCount} câu` : "--"}
+                              {exam.questionCount > 0 ? t("questions_count", { count: exam.questionCount }) : "--"}
                             </span>
                             <span className="flex items-center gap-1">
                               <span className="material-symbols-outlined text-[14px]">schedule</span>
-                              {exam.duration > 0 ? `${exam.duration} phút` : "--"}
+                              {exam.duration > 0 ? t("duration_minutes", { count: exam.duration }) : "--"}
                             </span>
                           </div>
                         </td>
@@ -647,7 +652,7 @@ export default function TeacherExamBankPage() {
                             <button
                               onClick={() => handleViewExam(exam)}
                               disabled={viewingId === exam.id}
-                              title="Xem chi tiết"
+                              title={t("tooltip_view")}
                               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all cursor-pointer disabled:opacity-50"
                             >
                               <span className={`material-symbols-outlined text-lg ${viewingId === exam.id ? "animate-spin" : ""}`}>
@@ -658,7 +663,7 @@ export default function TeacherExamBankPage() {
                               <button
                                 onClick={() => handleRemoveExam(exam.id)}
                                 disabled={isRemoving}
-                                title="Gỡ khỏi ngân hàng"
+                                title={t("tooltip_remove")}
                                 className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-orange-50 dark:hover:bg-orange-900/30 text-slate-400 hover:text-orange-500 transition-all disabled:opacity-40"
                               >
                                 <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>
@@ -702,7 +707,7 @@ export default function TeacherExamBankPage() {
                       )}
                       {exam.questionCount > 0 && (
                         <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[9px] font-bold rounded">
-                          {exam.questionCount} câu hỏi
+                          {t("questions_count", { count: exam.questionCount })}
                         </span>
                       )}
                     </div>
@@ -714,7 +719,7 @@ export default function TeacherExamBankPage() {
                     <button
                       onClick={() => handleViewExam(exam)}
                       disabled={viewingId === exam.id}
-                      title="Xem chi tiết"
+                      title={t("tooltip_view")}
                       className="p-2 text-slate-400 hover:text-[#0C2E5E] dark:hover:text-[#00C6FF] hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                     >
                       <span className={`material-symbols-outlined text-lg ${viewingId === exam.id ? "animate-spin" : ""}`}>
@@ -725,7 +730,7 @@ export default function TeacherExamBankPage() {
                       <button
                         onClick={() => handleRemoveExam(exam.id)}
                         disabled={isRemoving}
-                        title="Gỡ khỏi ngân hàng đề thi"
+                        title={t("tooltip_remove")}
                         className="p-2 text-slate-400 hover:text-orange-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all disabled:opacity-40"
                       >
                         <span className={`material-symbols-outlined text-lg ${isRemoving ? "animate-spin" : ""}`}>

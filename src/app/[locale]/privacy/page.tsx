@@ -3,8 +3,11 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function PrivacyPage() {
+  const t = useTranslations("Privacy");
+
   return (
     <main className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#030712] transition-colors duration-500">
       <Navbar />
@@ -15,47 +18,47 @@ export default function PrivacyPage() {
             <ShieldCheck className="w-6 h-6 text-[#00C6FF]" />
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-[#0C2E5E] dark:text-white mb-3">
-            Chính sách <span className="text-[#00C6FF]">Bảo mật</span>
+            {t("title")} <span className="text-[#00C6FF]">Bảo mật</span>
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Bảo vệ quyền riêng tư của bạn là ưu tiên hàng đầu của chúng tôi.</p>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">{t("subtitle")}</p>
         </div>
 
         <div className="bg-white dark:bg-[#0A1F3E]/20 border border-slate-200 dark:border-cyan-950/40 rounded-2xl p-8 md:p-12">
           <div className="text-slate-600 dark:text-slate-300 leading-relaxed [&>h3]:text-xl [&>h3]:font-bold [&>h3]:text-[#0C2E5E] dark:[&>h3]:text-white [&>h3]:mt-8 [&>h3]:mb-4 [&>p]:mb-4 [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:mb-4 [&>ul>li]:mb-2 [&_strong]:text-slate-900 dark:[&_strong]:text-white">
-            <h3>1. Dữ liệu chúng tôi thu thập</h3>
+            <h3>{t("section1_title")}</h3>
             <p>
-              Khi bạn sử dụng AuraAcademic, chúng tôi thu thập các thông tin sau để đảm bảo nền tảng hoạt động trơn tru:
+              {t("section1_desc")}
             </p>
             <ul>
-              <li><strong>Thông tin định danh:</strong> Tên, địa chỉ email, ảnh đại diện, trường học/tổ chức.</li>
-              <li><strong>Dữ liệu hoạt động:</strong> Lịch sử bài làm, lịch sử tạo đề, nhật ký hệ thống.</li>
-              <li><strong>Dữ liệu giám sát (Proctoring):</strong> Trong lúc làm bài, hệ thống AI phân tích biểu cảm khuôn mặt, hướng nhìn, âm thanh nền để phát hiện gian lận. Dữ liệu này chỉ được ghi đè và tự hủy sau kỳ thi, trừ khi bị đánh dấu là "vi phạm".</li>
+              <li>{t("section1_li1")}</li>
+              <li>{t("section1_li2")}</li>
+              <li>{t("section1_li3")}</li>
             </ul>
 
-            <h3>2. Cách chúng tôi sử dụng dữ liệu</h3>
+            <h3>{t("section2_title")}</h3>
             <p>
-              Dữ liệu của bạn được sử dụng ĐỘC QUYỀN cho các mục đích:
+              {t("section2_desc")}
             </p>
             <ul>
-              <li>Xác thực danh tính và cấp quyền truy cập.</li>
-              <li>Cung cấp kết quả thi, báo cáo phân tích năng lực cho Giáo viên.</li>
-              <li>Phát hiện gian lận và đảm bảo sự công bằng của bài kiểm tra.</li>
-              <li>Cải thiện độ chính xác của AI phân tích hành vi.</li>
+              <li>{t("section2_li1")}</li>
+              <li>{t("section2_li2")}</li>
+              <li>{t("section2_li3")}</li>
+              <li>{t("section2_li4")}</li>
             </ul>
 
-            <h3>3. Cam kết không bán dữ liệu</h3>
+            <h3>{t("section3_title")}</h3>
             <p>
-              AuraAcademic tuyệt đối KHÔNG bán, cho thuê hoặc trao đổi dữ liệu cá nhân của người dùng (kể cả dữ liệu khuôn mặt) cho bất kỳ bên thứ ba nào vì mục đích quảng cáo hoặc thương mại. Toàn bộ cơ sở dữ liệu được mã hóa chuẩn AES-256 trên đám mây.
+              {t("section3_desc")}
             </p>
 
-            <h3>4. Xóa tài khoản & Dữ liệu</h3>
+            <h3>{t("section4_title")}</h3>
             <p>
-              Người dùng có quyền yêu cầu trích xuất toàn bộ dữ liệu cá nhân hoặc xóa vĩnh viễn tài khoản của mình khỏi hệ thống. Khi tài khoản bị xóa, các kết quả thi có thể được làm ẩn danh (anonymized) để lưu trữ thống kê chung cho tổ chức giáo dục nhưng không thể truy xuất ngược lại cá nhân.
+              {t("section4_desc")}
             </p>
 
-            <h3>5. Liên hệ với bộ phận DPO (Data Protection Officer)</h3>
+            <h3>{t("section5_title")}</h3>
             <p>
-              Nếu bạn có bất kỳ lo ngại nào về quyền riêng tư hoặc cách chúng tôi xử lý dữ liệu của bạn, vui lòng gửi email về <strong>privacy@auraacademic.edu.vn</strong> để được giải đáp trong 24 giờ.
+              {t("section5_desc")}
             </p>
           </div>
         </div>

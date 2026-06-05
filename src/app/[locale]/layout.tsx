@@ -16,7 +16,6 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  params: { locale }
 }: Readonly<{
   children: React.ReactNode;
   params: { locale: string };
@@ -24,7 +23,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logoweb.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

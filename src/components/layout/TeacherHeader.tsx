@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import NotificationBell from "@/components/layout/NotificationBell";
 import { useTranslations } from "next-intl";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import Image from "next/image";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -64,8 +64,8 @@ export function TeacherHeader({ onMenuClick }: HeaderProps) {
         </span>
         <div className="flex items-center gap-3 md:hidden">
           <Link href="/">
-            <img src="/logoweb.png" alt="AuraAcademic" className="h-8 object-contain dark:hidden" />
-            <img src="/logoweb-dark.png" alt="AuraAcademic" className="h-8 object-contain hidden dark:block" />
+            <Image src="/logoweb.png" alt="AuraAcademic" width={180} height={44} className="h-8 w-auto object-contain dark:hidden" priority />
+            <Image src="/logoweb-dark.png" alt="AuraAcademic" width={180} height={44} className="h-8 w-auto object-contain hidden dark:block" priority />
           </Link>
         </div>
       </div>
@@ -83,7 +83,6 @@ export function TeacherHeader({ onMenuClick }: HeaderProps) {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <NotificationBell />
-            <LanguageSwitcher />
           </div>
 
           <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700 cursor-pointer hover:opacity-90 transition-opacity group">
@@ -98,10 +97,11 @@ export function TeacherHeader({ onMenuClick }: HeaderProps) {
                 <div className="absolute inset-0 bg-gradient-to-tr from-[#0C2E5E] to-[#00C6FF] rounded-full -m-[2px] p-[2px]"></div>
               )}
               {user?.avatarUrl ? (
-                <img
+                <Image
                   alt={displayName}
                   className="w-9 h-9 rounded-full object-cover border border-white dark:border-[#0A1F3E] shadow-md relative z-10 bg-white"
                   src={user.avatarUrl}
+                  width={36} height={36} unoptimized
                 />
               ) : (
                 <div className="w-9 h-9 rounded-full border border-white dark:border-[#0A1F3E] shadow-md relative z-10 bg-[#0C2E5E] dark:bg-cyan-950 text-white dark:text-cyan-100 flex items-center justify-center text-xs font-black">

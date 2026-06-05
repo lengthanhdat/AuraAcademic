@@ -9,6 +9,7 @@ import "katex/dist/katex.min.css";
 import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 import { API_BASE } from "@/lib/api";
 import { useLocale } from "next-intl";
+import Image from "next/image";
 
 interface ParsedOption {
   id: string;
@@ -398,7 +399,7 @@ function ImportFormContent() {
                       {/* Question image */}
                       {q.imageBase64 && (
                         <div className="mt-3">
-                          <img src={q.imageBase64} alt="Hình ảnh câu hỏi" className="max-h-48 rounded-lg border border-slate-200 object-contain" />
+                          <Image src={q.imageBase64} alt="Hình ảnh câu hỏi" width={400} height={200} unoptimized className="max-h-48 w-auto rounded-lg border border-slate-200 object-contain" />
                         </div>
                       )}
                     </div>

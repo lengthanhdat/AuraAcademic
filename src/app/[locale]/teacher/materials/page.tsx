@@ -214,90 +214,189 @@ export default function TeacherMaterials() {
     return `${bytes} B`;
   };
 
-  return (
-    <main className="flex-1 p-8 max-w-6xl mx-auto w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <section>
-        <h1 className="text-3xl font-extrabold text-on-surface dark:text-slate-200 tracking-tight mb-1">Tài liệu giảng dạy</h1>
-        <p className="text-on-surface-variant dark:text-slate-400">Quản lý và chia sẻ tài liệu học tập với học viên của bạn.</p>
-      </section>
+  const formatDate = (value?: string) => {
+    if (!value) return "--";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("vi-VN");
+  };
 
-      {/* Stats */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Tổng tài liệu", value: materials.length, icon: "folder", color: "text-blue-500", bg: "bg-blue-50" },
-          { label: "Chờ duyệt", value: materials.filter(m=>m.status==="pending_review").length, icon: "schedule", color: "text-amber-500", bg: "bg-amber-50" },
-          { label: "Đã công khai", value: materials.filter(m=>m.status==="published").length, icon: "public", color: "text-green-500", bg: "bg-green-50" },
-          { label: "Lượt tải", value: materials.reduce((s,m)=>s+m.downloadCount,0), icon: "download", color: "text-violet-500", bg: "bg-violet-50" },
-        ].map(({ label, value, icon, color, bg }) => (
-          <div key={label} className="bg-white dark:bg-[#0A1F3E]/90 border border-slate-200/60 dark:border-cyan-950/40 shadow-sm rounded-2xl p-5 shadow-sm flex items-center gap-4">
-            <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}>
-              <span className={`material-symbols-outlined ${color}`}>{icon}</span>
+  const fileTypeLabel = (type?: string) => ({
+    pdf: "PDF",
+    pptx: "Slide",
+    docx: "Word",
+    video: "Video",
+    link: "Link",
+  }[type || ""] || (type || "Tệp").toUpperCase());
+
+  const totalDownloads = materials.reduce((s,m)=>s+(m.downloadCount || 0),0);
+  const publishedCount = materials.filter(m=>m.status==="published").length;
+  const pendingCount = materials.filter(m=>m.status==="pending_review").length;
+  const rejectedCount = materials.filter(m=>m.status==="rejected").length;
+  const idleQueueCount = queue.filter(i => i.status === "idle").length;
+
+  return (
+    <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm dark:border-cyan-900/40 dark:bg-[#071A33]">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-400" />
+        <div className="grid gap-6 p-6 lg:grid-cols-[1fr_520px] lg:p-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-bold uppercase tracking-widest text-sky-700 dark:border-cyan-800/60 dark:bg-cyan-950/40 dark:text-cyan-200">
+              <span className="material-symbols-outlined text-base">library_books</span>
+              Trung tâm tài liệu
             </div>
             <div>
-              <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider">{label}</p>
-              <p className="text-xl font-black text-on-surface dark:text-[#00C6FF]">{value}</p>
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Tài liệu giảng dạy</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Tải lên, phân loại và theo dõi tài liệu học tập mà học sinh có thể xem trong kho tài liệu.
+              </p>
             </div>
           </div>
-        ))}
+
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Tổng tài liệu", value: materials.length, icon: "folder", color: "text-sky-600", bg: "bg-sky-50" },
+              { label: "Đã công khai", value: publishedCount, icon: "public", color: "text-emerald-600", bg: "bg-emerald-50" },
+              { label: "Chờ duyệt", value: pendingCount, icon: "schedule", color: "text-amber-600", bg: "bg-amber-50" },
+              { label: "Lượt tải", value: totalDownloads, icon: "download", color: "text-violet-600", bg: "bg-violet-50" },
+            ].map(({ label, value, icon, color, bg }) => (
+              <div key={label} className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 dark:border-cyan-900/40 dark:bg-[#0B2445]">
+                <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${bg}`}>
+                  <span className={`material-symbols-outlined ${color}`}>{icon}</span>
+                </div>
+                <p className="text-2xl font-black text-slate-950 dark:text-white">{value}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* Drop Zone */}
-      <section
-        ref={dropRef}
-        onDragOver={e => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={e => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files); }}
-        className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-200 cursor-pointer
-          ${dragging ? "border-primary bg-primary/5 scale-[1.01]" : "border-slate-300 dark:border-cyan-950/40 bg-white dark:bg-[#0A1F3E]/90 hover:border-primary/40 hover:bg-primary/2"}`}
-        onClick={() => document.getElementById("file-input")?.click()}
-      >
-        <input id="file-input" type="file" className="hidden" multiple
-          accept=".pdf,.pptx,.ppt,.docx,.doc,video/*"
-          onChange={e => addFiles(e.target.files)} />
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <span className="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+        <div
+          ref={dropRef}
+          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={e => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files); }}
+          className={`group flex min-h-[320px] cursor-pointer flex-col justify-between rounded-3xl border-2 border-dashed p-6 transition-all duration-200
+            ${dragging ? "scale-[1.01] border-sky-500 bg-sky-50 shadow-lg shadow-sky-100 dark:border-cyan-400 dark:bg-cyan-950/30" : "border-slate-300 bg-white hover:border-sky-400 hover:bg-sky-50/60 dark:border-cyan-900/50 dark:bg-[#071A33] dark:hover:border-cyan-500 dark:hover:bg-cyan-950/20"}`}
+          onClick={() => document.getElementById("file-input")?.click()}
+        >
+          <input id="file-input" type="file" className="hidden" multiple
+            accept=".pdf,.pptx,.ppt,.docx,.doc,video/*"
+            onChange={e => addFiles(e.target.files)} />
+          <div>
+            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 transition-transform group-hover:-translate-y-1 dark:bg-cyan-950/50 dark:text-cyan-200">
+              <span className="material-symbols-outlined text-3xl">cloud_upload</span>
+            </div>
+            <h2 className="text-2xl font-black text-slate-950 dark:text-white">Tải tài liệu mới</h2>
+            <p className="mt-2 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
+              Kéo thả file vào đây hoặc bấm để chọn nhiều file cùng lúc. Hỗ trợ PDF, PPTX, DOCX và Video, tối đa 50MB mỗi file.
+            </p>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 sm:grid-cols-4">
+            {["PDF", "PPTX", "DOCX", "Video"].map(type => (
+              <span key={type} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-center shadow-sm dark:border-cyan-900/40 dark:bg-[#0B2445]">{type}</span>
+            ))}
+          </div>
         </div>
-        <h3 className="font-bold text-on-surface dark:text-slate-200 mb-1">Kéo và thả file vào đây</h3>
-        <p className="text-xs text-on-surface-variant dark:text-slate-400">hoặc click để chọn file · PDF, PPTX, DOCX, Video · Tối đa 50MB/file</p>
+
+        <div className="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-cyan-900/40 dark:bg-[#071A33]">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black text-slate-950 dark:text-white">Quy trình đăng tải</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Chuẩn bị file, bổ sung thông tin, rồi công khai cho học sinh.</p>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600 dark:bg-[#0B2445] dark:text-slate-300">{queue.length} file chờ</span>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              { icon: "upload_file", title: "Chọn tài liệu", text: "Tải lên một hoặc nhiều file bài giảng, bài tập, hướng dẫn." },
+              { icon: "sell", title: "Gắn thông tin", text: "Đặt tiêu đề, môn học, danh mục và tag để học sinh dễ tìm." },
+              { icon: "verified", title: "Theo dõi trạng thái", text: "Tài liệu hợp lệ sẽ xuất hiện trong kho học sinh sau khi xử lý." },
+            ].map(step => (
+              <div key={step.title} className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-cyan-900/40 dark:bg-[#0B2445]">
+                <span className="material-symbols-outlined text-sky-600 dark:text-cyan-300">{step.icon}</span>
+                <div>
+                  <p className="font-black text-slate-800 dark:text-white">{step.title}</p>
+                  <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">{step.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Upload Queue */}
       {queue.length > 0 && (
-        <section className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-cyan-950/40 flex items-center justify-between">
-            <h2 className="font-bold text-on-surface dark:text-slate-200 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">upload_file</span>
-              Hàng chờ upload ({queue.length} file)
-            </h2>
+        <section className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm dark:border-cyan-900/40 dark:bg-[#071A33]">
+          <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 dark:border-cyan-900/40 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 font-black text-slate-950 dark:text-white">
+                <span className="material-symbols-outlined text-sky-600 dark:text-cyan-300">upload_file</span>
+                Hàng chờ upload
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{idleQueueCount} file sẵn sàng, {queue.length - idleQueueCount} file đã xử lý hoặc đang xử lý.</p>
+            </div>
             <button onClick={uploadAll}
-              className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-all flex items-center gap-2">
+              disabled={idleQueueCount === 0}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-cyan-400 dark:text-[#06172E] dark:hover:bg-cyan-300">
               <span className="material-symbols-outlined text-sm">rocket_launch</span>
               Upload tất cả
             </button>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-cyan-950/40">
+          <div className="divide-y divide-slate-100 dark:divide-cyan-900/40">
             {queue.map(item => (
-              <div key={item.key} className="p-5 space-y-3">
+              <div key={item.key} className="space-y-4 p-5">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${FILE_TYPES[item.fileType]?.bg || "bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40"}`}>
+                  <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl ${FILE_TYPES[item.fileType]?.bg || "bg-slate-50 dark:bg-cyan-950/30"}`}>
                     <span className={`material-symbols-outlined ${FILE_TYPES[item.fileType]?.color || "text-slate-500"}`}>{FILE_TYPES[item.fileType]?.icon || "description"}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-on-surface dark:text-slate-200 text-sm truncate">{item.file.name}</p>
-                    <p className="text-xs text-on-surface-variant dark:text-slate-400">{fmt(item.file.size)}</p>
+                    <p className="truncate text-sm font-black text-slate-900 dark:text-white">{item.file.name}</p>
+                    <p className="text-xs font-semibold text-slate-400">{fileTypeLabel(item.fileType)} · {fmt(item.file.size)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {item.status === "done" && <span className="text-green-600 material-symbols-outlined">check_circle</span>}
                     {item.status === "idle" && (
                       <button onClick={() => uploadItem(item)}
-                        className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-all">
+                        className="rounded-xl bg-sky-50 px-3 py-1.5 text-xs font-black text-sky-700 transition-all hover:bg-sky-100 dark:bg-cyan-950/40 dark:text-cyan-200">
                         Upload
                       </button>
                     )}
-                    <button onClick={() => removeFromQueue(item.key)} className="material-symbols-outlined text-on-surface-variant dark:text-slate-400 hover:text-error transition-colors text-xl">close</button>
+                    <button onClick={() => removeFromQueue(item.key)} className="material-symbols-outlined text-xl text-slate-400 transition-colors hover:text-red-600">close</button>
                   </div>
                 </div>
+
+                {item.status === "idle" && (
+                  <div className="grid gap-3 md:grid-cols-[minmax(180px,1fr)_160px_160px]">
+                    <input
+                      value={item.title}
+                      onChange={e => setQueue(q => q.map(i => i.key === item.key ? { ...i, title: e.target.value } : i))}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-white"
+                      placeholder="Tiêu đề tài liệu"
+                    />
+                    <input
+                      value={item.subject}
+                      onChange={e => setQueue(q => q.map(i => i.key === item.key ? { ...i, subject: e.target.value } : i))}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-white"
+                      placeholder="Môn học"
+                    />
+                    <select
+                      value={item.category}
+                      onChange={e => setQueue(q => q.map(i => i.key === item.key ? { ...i, category: e.target.value } : i))}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-white"
+                    >
+                      {CATEGORIES.map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
+                    </select>
+                    <input
+                      value={item.tags}
+                      onChange={e => setQueue(q => q.map(i => i.key === item.key ? { ...i, tags: e.target.value } : i))}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-white md:col-span-3"
+                      placeholder="Tag, cách nhau bằng dấu phẩy"
+                    />
+                  </div>
+                )}
 
                 {/* AI rejection error banner */}
                 {item.status === "error" && (() => {
@@ -346,34 +445,18 @@ export default function TeacherMaterials() {
                   );
                 })()}
 
-                {/* Metadata form */}
-                {item.status === "idle" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pl-13">
-                    <input value={item.title} onChange={e => setQueue(q=>q.map(i=>i.key===item.key?{...i,title:e.target.value}:i))}
-                      className="px-3 py-2 rounded-lg border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary" placeholder="Tiêu đề..." />
-                    <input value={item.subject} onChange={e => setQueue(q=>q.map(i=>i.key===item.key?{...i,subject:e.target.value}:i))}
-                      className="px-3 py-2 rounded-lg border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary" placeholder="Môn học..." />
-                    <select value={item.category} onChange={e => setQueue(q=>q.map(i=>i.key===item.key?{...i,category:e.target.value}:i))}
-                      className="px-3 py-2 rounded-lg border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary">
-                      {CATEGORIES.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}
-                    </select>
-                    <input value={item.tags} onChange={e => setQueue(q=>q.map(i=>i.key===item.key?{...i,tags:e.target.value}:i))}
-                      className="px-3 py-2 rounded-lg border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary sm:col-span-3" placeholder="Thẻ (cách nhau bằng dấu phẩy): toán học, chương 1..." />
-                  </div>
-                )}
-
                 {/* Progress bar + AI review label */}
                 {item.status === "uploading" && (
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px] animate-pulse text-primary">smart_toy</span>
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-sky-700 dark:text-cyan-200">
+                        <span className="material-symbols-outlined text-[12px] animate-pulse">smart_toy</span>
                         {item.progress < 40 ? t("uploading") : t("ai_checking")}
                       </span>
-                      <span className="text-[10px] text-on-surface-variant dark:text-slate-400">{item.progress}%</span>
+                      <span className="text-[10px] text-slate-400">{item.progress}%</span>
                     </div>
-                    <div className="w-full bg-surface-container dark:bg-cyan-950/20 rounded-full h-2">
-                      <div className="bg-gradient-to-r from-primary to-primary-container h-2 rounded-full transition-all duration-500" style={{ width: `${item.progress}%` }} />
+                    <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-cyan-950/30">
+                      <div className="h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-400 transition-all duration-500" style={{ width: `${item.progress}%` }} />
                     </div>
                   </div>
                 )}
@@ -384,21 +467,24 @@ export default function TeacherMaterials() {
       )}
 
       {/* My Materials */}
-      <section className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-cyan-950/40 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <h2 className="font-bold text-on-surface dark:text-slate-200 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">folder_open</span>
-            Tài liệu của tôi
-          </h2>
-          <div className="flex gap-3 w-full sm:w-auto">
-            <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 text-base">search</span>
+      <section className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm dark:border-cyan-900/40 dark:bg-[#071A33]">
+        <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-4 dark:border-cyan-900/40 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 font-black text-slate-950 dark:text-white">
+              <span className="material-symbols-outlined text-sky-600 dark:text-cyan-300">folder_open</span>
+              Tài liệu của tôi
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{filtered.length} tài liệu đang hiển thị · {rejectedCount} tài liệu bị từ chối</p>
+          </div>
+          <div className="grid w-full gap-3 sm:grid-cols-[minmax(240px,1fr)_180px] lg:w-[560px]">
+            <label className="relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-slate-400">search</span>
               <input value={search} onChange={e=>setSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm font-semibold outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-white"
                 placeholder={t("search_material")} />
-            </div>
+            </label>
             <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-xs font-bold focus:outline-none">
+              className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-white">
               <option value="all">{t('all')}</option>
               {Object.keys(STATUS_CONFIG).map(s=><option key={s} value={s}>{STATUS_CONFIG[s].label}</option>)}
             </select>
@@ -407,51 +493,69 @@ export default function TeacherMaterials() {
 
         {loading ? (
           <div className="p-16 text-center">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent"/>
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-16 text-center">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant dark:text-slate-400/30 block mb-3">folder_off</span>
-            <p className="text-on-surface-variant dark:text-slate-400">Chưa có tài liệu nào.</p>
+            <span className="material-symbols-outlined mb-3 block text-5xl text-slate-300 dark:text-slate-600">folder_off</span>
+            <p className="font-semibold text-slate-500 dark:text-slate-400">Chưa có tài liệu nào.</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-cyan-950/40">
+          <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
             {filtered.map(m => {
               const ft = FILE_TYPES[m.fileType] || FILE_TYPES.pdf;
               const sc = STATUS_CONFIG[m.status] || STATUS_CONFIG.pending_review;
               return (
-                <div key={m.id} className="px-6 py-5 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-cyan-950/20 transition-colors">
-                  <div className={`w-10 h-10 rounded-xl ${ft.bg} flex items-center justify-center flex-shrink-0`}>
-                    <span className={`material-symbols-outlined ${ft.color}`}>{ft.icon}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-on-surface dark:text-slate-200 text-sm truncate">{m.title}</p>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1 ${sc.cls}`}>
-                        <span className="material-symbols-outlined text-[10px]">{sc.icon}</span>{sc.label}
-                      </span>
+                <div key={m.id} className="group flex min-h-[250px] flex-col rounded-2xl border border-slate-200/70 bg-slate-50/70 p-5 transition-all hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:shadow-md dark:border-cyan-900/40 dark:bg-[#0B2445] dark:hover:border-cyan-700/50">
+                  <div className="mb-4 flex items-start gap-3">
+                    <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${ft.bg}`}>
+                      <span className={`material-symbols-outlined ${ft.color}`}>{ft.icon}</span>
                     </div>
-                    <p className="text-xs text-on-surface-variant dark:text-slate-400">
-                      {m.subject} {m.subject&&"·"} {CAT_LABELS[m.category]||m.category} {m.fileName&&`· ${fmt(m.fileSizeBytes)}`}
-                    </p>
-                    {m.status==="rejected" && m.rejectionReason && (
-                      <p className="text-xs text-red-600 mt-0.5 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-xs">info</span>{m.rejectionReason}
-                      </p>
-                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-black leading-snug text-slate-950 dark:text-white">{m.title}</p>
+                      <p className="mt-1 text-[11px] font-bold uppercase text-slate-400">{fileTypeLabel(m.fileType)}</p>
+                    </div>
+                    <span className={`inline-flex flex-shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black ${sc.cls}`}>
+                        <span className="material-symbols-outlined text-[10px]">{sc.icon}</span>{sc.label}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className="text-xs text-on-surface-variant dark:text-slate-400 mr-2">{m.downloadCount} tải</span>
+
+                  <div className="space-y-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <p className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">school</span>{m.subject || "Chưa có môn học"}</p>
+                    <p className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">category</span>{CAT_LABELS[m.category]||m.category}</p>
+                    <p className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">database</span>{m.fileName ? fmt(m.fileSizeBytes) : "--"} · {formatDate(m.createdAt)}</p>
+                  </div>
+
+                  {m.tags?.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {m.tags.slice(0, 3).map(tag => (
+                        <span key={tag} className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-slate-500 shadow-sm dark:bg-cyan-950/50 dark:text-cyan-200">#{tag}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {m.status==="rejected" && m.rejectionReason && (
+                    <p className="mt-4 flex items-start gap-1 rounded-xl border border-red-100 bg-red-50 p-2 text-xs text-red-600">
+                      <span className="material-symbols-outlined text-sm">info</span>{m.rejectionReason}
+                    </p>
+                  )}
+
+                  <div className="mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4 dark:border-cyan-900/40">
+                    <span className="inline-flex items-center gap-1 text-xs font-black text-slate-500 dark:text-slate-400">
+                      <span className="material-symbols-outlined text-sm">download</span>{m.downloadCount} tải
+                    </span>
+                    <div className="flex items-center gap-1">
                     <button onClick={() => openEdit(m)}
-                      className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-cyan-950/50 dark:text-slate-200 transition-all text-on-surface-variant dark:text-slate-400 hover:text-primary"
+                      className="rounded-xl p-2 text-slate-500 transition-all hover:bg-sky-50 hover:text-sky-700 dark:text-slate-400 dark:hover:bg-cyan-950/50 dark:hover:text-cyan-200"
                       title={t("edit")}>
                       <span className="material-symbols-outlined text-lg">edit</span>
                     </button>
                     <button onClick={() => handleDelete(m.id)}
-                      className="p-2 rounded-xl hover:bg-red-50 transition-all text-on-surface-variant dark:text-slate-400 hover:text-red-600"
+                      className="rounded-xl p-2 text-slate-500 transition-all hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-950/30"
                       title={t("delete")}>
                       <span className="material-symbols-outlined text-lg">delete</span>
                     </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -462,41 +566,51 @@ export default function TeacherMaterials() {
 
       {/* Edit Modal */}
       {editItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-on-surface dark:text-slate-200 text-lg">Chỉnh sửa tài liệu</h3>
-              <button onClick={()=>setEditItem(null)} className="material-symbols-outlined text-on-surface-variant dark:text-slate-400 hover:text-error transition-colors">close</button>
-            </div>
-            {[
-              { field: "title", label: t("title"), type: "text" },
-              { field: "subject", label: t("subject"), type: "text" },
-              { field: "description", label: t("description"), type: "text" },
-              { field: "tags", label: t("tags"), type: "text" },
-            ].map(({ field, label }) => (
-              <div key={field}>
-                <label className="text-[10px] font-bold uppercase text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">{label}</label>
-                <input value={(editForm as any)[field]}
-                  onChange={e => setEditForm(f=>({...f,[field]:e.target.value}))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-white/20 bg-white shadow-2xl animate-in zoom-in-95 duration-200 dark:border-cyan-900/40 dark:bg-[#071A33]">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-cyan-900/40">
+              <div>
+                <h3 className="text-xl font-black text-slate-950 dark:text-white">Chỉnh sửa tài liệu</h3>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Cập nhật thông tin hiển thị trong kho tài liệu học sinh.</p>
               </div>
-            ))}
-            <div>
-              <label className="text-[10px] font-bold uppercase text-on-surface-variant dark:text-slate-400 tracking-widest block mb-1">Danh mục</label>
-              <select value={editForm.category} onChange={e=>setEditForm(f=>({...f,category:e.target.value}))}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] focus:border-blue-400 outline-none transition-colors text-sm focus:outline-none focus:border-primary">
-                {CATEGORIES.map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
-              </select>
+              <button onClick={()=>setEditItem(null)} className="material-symbols-outlined rounded-2xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-red-600 dark:hover:bg-cyan-950/40">close</button>
             </div>
-            <div className="flex gap-3 pt-2">
-              <button onClick={()=>setEditItem(null)}
-                className="flex-1 py-2.5 rounded-xl border border-outline-variant text-on-surface dark:text-slate-200 font-bold text-sm hover:bg-surface-container dark:bg-cyan-950/20 transition-all">
-                Hủy
-              </button>
-              <button onClick={saveEdit}
-                className="flex-1 py-2.5 rounded-xl bg-primary text-white font-bold text-sm hover:bg-primary/90 transition-all">
-                Lưu thay đổi
-              </button>
+
+            <div className="space-y-4 p-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                {[
+                  { field: "title", label: t("title"), type: "text" },
+                  { field: "subject", label: t("subject"), type: "text" },
+                  { field: "description", label: t("description"), type: "text" },
+                  { field: "tags", label: t("tags"), type: "text" },
+                ].map(({ field, label }) => (
+                  <label key={field} className={field === "description" || field === "tags" ? "md:col-span-2" : ""}>
+                    <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</span>
+                    <input value={(editForm as any)[field]}
+                      onChange={e => setEditForm(f=>({...f,[field]:e.target.value}))}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-white" />
+                  </label>
+                ))}
+              </div>
+
+              <label>
+                <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-slate-400">Danh mục</span>
+                <select value={editForm.category} onChange={e=>setEditForm(f=>({...f,category:e.target.value}))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-100 dark:border-cyan-900/50 dark:bg-[#0B2445] dark:text-white">
+                  {CATEGORIES.map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
+                </select>
+              </label>
+
+              <div className="flex gap-3 pt-2">
+                <button onClick={()=>setEditItem(null)}
+                  className="flex-1 rounded-2xl border border-slate-200 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50 dark:border-cyan-900/50 dark:text-slate-200 dark:hover:bg-cyan-950/30">
+                  Hủy
+                </button>
+                <button onClick={saveEdit}
+                  className="flex-1 rounded-2xl bg-slate-900 py-3 text-sm font-black text-white shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-cyan-400 dark:text-[#06172E] dark:hover:bg-cyan-300">
+                  Lưu thay đổi
+                </button>
+              </div>
             </div>
           </div>
         </div>

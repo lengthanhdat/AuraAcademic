@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { API_BASE } from "@/lib/api";
 import { classroomApi } from "@/lib/classroomApi";
 
@@ -20,6 +20,7 @@ type Result = {
 
 export default function StudentResults() {
   const t = useTranslations('StudentResults');
+  const locale = useLocale();
   const [user, setUser] = useState<any>(null);
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,9 +174,9 @@ export default function StudentResults() {
             onChange={e => setScopeFilter(e.target.value)}
             className="px-3 py-2 rounded-xl border border-slate-200 dark:border-cyan-950/40 bg-white dark:bg-[#051329] dark:text-[#E2E8F0] text-xs font-bold focus:outline-none focus:border-primary transition-colors"
           >
-            <option value="all">Tất cả nguồn</option>
-            <option value="classroom">Trong lớp học</option>
-            <option value="outside">Ngoài lớp học</option>
+            <option value="all">{t("source_all")}</option>
+            <option value="classroom">{t("source_inside")}</option>
+            <option value="outside">{t("source_outside")}</option>
             {classroomOptions.map(([id, name]) => (
               <option key={id} value={id}>{name}</option>
             ))}
@@ -196,7 +197,7 @@ export default function StudentResults() {
         <div className="px-6 py-4 border-b border-slate-100 dark:border-cyan-950/50 flex items-center justify-between">
           <h2 className="font-bold text-on-surface dark:text-slate-200 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-xl">format_list_bulleted</span>
-            Danh sách kết quả
+            {t("list_title")}
           </h2>
           <span className="text-xs text-on-surface-variant dark:text-slate-400 font-medium">{filtered.length} {t('results_count')}</span>
         </div>
@@ -231,12 +232,12 @@ export default function StudentResults() {
                       <div className="flex items-center gap-2 flex-wrap text-xs text-on-surface-variant dark:text-slate-400">
                         <span>{t('version_prefix')} {r.versionCode}</span>
                         <span>·</span>
-                        <span>{new Date(r.submittedAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                        <span>{new Date(r.submittedAt).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                         {r.classroomName && (
                           <>
                             <span>·</span>
                             <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-bold">
-                              Lớp: {r.classroomName}
+                              {t("class_label", { name: r.classroomName })}
                             </span>
                           </>
                         )}
@@ -262,12 +263,12 @@ export default function StudentResults() {
                       </div>
                       <div className="bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/40">
                         <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-1">{t('detail_time')}</p>
-                        <p className="text-sm font-bold text-on-surface dark:text-slate-200">{new Date(r.submittedAt).toLocaleString("vi-VN")}</p>
+                        <p className="text-sm font-bold text-on-surface dark:text-slate-200">{new Date(r.submittedAt).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}</p>
                       </div>
                       <div className="bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200/50 dark:border-cyan-950/40 sm:col-span-3">
-                        <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-1">Nguồn bài thi</p>
+                        <p className="text-[10px] font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-1">{t("source_label")}</p>
                         <p className="text-sm font-bold text-on-surface dark:text-slate-200">
-                          {r.classroomName ? `Lớp học: ${r.classroomName}` : "Bài thi ngoài lớp học"}
+                          {r.classroomName ? t("source_class", { name: r.classroomName }) : t("source_standalone")}
                         </p>
                       </div>
                     </div>

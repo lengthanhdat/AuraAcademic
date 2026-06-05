@@ -4,15 +4,15 @@ import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
 import ExamConfigDrawer from "@/components/ExamConfigDrawer";
 import { useAlert } from "@/components/ui/AlertProvider";
 
 const DIFFICULTY_CONFIG: Record<string, { label: string; cls: string }> = {
-  EASY:   { label: "Dễ",     cls: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  MEDIUM: { label: "Vừa",    cls: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" },
-  HARD:   { label: "Khó",    cls: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
+  EASY:   { label: "Dễ", cls: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  MEDIUM: { label: "Vừa", cls: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" },
+  HARD:   { label: "Khó", cls: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
   EXPERT: { label: "Chuyên", cls: "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
 };
 
@@ -20,6 +20,7 @@ export default function TeacherExamTemplatesPage() {
   const { showAlert } = useAlert();
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("TeacherExamTemplates");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("Tất cả");
   const [selectedSubject, setSelectedSubject] = useState("Tất cả");
@@ -78,8 +79,8 @@ export default function TeacherExamTemplatesPage() {
 
   const handleDeleteExam = async (examId: string) => {
     showAlert({
-      title: "Xác nhận xóa",
-      message: "Bạn có chắc chắn muốn xóa VĨNH VIỄN đề thi mẫu này?",
+      title: t("delete_confirm_title"),
+      message: t("delete_confirm_msg"),
       type: "confirm",
       onConfirm: async () => {
         setDeletingId(examId);
@@ -91,21 +92,21 @@ export default function TeacherExamTemplatesPage() {
           if (res.ok) {
             mutate();
             showAlert({
-              title: "Thành công",
-              message: "Đã xóa đề thi mẫu thành công.",
+              title: t("success"),
+              message: t("delete_success"),
               type: "success"
             });
           } else {
             showAlert({
-              title: "Thất bại",
-              message: "Lỗi khi xóa đề mẫu.",
+              title: t("fail"),
+              message: t("delete_fail"),
               type: "error"
             });
           }
         } catch {
           showAlert({
-            title: "Lỗi kết nối",
-            message: "Không thể kết nối đến hệ thống.",
+            title: t("error_conn_title"),
+            message: t("error_conn_msg"),
             type: "error"
           });
         } finally {
@@ -117,8 +118,8 @@ export default function TeacherExamTemplatesPage() {
 
   const handlePublishToBank = async (examId: string) => {
     showAlert({
-      title: "Chia sẻ vào Ngân hàng",
-      message: "Chia sẻ đề thi này vào Ngân hàng đề thi chung để giáo viên khác/học sinh luyện tập?",
+      title: t("publish_confirm_title"),
+      message: t("publish_confirm_msg"),
       type: "confirm",
       onConfirm: async () => {
         try {
@@ -128,21 +129,21 @@ export default function TeacherExamTemplatesPage() {
           });
           if (res.ok) {
             showAlert({
-              title: "Thành công",
-              message: "Đã chia sẻ vào Ngân hàng đề thi chung thành công!",
+              title: t("success"),
+              message: t("publish_success"),
               type: "success"
             });
           } else {
             showAlert({
-              title: "Thất bại",
-              message: "Có lỗi xảy ra khi chia sẻ.",
+              title: t("fail"),
+              message: t("publish_fail"),
               type: "error"
             });
           }
         } catch {
           showAlert({
-            title: "Lỗi kết nối",
-            message: "Không thể kết nối đến hệ thống.",
+            title: t("error_conn_title"),
+            message: t("error_conn_msg"),
             type: "error"
           });
         }
@@ -161,10 +162,10 @@ export default function TeacherExamTemplatesPage() {
               <span className="material-symbols-outlined text-4xl text-white">folder_special</span>
             </div>
             <h2 className="font-headline font-extrabold text-4xl text-white tracking-tight mb-2">
-              Kho đề của tôi
+              {t("title")}
             </h2>
             <p className="text-white/80 max-w-lg leading-relaxed">
-              Lưu trữ các đề mẫu của bạn từ thiết kế. Nhấn nút &quot;Sử dụng&quot; để cấu hình, nhân bản và giao bài kiểm tra cho các lớp học.
+              {t("description")}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0 relative z-10">
@@ -173,7 +174,7 @@ export default function TeacherExamTemplatesPage() {
               className="px-5 py-2.5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-all flex items-center gap-2 hover:scale-105"
             >
               <span className="material-symbols-outlined text-lg">magic_button</span>
-              Thiết kế Đề thi
+              {t("design_exam")}
             </button>
           </div>
         </section>
@@ -186,7 +187,7 @@ export default function TeacherExamTemplatesPage() {
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
             <input
               type="text"
-              placeholder="Tìm kiếm đề mẫu..."
+              placeholder={t("search_placeholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200"
@@ -202,7 +203,7 @@ export default function TeacherExamTemplatesPage() {
                   onChange={(e) => setSelectedGrade(e.target.value)}
                   className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
                 >
-                  <option value="Tất cả">Tất cả cấp bậc</option>
+                  <option value="Tất cả">{t("all_grades")}</option>
                   {uniqueGrades.map(g => (
                     <option key={g} value={g}>{g}</option>
                   ))}
@@ -219,7 +220,7 @@ export default function TeacherExamTemplatesPage() {
                   onChange={(e) => setSelectedSubject(e.target.value)}
                   className="w-full sm:w-auto pl-10 pr-8 py-2.5 bg-white dark:bg-[#0A1F3E]/60 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-bold text-slate-700 dark:text-slate-300 appearance-none cursor-pointer"
                 >
-                  <option value="Tất cả">Tất cả môn học</option>
+                  <option value="Tất cả">{t("all_subjects")}</option>
                   {uniqueSubjects.map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
@@ -234,14 +235,14 @@ export default function TeacherExamTemplatesPage() {
               <button
                 onClick={() => setViewMode("list")}
                 className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
-                title="Dạng danh sách"
+                title={t("list_view")}
               >
                 <span className="material-symbols-outlined text-lg">format_list_bulleted</span>
               </button>
               <button
                 onClick={() => setViewMode("table")}
                 className={`p-1.5 rounded-lg flex items-center justify-center transition-all ${viewMode === "table" ? "bg-white dark:bg-[#0A1F3E] text-indigo-600 dark:text-cyan-400 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}
-                title="Dạng bảng"
+                title={t("table_view")}
               >
                 <span className="material-symbols-outlined text-lg">table_chart</span>
               </button>
@@ -250,7 +251,7 @@ export default function TeacherExamTemplatesPage() {
             <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl">
               <span className="material-symbols-outlined text-slate-400 text-lg">quiz</span>
               <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                {filtered.length} bản mẫu
+                {t("template_count", { count: filtered.length })}
               </span>
             </div>
           </div>
@@ -280,10 +281,10 @@ export default function TeacherExamTemplatesPage() {
               {searchTerm ? "search_off" : "folder_zip"}
             </span>
             <p className="font-bold text-slate-500 dark:text-slate-400 mb-1">
-              {searchTerm ? "Không tìm thấy đề mẫu phù hợp" : "Kho đề trống"}
+              {searchTerm ? t("no_search_results") : t("empty")}
             </p>
             <p className="text-sm text-slate-400">
-              Thiết kế đề thi và bấm &quot;Lưu vào Kho đề&quot; để lưu trữ các đề mẫu của bạn ở đây.
+              {t("empty_desc")}
             </p>
           </div>
         ) : viewMode === "table" ? (
@@ -292,11 +293,11 @@ export default function TeacherExamTemplatesPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-cyan-950/40 bg-slate-50/50 dark:bg-cyan-950/20">
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Tên đề</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Môn học</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Thông số</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Độ khó</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-right">Hành động</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("col_name")}</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("col_subject")}</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("col_stats")}</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("col_difficulty")}</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-right">{t("col_actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-cyan-950/30">
@@ -321,25 +322,25 @@ export default function TeacherExamTemplatesPage() {
                         </td>
                         <td className="py-4 px-6">
                           <span className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-lg border border-slate-100 dark:border-cyan-950/20">
-                            {exam.subject || "Chưa rõ"}
+                            {exam.subject || t("unknown_subject")}
                           </span>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex flex-col gap-0.5 text-xs text-slate-500 dark:text-slate-400 font-semibold">
                             <span className="flex items-center gap-1">
                               <span className="material-symbols-outlined text-[14px]">format_list_numbered</span>
-                              {questionCount} câu hỏi
+                              {t("questions", { count: questionCount })}
                             </span>
                             <span className="flex items-center gap-1">
                               <span className="material-symbols-outlined text-[14px]">schedule</span>
-                              {exam.duration} phút
+                              {t("minutes", { count: exam.duration })}
                             </span>
                           </div>
                         </td>
                         <td className="py-4 px-6">
                           {diff ? (
                             <span className={`px-2 py-0.5 text-[10px] font-black rounded-md inline-block uppercase tracking-wider ${diff.cls}`}>
-                              {diff.label}
+                              {t(`difficulty.${exam.difficulty}` as any)}
                             </span>
                           ) : (
                             <span className="text-slate-400">--</span>
@@ -349,22 +350,22 @@ export default function TeacherExamTemplatesPage() {
                           <div className="flex items-center justify-end gap-1.5 transition-opacity">
                             <button
                               onClick={() => setSelectedExamForConfig(exam)}
-                              title="Cấu hình & Sử dụng"
+                              title={t("actions.use")}
                               className="px-3 py-1.5 bg-[#0C2E5E] text-white hover:bg-[#0E3E7A] text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm transition-all"
                             >
                               <span className="material-symbols-outlined text-sm">send</span>
-                              Sử dụng
+                              {t("actions.use")}
                             </button>
                             <button
                               onClick={() => router.push(`/${locale}/teacher/exams?edit=${exam.id}`)}
-                              title="Sửa đề"
+                              title={t("actions.edit")}
                               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"
                             >
                               <span className="material-symbols-outlined text-lg">edit</span>
                             </button>
                             <button
                               onClick={() => handlePublishToBank(exam.id)}
-                              title="Đưa lên Ngân hàng luyện tập chung"
+                              title={t("actions.publish")}
                               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-slate-400 hover:text-emerald-600 transition-all"
                             >
                               <span className="material-symbols-outlined text-lg">publish</span>
@@ -372,7 +373,7 @@ export default function TeacherExamTemplatesPage() {
                             <button
                               onClick={() => handleDeleteExam(exam.id)}
                               disabled={isDeleting}
-                              title="Xoá vĩnh viễn"
+                              title={t("actions.delete")}
                               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all disabled:opacity-40"
                             >
                               <span className={`material-symbols-outlined text-lg ${isDeleting ? "animate-spin" : ""}`}>
@@ -407,7 +408,7 @@ export default function TeacherExamTemplatesPage() {
                     <div className="flex flex-wrap items-center gap-1.5 mb-1">
                       {diff && (
                         <span className={`px-1.5 py-0.5 text-[10px] font-black rounded-md ${diff.cls}`}>
-                          {diff.label}
+                          {t(`difficulty.${exam.difficulty}` as any)}
                         </span>
                       )}
                       {exam.subject && (
@@ -417,12 +418,12 @@ export default function TeacherExamTemplatesPage() {
                       )}
                       {questionCount > 0 && (
                         <span className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-bold rounded-md">
-                          {questionCount} câu hỏi
+                          {t("questions", { count: questionCount })}
                         </span>
                       )}
                       {exam.duration > 0 && (
                         <span className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-bold rounded-md">
-                          {exam.duration} phút
+                          {t("minutes", { count: exam.duration })}
                         </span>
                       )}
                     </div>
@@ -437,18 +438,18 @@ export default function TeacherExamTemplatesPage() {
                       className="px-3 py-1.5 bg-[#0C2E5E] text-white hover:bg-[#0E3E7A] text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm transition-all"
                     >
                       <span className="material-symbols-outlined text-sm">send</span>
-                      Sử dụng
+                      {t("actions.use")}
                     </button>
                     <button
                       onClick={() => router.push(`/${locale}/teacher/exams?edit=${exam.id}`)}
-                      title="Sửa đề"
+                      title={t("actions.edit")}
                       className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"
                     >
                       <span className="material-symbols-outlined text-lg">edit</span>
                     </button>
                     <button
                       onClick={() => handlePublishToBank(exam.id)}
-                      title="Chia sẻ vào ngân hàng đề chung"
+                      title={t("actions.publish")}
                       className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-slate-400 hover:text-emerald-600 transition-all"
                     >
                       <span className="material-symbols-outlined text-lg">publish</span>
@@ -456,7 +457,7 @@ export default function TeacherExamTemplatesPage() {
                     <button
                       onClick={() => handleDeleteExam(exam.id)}
                       disabled={isDeleting}
-                      title="Xoá vĩnh viễn"
+                      title={t("actions.delete")}
                       className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all disabled:opacity-40"
                     >
                       <span className={`material-symbols-outlined text-lg ${isDeleting ? "animate-spin" : ""}`}>

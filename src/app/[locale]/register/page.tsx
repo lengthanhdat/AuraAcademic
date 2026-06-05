@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAlert } from "@/components/ui/AlertProvider";
 
@@ -13,7 +13,6 @@ const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "850775217149
 export default function Register() {
   const router = useRouter();
   const t = useTranslations("Register");
-  const currentLocale = useLocale();
   const { showAlert } = useAlert();
   const [role, setRole] = useState("student");
   const [formData, setFormData] = useState({
@@ -132,7 +131,7 @@ export default function Register() {
 
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center gap-3 text-white mb-12 hover:opacity-90 transition-all hover:scale-[1.02]">
-              <img src="/logoweb-dark.png" alt="AuraAcademic" className="h-11 object-contain brightness-125" />
+              <Image src="/logoweb-dark.png" alt="AuraAcademic" width={200} height={44} className="h-11 w-auto object-contain brightness-125" priority />
             </Link>
             <h1 className="text-5xl font-extrabold text-white leading-[1.15] mb-6 tracking-tight">
               {t('hero_title')}
@@ -162,10 +161,6 @@ export default function Register() {
 
         {/* Right Panel: Register Form */}
         <div className="w-full lg:w-[55%] p-8 sm:p-12 md:p-16 lg:p-20 flex flex-col justify-center relative bg-white/40 dark:bg-[#020b18]/40">
-          <div className="absolute top-8 right-8 z-20">
-            <LanguageSwitcher />
-          </div>
-
           <div className="max-w-md w-full mx-auto">
             <div className="text-center sm:text-left mb-8">
               <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">{t('title')}</h2>
@@ -189,7 +184,7 @@ export default function Register() {
             </div>
 
             <div className="w-full mb-8 flex justify-center items-center hover:scale-[1.01] transition-transform duration-200">
-              <GoogleOAuthProvider clientId={googleClientId} locale={currentLocale}>
+              <GoogleOAuthProvider clientId={googleClientId} locale="vi">
                 <GoogleLogin
                   onSuccess={async (creds) => {
                     try {

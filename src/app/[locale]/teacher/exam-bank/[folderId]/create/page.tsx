@@ -8,6 +8,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import Image from "next/image";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
 
 type ParsedOption = {
@@ -812,10 +813,11 @@ export default function CreateBankItemPage({ params }: { params: { locale: strin
                         {question.imageUrl && (
                           <div className="relative inline-block">
                             {/* Image preview */}
-                            <img
+                            <Image
                               src={question.imageUrl}
                               alt={`Hình ảnh câu ${index + 1}`}
-                              className="max-h-56 rounded-xl border border-slate-200 dark:border-cyan-950/40 object-contain mt-3"
+                              width={400} height={200} unoptimized
+                              className="max-h-56 w-auto rounded-xl border border-slate-200 dark:border-cyan-950/40 object-contain mt-3"
                             />
                             {/* Inline replace button */}
                             <button

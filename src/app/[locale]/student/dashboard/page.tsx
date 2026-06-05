@@ -148,30 +148,30 @@ export default function StudentDashboard() {
 
   const stats = [
     {
-      label: "Điểm trung bình",
+      label: t("stats.avg"),
       value: dashboard.averageScore === null ? "--" : dashboard.averageScore.toFixed(1),
-      sub: dashboard.bestScore === null ? "Chưa có điểm" : `Cao nhất ${scoreText(dashboard.bestScore)}`,
+      sub: dashboard.bestScore === null ? t("stats.avg_no_score") : t("stats.avg_best", { score: scoreText(dashboard.bestScore) }),
       icon: "monitoring",
       tone: "bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-950/40 dark:text-sky-200 dark:border-sky-900/50",
     },
     {
-      label: "Bài thi đã nộp",
+      label: t("stats.exams"),
       value: results.length,
-      sub: dashboard.passRate === null ? "Chưa có bài thi" : `${dashboard.passRate}% đạt từ 5 điểm`,
+      sub: dashboard.passRate === null ? t("stats.exams_empty") : t("stats.exams_pass", { rate: dashboard.passRate }),
       icon: "assignment_turned_in",
       tone: "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-900/50",
     },
     {
-      label: "Lớp đang học",
+      label: t("stats.classes"),
       value: loadingClassrooms ? "--" : classrooms.length,
-      sub: classrooms.length ? "Cập nhật theo lớp thật" : "Chưa tham gia lớp nào",
+      sub: classrooms.length ? t("stats.classes_sync") : t("stats.classes_empty"),
       icon: "school",
       tone: "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900/50",
     },
     {
-      label: "Lượt luyện tập",
+      label: t("stats.practice"),
       value: practiceResults.length,
-      sub: practiceResults.length ? "Từ ngân hàng đề" : "Chưa luyện tập",
+      sub: practiceResults.length ? t("stats.practice_source") : t("stats.practice_empty"),
       icon: "psychology",
       tone: "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900/50",
     },
@@ -183,17 +183,17 @@ export default function StudentDashboard() {
         <div className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">Bảng điều khiển học sinh</p>
+              <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{t("subtitle")}</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-normal text-slate-950 dark:text-white">
                 {t("greeting", { name: user?.fullName || t("default_name") })}
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Theo dõi lớp học, kết quả bài thi, luyện tập và vào phòng thi từ một màn hình duy nhất.
+                {t("desc")}
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-sm">
-              <p className="font-semibold text-slate-900 dark:text-white">{user?.email || "Chưa có email"}</p>
-              <p className="mt-1 text-slate-500 dark:text-slate-400">Tài khoản học sinh</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{user?.email || t("no_email")}</p>
+              <p className="mt-1 text-slate-500 dark:text-slate-400">{t("role_label")}</p>
             </div>
           </div>
         </div>
@@ -204,8 +204,8 @@ export default function StudentDashboard() {
               <span className="material-symbols-outlined">key</span>
             </div>
             <div>
-              <h2 className="font-bold text-slate-950 dark:text-white">Vào bài thi</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Nhập mã truy cập do giáo viên cung cấp.</p>
+              <h2 className="font-bold text-slate-950 dark:text-white">{t("join_title")}</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{t("join_desc")}</p>
             </div>
           </div>
 
@@ -217,7 +217,7 @@ export default function StudentDashboard() {
                 if (error) setError("");
               }}
               onKeyDown={(event) => event.key === "Enter" && handleJoin()}
-              placeholder="VD: AURA25"
+              placeholder={t("join_placeholder")}
               className="min-w-0 flex-1 rounded-xl border border-cyan-200 dark:border-cyan-800 bg-white dark:bg-slate-950 px-4 py-3 text-sm font-bold uppercase tracking-[0.12em] text-slate-900 dark:text-white outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
             />
             <button
@@ -226,7 +226,7 @@ export default function StudentDashboard() {
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="material-symbols-outlined text-[20px]">{isJoining ? "progress_activity" : "login"}</span>
-              Vào
+              {t("join_btn")}
             </button>
           </div>
           {error && <p className="mt-3 text-sm font-semibold text-red-600 dark:text-red-300">{error}</p>}
@@ -251,11 +251,11 @@ export default function StudentDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Kết quả bài thi gần đây</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Các bài thi chính thức đã nộp.</p>
+                <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{t("recent_results")}</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t("recent_results_desc")}</p>
               </div>
               <Link href={`/${locale}/student/results`} className="inline-flex items-center gap-1 text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
-                Xem tất cả
+                {t("view_all")}
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </Link>
             </div>
@@ -317,11 +317,11 @@ export default function StudentDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Lớp học của tôi</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Danh sách lớp đang tham gia.</p>
+                <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{t("my_classes")}</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t("my_classes_desc")}</p>
               </div>
               <Link href={`/${locale}/student/classrooms`} className="inline-flex items-center gap-1 text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
-                Mở lớp học
+                {t("open_class")}
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </Link>
             </div>
@@ -334,7 +334,7 @@ export default function StudentDashboard() {
               </div>
             ) : dashboard.visibleClassrooms.length === 0 ? (
               <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                Bạn chưa tham gia lớp học nào.
+                {t("no_classes")}
               </div>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
@@ -348,14 +348,14 @@ export default function StudentDashboard() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-extrabold text-slate-950 dark:text-white">{room.name || room.className || "Lớp học"}</p>
-                          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{room.subject || "Chưa có môn học"}</p>
+                          <p className="font-extrabold text-slate-950 dark:text-white">{room.name || room.className || t("class_fallback")}</p>
+                          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{room.subject || t("subject_fallback")}</p>
                         </div>
                         <span className="material-symbols-outlined text-cyan-700 dark:text-cyan-300">chevron_right</span>
                       </div>
                       <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1">{room.teacherName || room.teacherEmail || "Giáo viên"}</span>
-                        {typeof room.examCount === "number" && <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1">{room.examCount} bài thi</span>}
+                        <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1">{room.teacherName || room.teacherEmail || t("teacher_fallback")}</span>
+                        {typeof room.examCount === "number" && <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1">{room.examCount} {t("col_exam").toLowerCase()}</span>}
                       </div>
                     </Link>
                   );
@@ -367,11 +367,11 @@ export default function StudentDashboard() {
 
         <aside className="space-y-6">
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm">
-            <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Tổng quan học tập</h2>
+            <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{t("overview")}</h2>
             <div className="mt-5 space-y-4">
               <div>
                 <div className="mb-2 flex justify-between text-sm font-bold text-slate-700 dark:text-slate-200">
-                  <span>Tỉ lệ đạt bài thi</span>
+                  <span>{t("pass_rate")}</span>
                   <span>{dashboard.passRate === null ? "--" : `${dashboard.passRate}%`}</span>
                 </div>
                 <div className="h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
@@ -380,11 +380,11 @@ export default function StudentDashboard() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-slate-50 dark:bg-slate-900 p-4">
-                  <p className="text-xs font-bold uppercase text-slate-400">Đã đạt</p>
+                  <p className="text-xs font-bold uppercase text-slate-400">{t("passed")}</p>
                   <p className="mt-2 text-2xl font-extrabold text-slate-950 dark:text-white">{dashboard.passedCount}</p>
                 </div>
                 <div className="rounded-xl bg-slate-50 dark:bg-slate-900 p-4">
-                  <p className="text-xs font-bold uppercase text-slate-400">Tổng điểm</p>
+                  <p className="text-xs font-bold uppercase text-slate-400">{t("total_score")}</p>
                   <p className="mt-2 text-2xl font-extrabold text-slate-950 dark:text-white">{dashboard.bestScore === null ? "--" : scoreText(dashboard.bestScore)}</p>
                 </div>
               </div>
@@ -393,9 +393,9 @@ export default function StudentDashboard() {
 
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Luyện tập gần đây</h2>
+              <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{t("recent_practice")}</h2>
               <Link href={`/${locale}/student/exam-bank/results`} className="text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
-                Xem
+                {t("view")}
               </Link>
             </div>
 
@@ -407,7 +407,7 @@ export default function StudentDashboard() {
               </div>
             ) : dashboard.recentPractice.length === 0 ? (
               <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                Chưa có kết quả luyện tập.
+                {t("no_practice")}
               </div>
             ) : (
               <div className="space-y-3">
@@ -415,9 +415,9 @@ export default function StudentDashboard() {
                   <div key={item.id || index} className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-bold text-slate-950 dark:text-white">{item.folderName || item.title || "Bài luyện tập"}</p>
+                        <p className="font-bold text-slate-950 dark:text-white">{item.folderName || item.title || t("practice_fallback")}</p>
                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                          {(item.submittedAt || item.createdAt) ? new Date(item.submittedAt || item.createdAt || "").toLocaleDateString(dateLocale) : "Chưa có ngày"}
+                          {(item.submittedAt || item.createdAt) ? new Date(item.submittedAt || item.createdAt || "").toLocaleDateString(dateLocale) : t("no_date")}
                         </p>
                       </div>
                       <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1 text-xs font-extrabold text-cyan-700 dark:text-cyan-300">
@@ -426,7 +426,7 @@ export default function StudentDashboard() {
                     </div>
                     {typeof item.correctCount === "number" && typeof item.totalQuestions === "number" && (
                       <p className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                        Đúng {item.correctCount}/{item.totalQuestions} câu
+                        {t("correct_count", { correct: item.correctCount, total: item.totalQuestions })}
                       </p>
                     )}
                   </div>

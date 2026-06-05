@@ -11,6 +11,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
+import Image from "next/image";
 
 /** Resolves [IMG_n] tags in question text to base64 <img> elements */
 function renderWithImages(text: string, extractedImages?: string[]) {
@@ -22,10 +23,13 @@ function renderWithImages(text: string, extractedImages?: string[]) {
       const idx = parseInt(match[1], 10);
       if (extractedImages?.[idx]) {
         return (
-          <img
+          <Image
             key={i}
             src={`data:image/jpeg;base64,${extractedImages[idx]}`}
             alt={`Hình ảnh ${idx + 1}`}
+            width={600}
+            height={320}
+            unoptimized
             className="max-w-full h-auto max-h-80 my-3 rounded-xl border border-slate-200 dark:border-cyan-950/40 mx-auto shadow-sm object-contain block"
             onError={(e) => { e.currentTarget.style.display = "none"; }}
           />
@@ -285,8 +289,9 @@ export default function TakePracticeExamPage({ params }: { params: { locale: str
                       </div>
 
                       {q.imageUrl && (
-                        <img src={q.imageUrl} alt="Hình ảnh câu hỏi"
-                          className="max-w-full rounded-xl mb-4 border border-slate-200 dark:border-cyan-950/40" />
+                        <Image src={q.imageUrl} alt="Hình ảnh câu hỏi"
+                          width={600} height={400} unoptimized
+                          className="max-w-full h-auto rounded-xl mb-4 border border-slate-200 dark:border-cyan-950/40" />
                       )}
 
                       <div className="space-y-2.5">

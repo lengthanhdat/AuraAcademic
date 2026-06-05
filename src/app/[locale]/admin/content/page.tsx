@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 export default function ContentPage() {
   const [activeTab, setActiveTab] = useState("media");
@@ -294,7 +295,7 @@ export default function ContentPage() {
                       <div key={m.id} className="group relative border border-slate-200/50 dark:border-cyan-950/40 rounded-xl overflow-hidden bg-slate-50 dark:bg-cyan-950/20 hover:border-[#00C6FF]/50 transition-all flex flex-col justify-between">
                         <div className="h-32 bg-slate-100 dark:bg-cyan-950/30 flex items-center justify-center relative overflow-hidden">
                           {isImg && m.fileUrl ? (
-                            <img src={m.fileUrl} alt={m.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <Image src={m.fileUrl} alt={m.title} fill unoptimized className="object-cover group-hover:scale-105 transition-transform duration-300" />
                           ) : isVideo && m.fileUrl ? (
                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/15 to-blue-500/15 flex items-center justify-center">
                               <span className="material-symbols-outlined text-4xl text-indigo-400">play_circle</span>
@@ -429,7 +430,7 @@ export default function ContentPage() {
             
             <div className="p-6 flex flex-col items-center justify-center bg-slate-100/30 dark:bg-slate-950/20 min-h-[300px] max-h-[500px] overflow-y-auto">
               {selectedPreview.fileType === "image" && selectedPreview.fileUrl ? (
-                <img src={selectedPreview.fileUrl} alt={selectedPreview.title} className="max-w-full max-h-[400px] object-contain rounded-lg border border-slate-200/50" />
+                <Image src={selectedPreview.fileUrl} alt={selectedPreview.title} width={600} height={400} unoptimized className="w-auto h-auto max-w-full max-h-[400px] object-contain rounded-lg border border-slate-200/50" />
               ) : selectedPreview.fileType === "video" && selectedPreview.fileUrl ? (
                 <video src={selectedPreview.fileUrl} controls className="max-w-full max-h-[400px] rounded-lg border border-slate-200/50" />
               ) : (

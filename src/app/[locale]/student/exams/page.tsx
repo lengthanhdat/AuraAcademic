@@ -175,7 +175,7 @@ export default function StudentExams() {
         <section>
           <h3 className="text-lg font-bold text-on-surface dark:text-slate-200 mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary">history</span>
-            Bài thi gần đây
+            {t("recent_title")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {recentExams.map((r, i) => (
@@ -185,7 +185,7 @@ export default function StudentExams() {
                 </div>
                 <div className="min-w-0">
                   <p className="font-bold text-on-surface dark:text-slate-200 text-sm truncate">{r.examTitle || `${t('room_prefix')} ${r.examId}`}</p>
-                  <p className="text-xs text-on-surface-variant dark:text-slate-400">{new Date(r.submittedAt).toLocaleDateString("vi-VN")}</p>
+                  <p className="text-xs text-on-surface-variant dark:text-slate-400">{new Date(r.submittedAt).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US")}</p>
                 </div>
                 <div className="ml-auto text-right flex-shrink-0">
                   <span className="text-lg font-black text-primary">{r.score}</span>

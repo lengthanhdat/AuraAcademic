@@ -2,6 +2,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
+import Image from "next/image";
 import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
@@ -22,11 +23,12 @@ function renderWithImages(text: string, extractedImages?: string[]) {
       const idx = parseInt(match[1], 10);
       if (extractedImages?.[idx]) {
         return (
-          <img
+          <Image
             key={i}
             src={`data:image/jpeg;base64,${extractedImages[idx]}`}
             alt={`Hình ảnh ${idx + 1}`}
-            className="max-w-full h-auto max-h-72 my-3 rounded-xl border border-slate-200 dark:border-cyan-950/40 mx-auto shadow-sm object-contain block"
+            width={400} height={200} unoptimized
+            className="w-auto h-auto max-w-full max-h-72 my-3 rounded-xl border border-slate-200 dark:border-cyan-950/40 mx-auto shadow-sm object-contain block"
             onError={(e) => { e.currentTarget.style.display = "none"; }}
           />
         );

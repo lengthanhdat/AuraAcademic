@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 import { useState, useRef, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useTranslations, useLocale } from "next-intl";
+import Image from "next/image";
 import { SmartMarkdown } from "@/components/ui/SmartMarkdown";
 import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
@@ -50,7 +51,7 @@ function ExamBuilderContent() {
   const [generatingMode, setGeneratingMode] = useState<"file" | "prompt">("file");
   const [aiSubMode, setAiSubMode] = useState<"file" | "prompt">("prompt");
   // -------------------------
-  const [genLog, setGenLog] = useState(t('generating.log_start'));
+  const [genLog, setGenLog] = useState("Đang khởi tạo tiến trình...");
   const [genProgress, setGenProgress] = useState(0);
   const [editingQIdx, setEditingQIdx] = useState<number | null>(null);
   const [editingOptIdx, setEditingOptIdx] = useState<{ q: number; o: number } | null>(null);
@@ -58,11 +59,11 @@ function ExamBuilderContent() {
   const [pendingImgQIdx, setPendingImgQIdx] = useState<number | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Flag để tránh autosave ghi đè trong khi đang load từ URL
+  // Flag Ä‘á»ƒ trÃ¡nh autosave ghi Ä‘Ã¨ trong khi Ä‘ang load tá»« URL
   const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 
-  // 1a. Load từ URL query param ?edit=<examId> (uu tiên cao nhất, fetch từ API)
+  // 1a. Load tá»« URL query param ?edit=<examId> (uu tiÃªn cao nháº¥t, fetch tá»« API)
   useEffect(() => {
     const editId = searchParams.get("edit");
     if (!editId) return;
@@ -92,7 +93,7 @@ function ExamBuilderContent() {
     }).finally(() => setIsLoadingFromUrl(false));
   }, [searchParams]);
 
-  // 1b. Xử lý chế độ truy cập từ URL (?mode=import hoặc ?mode=manual)
+  // 1b. Xá»­ lÃ½ cháº¿ Ä‘á»™ truy cáº­p tá»« URL (?mode=import hoáº·c ?mode=manual)
   useEffect(() => {
     const mode = searchParams.get("mode");
     if (mode === "import") setCreationMode("import");
@@ -100,12 +101,12 @@ function ExamBuilderContent() {
     else if (mode === "ai") setCreationMode("ai");
   }, [searchParams]);
 
-  // classroomId từ URL — nếu có thì sau lưu quấy lại lớp học
+  // classroomId tá»« URL â€” náº¿u cÃ³ thÃ¬ sau lÆ°u quáº¥y láº¡i lá»›p há»c
   const classroomId = searchParams.get("classroomId");
 
-  // 1c. Fallback: Khôi phục từ LocalStorage khi không có URL param
+  // 1c. Fallback: KhÃ´i phá»¥c tá»« LocalStorage khi khÃ´ng cÃ³ URL param
   useEffect(() => {
-    if (searchParams.get("edit")) return; // ưu tiên URL param
+    if (searchParams.get("edit")) return; // Æ°u tiÃªn URL param
     const savedData = localStorage.getItem("exam_builder_state");
     if (savedData) {
       try {
@@ -131,7 +132,7 @@ function ExamBuilderContent() {
     }
   }, []);
 
-  // 2. Tự động lưu dữ liệu (chỉ khi không đang load từ URL)
+  // 2. Tá»± Ä‘á»™ng lÆ°u dá»¯ liá»‡u (chá»‰ khi khÃ´ng Ä‘ang load tá»« URL)
   useEffect(() => {
     if (step !== "generating" && !isLoadingFromUrl) {
       const stateToSave = { step, title, duration, questionCount, questions, versionCount, extractedText, editingId, creationMode, allowReview };
@@ -153,7 +154,7 @@ function ExamBuilderContent() {
 
     setStep("generating");
     setGenProgress(5);
-    setGenLog(t('generating.log_start'));
+    setGenLog("Đang khởi tạo tiến trình...");
     setGeneratingMode("file");
     let jobId = "";
     try {
@@ -167,14 +168,14 @@ function ExamBuilderContent() {
         body: formData,
       });
 
-      // Xử lý 401: Token hết hạn → redirect về login
+      // Xá»­ lÃ½ 401: Token háº¿t háº¡n â†’ redirect vá» login
       if (uploadRes.status === 401 || uploadRes.status === 403) {
         toast.error(t('toast.session_expired'));
         router.push("/login");
         return;
       }
 
-      // Parse an toàn: đọc text trước, tránh crash khi body rỗng
+      // Parse an toÃ n: Ä‘á»c text trÆ°á»›c, trÃ¡nh crash khi body rá»—ng
       const rawText = await uploadRes.text();
       if (!rawText || !rawText.trim()) {
         throw new Error(t('toast.empty_response'));
@@ -184,7 +185,7 @@ function ExamBuilderContent() {
 
       jobId = uploadData.jobId;
       setGenProgress(15);
-      setGenLog(t('generating.log_uploading'));
+      setGenLog("Đang tải lên và xử lý...");
     } catch (e: any) {
       toast.error(e.message || t('toast.connection_error'));
       setStep("upload");
@@ -195,18 +196,18 @@ function ExamBuilderContent() {
     let pseudoProgress = 15;
 
     pollingRef.current = setInterval(async () => {
-      // 1. Cập nhật tiến trình giả lập để người dùng không cảm thấy treo
+      // 1. Cáº­p nháº­t tiáº¿n trÃ¬nh giáº£ láº­p Ä‘á»ƒ ngÆ°á»i dÃ¹ng khÃ´ng cáº£m tháº¥y treo
       pseudoProgress += Math.random() * 2;
       if (pseudoProgress > 95) pseudoProgress = 95;
       setGenProgress(Math.floor(pseudoProgress));
 
-      // 2. Cập nhật log theo tiến trình
-      if (pseudoProgress > 20 && pseudoProgress < 40) setGenLog(t('generating.log_extract'));
-      if (pseudoProgress >= 40 && pseudoProgress < 65) setGenLog(t('generating.log_analyze'));
-      if (pseudoProgress >= 65 && pseudoProgress < 85) setGenLog(t('generating.log_optimize'));
-      if (pseudoProgress >= 85) setGenLog(t('generating.log_prepare'));
+      // 2. Cáº­p nháº­t log theo tiáº¿n trÃ¬nh
+      if (pseudoProgress > 20 && pseudoProgress < 40) setGenLog("AI đang trích xuất nội dung văn bản...");
+      if (pseudoProgress >= 40 && pseudoProgress < 65) setGenLog("Đang phân tích cấu trúc và nhận diện câu hỏi...");
+      if (pseudoProgress >= 65 && pseudoProgress < 85) setGenLog("Đang chuẩn hóa định dạng và trích xuất hình ảnh...");
+      if (pseudoProgress >= 85) setGenLog("Đang đóng gói dữ liệu và hoàn thiện...");
 
-      // 3. Kiểm tra Timeout sau 5 phút
+      // 3. Kiá»ƒm tra Timeout sau 5 phÃºt
       if (Date.now() - startTime > 300000) {
         clearInterval(pollingRef.current!);
         toast.error(t('toast.timeout'));
@@ -232,7 +233,7 @@ function ExamBuilderContent() {
         if (job.status === "DONE") {
           clearInterval(pollingRef.current!);
           setGenProgress(100);
-          setGenLog(t('generating.log_done'));
+          setGenLog("Hoàn tất! Đang chuyển sang màn hình kiểm tra...");
           setQuestions(job.questions || []);
           setExtractedText(job.extractedText || "");
           const imgs = job.extractedImages || [];
@@ -312,11 +313,11 @@ function ExamBuilderContent() {
         if (job.status === "DONE") {
           clearInterval(pollingRef.current!);
           setGenProgress(100);
-          setGenLog(t('generating.log_done'));
+          setGenLog("Hoàn tất! Đang chuyển sang màn hình kiểm tra...");
           setQuestions(job.questions || []);
           setExtractedText(job.extractedText || "");
           setExtractedImages([]);
-          setTimeout(() => { toast.success(`✨ AI đã biên soạn xong ${job.questions?.length || 0} câu hỏi!`); setStep("review"); }, 500);
+          setTimeout(() => { toast.success(`AI đã biên soạn xong ${job.questions?.length || 0} câu hỏi!`); setStep("review"); }, 500);
         } else if (job.status === "FAILED") {
           clearInterval(pollingRef.current!);
           toast.error("AI không thể tạo câu hỏi cho chủ đề này. Vui lòng thử lại.");
@@ -331,7 +332,7 @@ function ExamBuilderContent() {
     setIsAiLoading(true);
     setStep("generating");
     setGenProgress(20);
-    setGenLog(t('generating.log_start'));
+    setGenLog("Đang khởi tạo tiến trình...");
 
     try {
       const formData = new FormData();
@@ -343,14 +344,14 @@ function ExamBuilderContent() {
         body: formData,
       });
 
-      // Xử lý 401: Token hết hạn → redirect về login
+      // Xá»­ lÃ½ 401: Token háº¿t háº¡n â†’ redirect vá» login
       if (res.status === 401 || res.status === 403) {
         toast.error(t('toast.session_expired'));
         router.push("/login");
         return;
       }
 
-      // Parse an toàn: đọc text trước, tránh crash khi body rỗng
+      // Parse an toÃ n: Ä‘á»c text trÆ°á»›c, trÃ¡nh crash khi body rá»—ng
       const rawText = await res.text();
       if (!rawText || !rawText.trim()) {
         toast.error(t('toast.empty_response'));
@@ -370,7 +371,7 @@ function ExamBuilderContent() {
 
       const data = JSON.parse(rawText);
       setGenProgress(100);
-      setGenLog(t('generating.log_done'));
+      setGenLog("Hoàn tất! Đang chuyển sang màn hình kiểm tra...");
 
       const qs = (data.questions || []).map((q: any, i: number) => ({
         id: q.id || String(Date.now() + i),
@@ -504,11 +505,11 @@ function ExamBuilderContent() {
         const savedExam = await res.json();
         clearPersistedState();
         if (status === "WAITING") {
-          // Công bố đề → vào thẳng trang phòng thi để chia sẻ mã và bắt đầu
+          // CÃ´ng bá»‘ Ä‘á» â†’ vÃ o tháº³ng trang phÃ²ng thi Ä‘á»ƒ chia sáº» mÃ£ vÃ  báº¯t Ä‘áº§u
           router.push(`/teacher/exam-room/${savedExam.id}`);
           toast.success(t('toast.publish_success'));
         } else if (classroomId) {
-          // Lưu bản nháp từ lớp học → quay lại lớp học
+          // LÆ°u báº£n nhÃ¡p tá»« lá»›p há»c â†’ quay láº¡i lá»›p há»c
           router.push(`/teacher/classrooms/${classroomId}?tab=exams`);
           toast.success("Bài thi đã được tạo và gắn vào lớp!");
         } else {
@@ -561,11 +562,11 @@ function ExamBuilderContent() {
     e.target.value = '';
   };
 
-  // Render nội dung câu hỏi: chuyển [IMG_N] → <img>, còn lại → SmartMarkdown (memoized)
+  // Render ná»™i dung cÃ¢u há»i: chuyá»ƒn [IMG_N] â†’ <img>, cÃ²n láº¡i â†’ SmartMarkdown (memoized)
   const renderContent = useCallback((text: string | null | undefined) => {
     const safeText = text || "";
     if (!safeText.trim()) {
-      return <span className="text-slate-400 italic text-sm">{t('list.no_content')}</span>;
+      return <span className="text-slate-400 italic text-sm">Chưa có nội dung</span>;
     }
     const parts = safeText.split(/(\[IMG_\d+\])/g);
     return (
@@ -576,8 +577,8 @@ function ExamBuilderContent() {
             const imgIdx = parseInt(match[1]);
             const src = extractedImages[imgIdx];
             return src
-              ? <img key={i} src={`data:image/jpeg;base64,${src}`} alt={`Hình ${imgIdx}`} className="max-w-[450px] max-h-[300px] object-contain rounded-lg my-3 border border-slate-200 dark:border-cyan-950/40 shadow-sm" />
-              : <span key={i} className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-mono">[IMG_{imgIdx} — chưa có ảnh]</span>;
+              ? <Image key={i} src={`data:image/jpeg;base64,${src}`} alt={`Hình ${imgIdx}`} width={450} height={300} unoptimized className="max-w-[450px] h-auto max-h-[300px] object-contain rounded-lg my-3 border border-slate-200 dark:border-cyan-950/40 shadow-sm" />
+              : <span key={i} className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded font-mono">[IMG_{imgIdx} - chưa có ảnh]</span>;
           }
           return part ? <SmartMarkdown key={i} content={part} /> : null;
         })}
@@ -625,7 +626,7 @@ function ExamBuilderContent() {
               </div>
             </div>
             <div className="text-center space-y-3">
-              <h2 className="text-2xl font-black text-[#00355f] dark:text-slate-200 tracking-tight">{t('generating.title')}</h2>
+              <h2 className="text-2xl font-black text-[#00355f] dark:text-slate-200 tracking-tight">Đang phân tích tài liệu...</h2>
               <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 font-medium h-6">
                 {[0, 0.2, 0.4].map((d, i) => <span key={i} className="inline-block w-1.5 h-1.5 bg-blue-500 dark:bg-[#00C6FF] rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />)}
                 <p className="text-sm ml-1 italic">{genLog}</p>
@@ -645,8 +646,8 @@ function ExamBuilderContent() {
                 <div className="h-full bg-gradient-to-r from-[#00355f] to-[#0f4c81] dark:from-[#00C6FF] dark:to-blue-600 transition-all duration-700 ease-out rounded-full" style={{ width: `${genProgress}%` }} />
               </div>
               <div className="flex justify-between items-center px-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('generating.progress_label')}</span>
-                <span className="text-[10px] font-bold text-blue-600 dark:text-[#00C6FF] uppercase tracking-widest animate-pulse">{t('generating.progress_value')}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tiến trình</span>
+                <span className="text-[10px] font-bold text-blue-600 dark:text-[#00C6FF] uppercase tracking-widest animate-pulse">Đang xử lý...</span>
               </div>
             </div>
           </div>
@@ -661,22 +662,22 @@ function ExamBuilderContent() {
   );
 
   return (
-    <main className="flex-1 overflow-y-auto bg-[#F8FAFC] dark:bg-[#051329] p-8">
+    <main className="flex-1 overflow-y-auto bg-[#F8FAFC] dark:bg-[radial-gradient(circle_at_top_left,#102a4a_0%,#061326_36%,#020817_100%)] p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Breadcrumbs & Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-              <span>{t('header.breadcrumb_parent')}</span>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase tracking-widest mb-2">
+              <span>Kho đề</span>
               <span className="material-symbols-outlined text-[10px]">chevron_right</span>
-              <span className="text-blue-600">{t('header.breadcrumb_current')}</span>
+              <span className="text-blue-600 dark:text-cyan-300">Biên soạn</span>
             </div>
-            <h1 className="text-3xl font-black text-[#00355f] tracking-tight">{t('header.title')}</h1>
+            <h1 className="text-3xl font-black text-[#00355f] dark:text-white dark:drop-shadow-[0_2px_18px_rgba(34,211,238,0.28)] tracking-tight">Biên soạn đề thi</h1>
 
-            <div className="flex gap-2 mt-4 bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 p-1 rounded-xl w-fit">
+            <div className="flex gap-2 mt-4 bg-slate-100 dark:bg-[#071A33] dark:text-slate-300 p-1 rounded-xl w-fit border border-transparent dark:border-cyan-900/50">
               <button
                 onClick={() => { setCreationMode("ai"); setStep("upload"); setFile(null); }}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "ai" ? "bg-white dark:bg-[#0A1F3E] text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "ai" ? "bg-white dark:bg-cyan-400 text-blue-700 dark:text-[#061326] shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-white dark:hover:bg-cyan-950/40"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">auto_awesome</span>
                 Tạo bằng AI
@@ -687,7 +688,7 @@ function ExamBuilderContent() {
                   setStep("upload");
                   setFile(null);
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "import" ? "bg-white dark:bg-[#0A1F3E] text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "import" ? "bg-white dark:bg-cyan-400 text-blue-700 dark:text-[#061326] shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-white dark:hover:bg-cyan-950/40"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">file_open</span>
                 Nhập từ file
@@ -697,7 +698,7 @@ function ExamBuilderContent() {
                   setCreationMode("manual");
                   if (questions.length > 0 && step === "upload") setStep("review");
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "manual" ? "bg-white dark:bg-[#0A1F3E] text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300"}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${creationMode === "manual" ? "bg-white dark:bg-cyan-400 text-blue-700 dark:text-[#061326] shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-white dark:hover:bg-cyan-950/40"}`}
               >
                 <span className="material-symbols-outlined text-[16px] inline-block align-text-bottom mr-1">edit_square</span>
                 Tạo thủ công
@@ -722,9 +723,9 @@ function ExamBuilderContent() {
               <span className="material-symbols-outlined text-[22px] animate-pulse">warning</span>
             </div>
             <div className="flex-1 py-0.5">
-              <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300">{t('warning.title')}</h4>
+              <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300">Lưu ý quan trọng</h4>
               <p className="text-xs text-amber-800/90 dark:text-amber-400/90 mt-0.5 leading-relaxed font-semibold">
-                {t('warning.text')}
+                Công cụ này sử dụng AI để phân tích tài liệu. Xin vui lòng kiểm tra lại chất lượng câu hỏi trước khi xuất bản.
               </p>
             </div>
           </div>
@@ -738,7 +739,7 @@ function ExamBuilderContent() {
             <div className="flex-1 py-0.5">
               <h4 className="text-sm font-bold text-blue-900 dark:text-blue-300">Hướng dẫn nhập câu hỏi từ file</h4>
               <p className="text-xs text-blue-800/90 dark:text-blue-400/90 mt-0.5 leading-relaxed font-semibold">
-                Hệ thống tự động tách câu hỏi dựa trên cấu trúc văn bản (Ví dụ: &quot;Câu 1:&quot;, &quot;A. B. C. D.&quot;). Vui lòng kiểm tra lại nội dung câu hỏi sau khi trích xuất và tự chọn đáp án đúng cho từng câu hỏi trước khi lưu đề thi.
+                Hệ thống tự động tách câu hỏi dựa trên cấu trúc văn bản (ví dụ: &quot;Câu 1:&quot;, &quot;A. B. C. D.&quot;). Vui lòng kiểm tra lại nội dung câu hỏi sau khi trích xuất và tự chọn đáp án đúng cho từng câu hỏi trước khi lưu đề thi.
               </p>
             </div>
           </div>
@@ -760,12 +761,12 @@ function ExamBuilderContent() {
 
         {/* Unified AI Area */}
         {creationMode === "ai" && step === "upload" && (
-          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl border border-slate-100 dark:border-cyan-950/30 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-[#0B1D36] rounded-3xl border border-slate-100 dark:border-cyan-800/50 shadow-sm dark:shadow-[0_24px_80px_-40px_rgba(34,211,238,0.45)] overflow-hidden">
             {/* Sub-mode toggle */}
-            <div className="flex border-b border-slate-100 dark:border-cyan-950/30">
+            <div className="flex border-b border-slate-100 dark:border-cyan-800/50 bg-white dark:bg-[#071A33]">
               <button
                 onClick={() => { setAiSubMode("prompt"); setFile(null); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "prompt" ? "bg-violet-50 text-violet-700 border-b-2 border-violet-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40"
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "prompt" ? "bg-violet-50 text-violet-700 border-b-2 border-violet-600 dark:bg-violet-500/15 dark:text-violet-200 dark:border-violet-400" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-cyan-950/40"
                   }`}
               >
                 <span className="material-symbols-outlined text-[18px]">psychology</span>
@@ -773,7 +774,7 @@ function ExamBuilderContent() {
               </button>
               <button
                 onClick={() => { setAiSubMode("file"); setTopic(""); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "file" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40"
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-bold transition-all ${aiSubMode === "file" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600 dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-400" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-cyan-950/40"
                   }`}
               >
                 <span className="material-symbols-outlined text-[18px]">upload_file</span>
@@ -781,27 +782,27 @@ function ExamBuilderContent() {
               </button>
             </div>
 
-            {/* ── Sub-mode: FROM FILE ── */}
+            {/* â”€â”€ Sub-mode: FROM FILE â”€â”€ */}
             {aiSubMode === "file" && (
               <div className="p-6 space-y-5">
-                {/* Hướng dẫn sử dụng */}
-                <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-900/40 rounded-2xl p-5 mb-2">
+                {/* HÆ°á»›ng dáº«n sá»­ dá»¥ng */}
+                <div className="bg-blue-50/50 dark:bg-[#09284A] border border-blue-200/60 dark:border-sky-700/60 rounded-2xl p-5 mb-2">
                   <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-[20px]">lightbulb</span>
                     Hướng dẫn chi tiết tạo đề từ tài liệu
                   </h4>
                   <div className="text-xs text-blue-900/80 dark:text-blue-300/80 space-y-3 font-medium leading-relaxed">
-                    <p>AI (Trí tuệ nhân tạo) có khả năng đọc và hiểu nội dung từ tài liệu bạn tải lên để tự động biên soạn câu hỏi trắc nghiệm tương ứng. Để đạt hiệu quả tốt nhất, Thầy/Cô vui lòng lưu ý:</p>
+                    <p>AI có khả năng đọc và hiểu nội dung từ tài liệu bạn tải lên để tự động biên soạn câu hỏi trắc nghiệm tương ứng. Để đạt hiệu quả tốt nhất, Thầy/Cô vui lòng lưu ý:</p>
                     
-                    <div className="bg-white/60 dark:bg-black/20 rounded-xl p-4 border border-blue-100/50 dark:border-white/5 shadow-sm">
+                    <div className="bg-white/60 dark:bg-[#061326] rounded-xl p-4 border border-blue-100/50 dark:border-sky-800/60 shadow-sm">
                       <p className="font-bold text-blue-800 dark:text-blue-400 mb-1">Các định dạng tệp được hỗ trợ:</p>
-                      <p className="text-blue-700 dark:text-blue-300 mb-3 bg-blue-100/50 dark:bg-blue-900/40 py-1.5 px-3 rounded-lg font-mono text-[10px]">PDF, Word (.docx), Văn bản thuần túy (.txt) — Dung lượng tối đa 25MB</p>
+                      <p className="text-blue-700 dark:text-blue-300 mb-3 bg-blue-100/50 dark:bg-blue-900/40 py-1.5 px-3 rounded-lg font-mono text-[10px]">PDF, Word (.docx), văn bản thuần túy (.txt) - dung lượng tối đa 25MB</p>
                       
                       <p className="font-bold text-blue-800 dark:text-blue-400 mb-1">Quy trình thực hiện:</p>
                       <ol className="list-decimal list-outside ml-4 space-y-1.5 text-blue-800/90 dark:text-blue-300/90">
                         <li>Thầy/Cô kéo thả hoặc nhấp chọn tài liệu bài học, đề cương, sách giáo khoa hoặc tệp tài nguyên từ máy tính.</li>
                         <li>Sau khi tệp được tải lên thành công, nhập số lượng câu hỏi mong muốn AI biên soạn dựa trên nội dung tài liệu.</li>
-                        <li>Nhấn nút <b>Aura AI — Bắt đầu tạo câu hỏi từ tài liệu</b> để hệ thống tiến hành phân tích và trích xuất.</li>
+                        <li>Nhấn nút <b>Aura AI - Bắt đầu tạo câu hỏi từ tài liệu</b> để hệ thống tiến hành phân tích và trích xuất.</li>
                       </ol>
                     </div>
                     
@@ -814,29 +815,29 @@ function ExamBuilderContent() {
 
                 <div
                   onClick={() => fileRef.current?.click()}
-                  className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 dark:border-cyan-950/40 hover:border-blue-400 hover:bg-blue-50/10"
+                  className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30 dark:bg-sky-500/10 dark:border-sky-500" : "border-slate-200 dark:border-cyan-800/60 hover:border-blue-400 hover:bg-blue-50/10 dark:hover:bg-sky-500/10"
                     }`}
                 >
                   <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 text-slate-400 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                     <span className="material-symbols-outlined text-3xl">cloud_upload</span>
                   </div>
                   <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">
-                    {file ? file.name : t('upload.title_ai')}
+                    {file ? file.name : "Tải tài liệu để AI tự động tạo câu hỏi"}
                   </h3>
-                  <p className="text-sm text-slate-400 mt-1">{t('upload.hint')}</p>
-                  <button className="mt-3 text-blue-600 font-bold text-sm hover:underline">{t('upload.btn_choose')}</button>
+                  <p className="text-sm text-slate-400 mt-1">Hỗ trợ định dạng PDF, Word, TXT - tối đa 25MB</p>
+                  <button className="mt-3 text-blue-600 font-bold text-sm hover:underline">Chọn tệp từ máy tính</button>
                   <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
 
                   {file && !questions.length && (
                     <div className="mt-5 flex flex-col items-center gap-3">
                       <div className="w-56">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{t('upload.label_count')}</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Số lượng câu hỏi muốn tạo</label>
                         <input
                           type="number"
                           value={questionCount}
                           onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
-                          placeholder={t('upload.placeholder_count')}
-                          className="w-full px-4 py-2 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-center font-bold text-blue-900 dark:text-[#00C6FF] outline-none"
+                          placeholder="VD: 20"
+                          className="w-full px-4 py-2 bg-white dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-xl text-center font-bold text-blue-900 dark:text-cyan-200 outline-none"
                           onClick={e => e.stopPropagation()}
                         />
                       </div>
@@ -845,7 +846,7 @@ function ExamBuilderContent() {
                         className="px-8 py-3 bg-blue-900 text-white rounded-xl font-bold text-sm shadow-xl hover:bg-blue-800 transition-all flex items-center gap-2"
                       >
                         <span className="material-symbols-outlined text-sm">auto_awesome</span>
-                        {t('upload.btn_generate')}
+                        Bắt đầu tạo câu hỏi
                       </button>
                     </div>
                   )}
@@ -853,19 +854,19 @@ function ExamBuilderContent() {
               </div>
             )}
 
-            {/* ── Sub-mode: FROM TOPIC ── */}
+            {/* â”€â”€ Sub-mode: FROM TOPIC â”€â”€ */}
             {aiSubMode === "prompt" && (
               <div className="p-6 space-y-5">
-                {/* Hướng dẫn sử dụng */}
-                <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-900/40 rounded-2xl p-5 mb-2">
+                {/* HÆ°á»›ng dáº«n sá»­ dá»¥ng */}
+                <div className="bg-blue-50/50 dark:bg-[#09284A] border border-blue-200/60 dark:border-sky-700/60 rounded-2xl p-5 mb-2">
                   <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-[20px]">lightbulb</span>
                     Hướng dẫn chi tiết tạo đề bằng AI
                   </h4>
                   <div className="text-xs text-blue-900/80 dark:text-blue-300/80 space-y-3 font-medium leading-relaxed">
-                    <p>Để AI (Trí tuệ nhân tạo) hiểu rõ và tạo ra bộ câu hỏi chính xác nhất, Thầy/Cô vui lòng mô tả yêu cầu theo cấu trúc sau:</p>
+                    <p>Để AI hiểu rõ và tạo ra bộ câu hỏi chính xác nhất, Thầy/Cô vui lòng mô tả yêu cầu theo cấu trúc sau:</p>
                     
-                    <div className="bg-white/60 dark:bg-black/20 rounded-xl p-4 border border-blue-100/50 dark:border-white/5 shadow-sm">
+                    <div className="bg-white/60 dark:bg-[#061326] rounded-xl p-4 border border-blue-100/50 dark:border-sky-800/60 shadow-sm">
                       <p className="font-bold text-blue-800 dark:text-blue-400 mb-1">Công thức viết yêu cầu chuẩn:</p>
                       <p className="italic text-blue-700 dark:text-blue-300 mb-3 bg-blue-100/50 dark:bg-blue-900/40 py-1.5 px-3 rounded-lg">[Môn học] + [Lớp/Khối] + [Tên bài học/Chương cụ thể] + [Yêu cầu thêm nếu có]</p>
                       
@@ -879,7 +880,7 @@ function ExamBuilderContent() {
                     
                     <ul className="list-disc list-outside ml-4 space-y-1.5 pt-1">
                       <li>Sau khi nhập mô tả, Thầy/Cô chọn <b>Độ khó</b>, <b>Ngôn ngữ</b> và nhập <b>Số câu</b> muốn tạo ở các ô phía dưới.</li>
-                      <li>Cuối cùng nhấn nút <b>Aura AI — Biên soạn đề thi ngay</b> và chờ hệ thống tạo đề.</li>
+                      <li>Cuối cùng nhấn nút <b>Aura AI - Biên soạn đề thi ngay</b> và chờ hệ thống tạo đề.</li>
                     </ul>
                   </div>
                 </div>
@@ -887,15 +888,15 @@ function ExamBuilderContent() {
                 {/* Chips */}
                 <div className="flex flex-wrap gap-2">
                   {[
-                    "Toán 12 — Tích phân",
-                    "Vật lý 11 — Điện từ học",
+                    "Toán 12 - Tích phân",
+                    "Vật lý 11 - Điện từ học",
                     "Tiếng Anh IELTS 6.0",
                     "Lập trình Java cơ bản",
-                    "Lịch sử Việt Nam — 1945",
+                    "Lịch sử Việt Nam - 1945",
                     "Hóa học hữu cơ lớp 11"
                   ].map(chip => (
                     <button key={chip} onClick={() => setTopic(chip)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${topic === chip ? "bg-violet-600 text-white border-violet-600" : "bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-cyan-950/40 hover:border-violet-300 hover:text-violet-600"
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${topic === chip ? "bg-violet-600 text-white border-violet-600 dark:bg-violet-400 dark:text-[#160a2e] dark:border-violet-300" : "bg-slate-50 dark:bg-[#071A33] text-slate-500 dark:text-slate-300 border-slate-200 dark:border-cyan-800/60 hover:border-violet-300 hover:text-violet-600 dark:hover:text-violet-200 dark:hover:border-violet-500"
                         }`}>
                       {chip}
                     </button>
@@ -910,7 +911,7 @@ function ExamBuilderContent() {
                     onChange={e => setTopic(e.target.value)}
                     rows={3}
                     placeholder="Ví dụ: Đề thi môn Toán lớp 12 chương tích phân bất định, tập trung vào kỹ thuật đổi biến..."
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 dark:border-cyan-950/40 rounded-2xl outline-none focus:border-violet-400 focus:bg-white dark:bg-[#0A1F3E] transition-all text-sm text-slate-700 dark:text-slate-300 resize-none leading-relaxed"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 dark:border-cyan-800/60 rounded-2xl outline-none focus:border-violet-400 focus:bg-white dark:focus:bg-[#0B1D36] dark:bg-[#061326] transition-all text-sm text-slate-700 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none leading-relaxed"
                   />
                 </div>
 
@@ -919,11 +920,11 @@ function ExamBuilderContent() {
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Độ khó</label>
                     <select value={difficulty} onChange={e => setDifficulty(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-violet-400">
-                      <option value="EASY">🟢 Dễ</option>
-                      <option value="MEDIUM">🟡 Trung bình</option>
-                      <option value="HARD">🔴 Khó</option>
-                      <option value="EXPERT">🟣 Chuyên gia</option>
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-100 outline-none focus:border-violet-400">
+                      <option value="EASY">Dễ</option>
+                      <option value="MEDIUM">Trung bình</option>
+                      <option value="HARD">Khó</option>
+                      <option value="EXPERT">Chuyên gia</option>
                     </select>
                   </div>
                   <div className="relative">
@@ -931,7 +932,7 @@ function ExamBuilderContent() {
                     <button
                       type="button"
                       onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-violet-400 flex items-center justify-between"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-100 outline-none focus:border-violet-400 flex items-center justify-between"
                     >
                       <span className="flex items-center gap-1.5">
                         {language === "vi" ? (
@@ -961,7 +962,7 @@ function ExamBuilderContent() {
                     {isLangDropdownOpen && (
                       <>
                         <div className="fixed inset-0 z-30" onClick={() => setIsLangDropdownOpen(false)} />
-                        <div className="absolute right-0 left-0 mt-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl shadow-xl z-40 overflow-hidden py-1">
+                        <div className="absolute right-0 left-0 mt-1 bg-white dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-xl shadow-xl z-40 overflow-hidden py-1">
                           <button
                             type="button"
                             onClick={() => { setLanguage("vi"); setIsLangDropdownOpen(false); }}
@@ -995,7 +996,7 @@ function ExamBuilderContent() {
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Số câu</label>
                     <input type="number" value={questionCount}
                       onChange={e => setQuestionCount(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 text-center outline-none focus:border-violet-400"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-100 text-center outline-none focus:border-violet-400"
                       placeholder="10" min={1} max={100} />
                   </div>
                 </div>
@@ -1156,17 +1157,17 @@ function ExamBuilderContent() {
                     <path className="path" d="M19 13l.85 2.15L22 16l-2.15.85L19 19l-.85-2.15L16 16l2.15-.85L19 13z" />
                     <path className="path" d="M5 14l.75 1.75L7.5 16.5l-1.75.75L5 19l-.75-1.75-1.75-.75 1.75-.75L5 14z" />
                   </svg>
-                  <span className="text_button">Aura AI — Biên soạn đề thi ngay</span>
+                  <span className="text_button">Aura AI - Biên soạn đề thi ngay</span>
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {/* ── Chế độ Nhập từ file truyền thống ── */}
+        {/* â”€â”€ Cháº¿ Ä‘á»™ Nháº­p tá»« file truyá»n thá»‘ng â”€â”€ */}
         {creationMode === "import" && step === "upload" && (
-          <div className="bg-white dark:bg-[#0A1F3E] rounded-3xl border border-slate-100 dark:border-cyan-950/30 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40/50">
+          <div className="bg-white dark:bg-[#0B1D36] rounded-3xl border border-slate-100 dark:border-cyan-800/50 shadow-sm dark:shadow-[0_24px_80px_-40px_rgba(34,211,238,0.45)] overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50 dark:bg-[#071A33] dark:border-cyan-800/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                   <span className="material-symbols-outlined">upload_file</span>
@@ -1180,31 +1181,31 @@ function ExamBuilderContent() {
 
             <div
               onClick={() => fileRefImport.current?.click()}
-              className={`relative border-2 border-dashed m-8 rounded-2xl p-12 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30" : "border-slate-200 dark:border-cyan-950/40 hover:border-blue-400 hover:bg-blue-50/10"
+              className={`relative border-2 border-dashed m-8 rounded-2xl p-12 text-center transition-all cursor-pointer group ${file ? "border-blue-400 bg-blue-50/30 dark:border-sky-500 dark:bg-sky-500/10" : "border-slate-200 dark:border-cyan-800/60 hover:border-blue-400 hover:bg-blue-50/10 dark:hover:bg-sky-500/10"
                 }`}
             >
               <div className="w-20 h-20 rounded-3xl bg-slate-100 dark:bg-cyan-950/50 dark:text-slate-300 text-slate-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <span className="material-symbols-outlined text-4xl">cloud_upload</span>
               </div>
               <h3 className="text-lg font-black text-slate-700 dark:text-slate-300">
-                {file ? file.name : t('upload.title_import')}
+                {file ? file.name : "Tải file DOCX/PDF để trích xuất câu hỏi"}
               </h3>
-              <p className="text-sm text-slate-400 mt-2 font-medium max-w-md mx-auto">{t('upload.hint')}</p>
+              <p className="text-sm text-slate-400 mt-2 font-medium max-w-md mx-auto">Hỗ trợ định dạng PDF, Word, TXT - tối đa 25MB</p>
 
               <div className="mt-4 flex items-center justify-center gap-4">
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-300">
                   <span className="w-2 h-2 rounded-full bg-red-400"></span> PDF
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-300">
                   <span className="w-2 h-2 rounded-full bg-blue-400"></span> DOCX
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-300">
                   <span className="w-2 h-2 rounded-full bg-slate-400"></span> TXT
                 </div>
               </div>
 
-              <button className="mt-6 px-6 py-2.5 bg-white dark:bg-[#0A1F3E] text-blue-700 border border-blue-200 shadow-sm font-bold text-sm rounded-xl hover:bg-blue-50 transition-all">
-                {t('upload.btn_choose')}
+              <button className="mt-6 px-6 py-2.5 bg-white dark:bg-[#061326] text-blue-700 dark:text-cyan-200 border border-blue-200 dark:border-cyan-800/60 shadow-sm font-bold text-sm rounded-xl hover:bg-blue-50 dark:hover:bg-cyan-950/40 transition-all">
+                Chọn tệp từ máy tính
               </button>
 
               <input ref={fileRefImport} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
@@ -1224,14 +1225,14 @@ function ExamBuilderContent() {
           </div>
         )}
 
-        {/* Empty State cho chế độ Thủ công */}
+        {/* Empty State cho cháº¿ Ä‘á»™ Thá»§ cÃ´ng */}
         {creationMode === "manual" && questions.length === 0 && (
-          <div className="border-2 border-dashed border-slate-200 dark:border-cyan-950/40 rounded-3xl p-16 text-center bg-white dark:bg-[#0A1F3E] flex flex-col items-center justify-center">
+          <div className="border-2 border-dashed border-slate-200 dark:border-cyan-800/60 rounded-3xl p-16 text-center bg-white dark:bg-[#0B1D36] flex flex-col items-center justify-center">
             <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-4xl">post_add</span>
             </div>
-            <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2">{t('empty.title')}</h3>
-            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">{t('empty.desc')}</p>
+            <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2">Chưa có câu hỏi nào</h3>
+            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">Bạn đang ở chế độ tạo đề thi thủ công. Hãy bắt đầu bằng việc thêm câu hỏi đầu tiên cho đề thi của bạn.</p>
             <button
               onClick={() => {
                 addManualQuestion();
@@ -1248,14 +1249,14 @@ function ExamBuilderContent() {
         {/* Question List Header */}
         {questions.length > 0 && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-cyan-950/40 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-cyan-800/60 pb-4">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-slate-400">list_alt</span>
-                <h2 className="text-xl font-black text-slate-800 dark:text-[#E2E8F0]">{t('list.title')}</h2>
+                <h2 className="text-xl font-black text-slate-800 dark:text-white">Danh sách câu hỏi</h2>
               </div>
               <button
                 onClick={addManualQuestion}
-                className="flex items-center gap-2 text-blue-600 font-bold text-sm hover:bg-blue-50 px-4 py-2 rounded-xl transition-all"
+                className="flex items-center gap-2 text-blue-600 dark:text-cyan-300 font-bold text-sm hover:bg-blue-50 dark:hover:bg-cyan-950/40 px-4 py-2 rounded-xl transition-all"
               >
                 <span className="material-symbols-outlined text-sm">add_circle</span>
                 Thêm câu hỏi mới
@@ -1268,22 +1269,22 @@ function ExamBuilderContent() {
             {/* Questions List */}
             <div className="space-y-4">
               {questions.map((q, idx) => (
-                <div key={q.id} className="bg-white dark:bg-[#0A1F3E] rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-cyan-950/30 hover:shadow-md transition-shadow group relative">
+                <div key={q.id} className="bg-white dark:bg-[#0B1D36] rounded-2xl p-6 shadow-sm dark:shadow-[0_20px_60px_-38px_rgba(34,211,238,0.45)] border border-slate-100 dark:border-cyan-800/50 hover:shadow-md dark:hover:border-cyan-600/70 transition-all group relative">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4">
-                    <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider">
-                      {t('list.q_prefix')} {String(idx + 1).padStart(2, '0')} - {q.type.toUpperCase()}
+                    <span className="px-3 py-1 rounded-full bg-blue-50 dark:bg-cyan-950/60 text-blue-700 dark:text-cyan-200 text-[10px] font-bold uppercase tracking-wider border border-transparent dark:border-cyan-800/60">
+                      Câu {String(idx + 1).padStart(2, '0')} - {q.type.toUpperCase()}
                     </span>
                     <div className="flex items-center gap-1">
                       <button
-                        title={t('list.tooltip_add_img')}
+                        title="Thêm hình ảnh"
                         onClick={() => { setPendingImgQIdx(idx); imgUploadRef.current?.click(); }}
                         className="p-2 text-slate-300 hover:text-blue-500 transition-colors"
                       >
                         <span className="material-symbols-outlined text-[20px]">add_photo_alternate</span>
                       </button>
                       <button
-                        title={editingQIdx === idx ? t('list.tooltip_done') : t('list.tooltip_edit')}
+                        title={editingQIdx === idx ? "Xong chỉnh sửa" : "Chỉnh sửa câu hỏi"}
                         onClick={() => setEditingQIdx(editingQIdx === idx ? null : idx)}
                         className={`p-2 transition-colors ${editingQIdx === idx ? "text-blue-600" : "text-slate-300 hover:text-blue-500"}`}
                       >
@@ -1295,27 +1296,28 @@ function ExamBuilderContent() {
                     </div>
                   </div>
 
-                  {/* Question Text — editable or rendered */}
+                  {/* Question Text â€” editable or rendered */}
                   {editingQIdx === idx ? (
                     <textarea
-                      className="w-full text-base font-semibold text-slate-800 dark:text-[#E2E8F0] mb-4 leading-relaxed bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border border-blue-200 rounded-xl p-3 outline-none resize-y min-h-[80px]"
+                      className="w-full text-base font-semibold text-slate-800 dark:text-white mb-4 leading-relaxed bg-slate-50 dark:bg-[#061326] dark:border-cyan-800/60 border border-blue-200 rounded-xl p-3 outline-none resize-y min-h-[80px]"
                       value={q.text || ""}
                       onChange={e => updateQuestionText(idx, e.target.value)}
                       autoFocus
                     />
                   ) : (
-                    <div className="text-base font-semibold text-slate-800 dark:text-[#E2E8F0] mb-5 leading-relaxed prose prose-sm max-w-none">
+                    <div className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-5 leading-relaxed prose prose-sm max-w-none dark:prose-invert">
                       {renderContent(q.text)}
                     </div>
                   )}
 
-                  {/* Hình ảnh đính kèm câu hỏi (từ import file DOCX) */}
+                  {/* HÃ¬nh áº£nh Ä‘Ã­nh kÃ¨m cÃ¢u há»i (tá»« import file DOCX) */}
                   {q.imageUrl && (
                     <div className="mb-4">
-                      <img
+                      <Image
                         src={q.imageUrl.startsWith("data:") ? q.imageUrl : `data:image/jpeg;base64,${q.imageUrl}`}
                         alt="Hình ảnh câu hỏi"
-                        className="max-w-[450px] max-h-[300px] rounded-lg border border-slate-200 dark:border-cyan-950/40 shadow-sm object-contain"
+                        width={450} height={300} unoptimized
+                        className="max-w-[450px] max-h-[300px] w-auto rounded-lg border border-slate-200 dark:border-cyan-800/60 shadow-sm object-contain"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     </div>
@@ -1326,27 +1328,30 @@ function ExamBuilderContent() {
                     {q.options.map((opt, oIdx) => (
                       <div
                         key={opt.id}
-                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${opt.isCorrect ? "bg-blue-50 border-blue-400" : "bg-slate-50 dark:bg-cyan-950/30 dark:border-cyan-950/40 border-transparent hover:border-slate-200 dark:border-cyan-950/40"
+                        onClick={() => editingQIdx !== idx && setCorrectOption(idx, oIdx)}
+                        className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${editingQIdx === idx ? "" : "cursor-pointer"} ${opt.isCorrect ? "bg-blue-50 border-blue-400 dark:bg-cyan-500/15 dark:border-cyan-400" : "bg-slate-50 dark:bg-[#061326] dark:border-cyan-800/50 border-transparent hover:border-slate-200 dark:hover:border-cyan-600"
                           }`}
                       >
-                        {/* Radio — click to set correct */}
+                        {/* Radio â€” click to set correct */}
                         <button
+                          type="button"
                           onClick={() => setCorrectOption(idx, oIdx)}
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${opt.isCorrect ? "bg-blue-900 border-blue-900" : "bg-white dark:bg-[#0A1F3E] border-slate-300 hover:border-blue-400"
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${opt.isCorrect ? "bg-blue-900 border-blue-900 dark:bg-cyan-400 dark:border-cyan-400" : "bg-white dark:bg-[#0B1D36] border-slate-300 dark:border-cyan-800 hover:border-blue-400 dark:hover:border-cyan-500"
                             }`}
                         >
-                          {opt.isCorrect && <div className="w-2 h-2 rounded-full bg-white dark:bg-[#0A1F3E]" />}
+                          {opt.isCorrect && <div className="w-2 h-2 rounded-full bg-white dark:bg-[#061326]" />}
                         </button>
 
-                        {/* Option text — editable inline */}
+                        {/* Option text â€” editable inline */}
                         {editingQIdx === idx ? (
                           <input
-                            className="flex-1 text-sm bg-transparent border-b border-blue-200 outline-none py-0.5 font-medium text-slate-700 dark:text-slate-300"
+                            onClick={e => e.stopPropagation()}
+                            className="flex-1 text-sm bg-transparent border-b border-blue-200 dark:border-cyan-700 outline-none py-0.5 font-medium text-slate-700 dark:text-slate-100"
                             value={opt.text}
                             onChange={e => updateOptionText(idx, oIdx, e.target.value)}
                           />
                         ) : (
-                          <div className={`text-sm font-medium flex-1 ${opt.isCorrect ? "text-blue-900 dark:text-[#00C6FF]" : "text-slate-600"}`}>
+                          <div className={`text-sm font-medium flex-1 ${opt.isCorrect ? "text-blue-900 dark:text-cyan-100" : "text-slate-600 dark:text-slate-300"}`}>
                             <SmartMarkdown content={opt.text} />
                           </div>
                         )}
@@ -1362,7 +1367,7 @@ function ExamBuilderContent() {
 
       {isSaveModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-white dark:bg-[#0B1D36] border border-slate-200 dark:border-cyan-800/60 rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
             
             <h3 className="font-headline font-black text-xl text-slate-800 dark:text-slate-200 mb-2">
@@ -1383,7 +1388,7 @@ function ExamBuilderContent() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Nhập tên đề thi..."
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-cyan-950/20 border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-sky-400"
                 />
               </div>
 
@@ -1398,7 +1403,7 @@ function ExamBuilderContent() {
                       setGrade(e.target.value);
                       setSubject("");
                     }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-100 outline-none focus:border-sky-400"
                   >
                     <option value="">Chọn cấp bậc</option>
                     {EDUCATION_HIERARCHY.map((l) => (
@@ -1417,7 +1422,7 @@ function ExamBuilderContent() {
                     disabled={!grade}
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-[#0A1F3E] border border-slate-200 dark:border-cyan-950/40 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none disabled:opacity-55"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-[#061326] border border-slate-200 dark:border-cyan-800/60 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-100 outline-none disabled:opacity-55 focus:border-sky-400"
                   >
                     <option value="">Chọn môn</option>
                     {(grade ? EDUCATION_HIERARCHY.find((l) => l.name === grade)?.subjects.map((s) => s.name) || [] : []).map((s) => (
@@ -1429,11 +1434,11 @@ function ExamBuilderContent() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-cyan-950/40 mt-6">
+              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-cyan-800/60 mt-6">
                 <button
                   type="button"
                   onClick={() => setIsSaveModalOpen(false)}
-                  className="flex-1 py-2.5 bg-slate-100 dark:bg-cyan-950/30 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-2.5 bg-slate-100 dark:bg-[#061326] text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-cyan-950/40 transition-colors"
                 >
                   Hủy
                 </button>

@@ -12,6 +12,7 @@ import {
   ArrowLeft, BookOpen, MessageSquare,
   Send, Radio, PlayCircle, Trophy, Clock, KeyRound, CheckCircle, Award, Lock, BarChart3
 } from "lucide-react";
+import Image from "next/image";
 
 type Tab = "timeline" | "members" | "exams" | "gradebook" | "chat";
 
@@ -38,7 +39,11 @@ const getInitials = (name?: string) => {
 function Avatar({ name, src, className = "w-10 h-10", tone = "cyan" }: { name?: string; src?: string; className?: string; tone?: "cyan" | "amber" }) {
   const ringClass = tone === "amber" ? "ring-2 ring-amber-300 dark:ring-amber-500/60" : "";
   if (src) {
-    return <img src={src} alt={name || "Avatar"} className={`${className} rounded-full object-cover border border-white dark:border-slate-900 shadow-sm shrink-0 ${ringClass}`} />;
+    return (
+      <div className={`${className} relative rounded-full overflow-hidden border border-white dark:border-slate-900 shadow-sm shrink-0 ${ringClass}`}>
+        <Image src={src} alt={name || "Avatar"} fill unoptimized className="object-cover" />
+      </div>
+    );
   }
 
   return (

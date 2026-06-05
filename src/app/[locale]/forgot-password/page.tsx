@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -45,8 +46,8 @@ export default function ForgotPasswordPage() {
         <div className="pointer-events-auto">
           {/* Logo visible on mobile/tablet but hidden on desktop since it is in the left panel */}
           <Link href="/" className="lg:hidden hover:opacity-90 transition-all hover:scale-[1.02]">
-            <img src="/logoweb.png" alt="Aura Academic Logo" className="h-8 object-contain dark:hidden" />
-            <img src="/logoweb-dark.png" alt="Aura Academic Logo" className="h-8 object-contain hidden dark:block" />
+            <Image src="/logoweb.png" alt="Aura Academic Logo" width={180} height={40} className="h-8 w-auto object-contain dark:hidden" priority />
+            <Image src="/logoweb-dark.png" alt="Aura Academic Logo" width={180} height={40} className="h-8 w-auto object-contain hidden dark:block" priority />
           </Link>
         </div>
         <div className="flex gap-4 pointer-events-auto">
@@ -67,7 +68,7 @@ export default function ForgotPasswordPage() {
 
           <div className="absolute top-12 left-12 z-20">
             <Link href="/" className="hover:opacity-90 transition-all hover:scale-[1.02]">
-              <img src="/logoweb-dark.png" alt="Aura Academic Logo" className="h-11 object-contain brightness-125" />
+              <Image src="/logoweb-dark.png" alt="Aura Academic Logo" width={200} height={44} className="h-11 w-auto object-contain brightness-125" priority />
             </Link>
           </div>
 
@@ -87,7 +88,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           <div className="absolute bottom-[-10%] right-[-10%] w-[80%] h-[80%] opacity-10 rotate-12 pointer-events-none">
-            <img className="w-full h-full object-contain" alt="Abstract digital network visualization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1wQU1_5JaGL5yUrnjfLOk2yd0Ig6_YkehO-ZtSe6PYTMDWiAs48UXK6w0Z90EMnGHmVn4PqbXmiqEAuyaSjtKgGSY123DNY7NLj361uXNLbKnZ7BiO7AxOEcrvSEpHsJZZ1YYhE4USYJHst3itrbox9z9c6RUsXvWHvXxktZLTZSoAr50vNcB_mwbKugxdHXZ5TWEGNw8djuJZyoFu4j1RhO-uT8tL3zCpro9MqB0KvH7M1VxjVTORsOroiBZbGw3ZU7_Th-us90" />
+            <Image className="w-full h-full object-contain" alt="Abstract digital network visualization" width={800} height={800} unoptimized src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1wQU1_5JaGL5yUrnjfLOk2yd0Ig6_YkehO-ZtSe6PYTMDWiAs48UXK6w0Z90EMnGHmVn4PqbXmiqEAuyaSjtKgGSY123DNY7NLj361uXNLbKnZ7BiO7AxOEcrvSEpHsJZZ1YYhE4USYJHst3itrbox9z9c6RUsXvWHvXxktZLTZSoAr50vNcB_mwbKugxdHXZ5TWEGNw8djuJZyoFu4j1RhO-uT8tL3zCpro9MqB0KvH7M1VxjVTORsOroiBZbGw3ZU7_Th-us90" />
           </div>
         </section>
 

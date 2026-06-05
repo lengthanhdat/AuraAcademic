@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { fetchSettings, updateSettings, checkAiToken } from "@/lib/adminApi";
 
 export default function AiTokensPage() {
@@ -134,7 +135,7 @@ export default function AiTokensPage() {
                   <div className="flex items-center justify-between mb-3">
                     <label className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300 font-semibold">
                       <span className="w-6 h-6 rounded bg-white flex items-center justify-center p-0.5">
-                        <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_red_v2.svg" alt="gemini" className="w-4 h-4" />
+                        <Image src="https://www.gstatic.com/lamda/images/gemini_sparkle_red_v2.svg" alt="gemini" width={16} height={16} unoptimized />
                       </span>
                       Google Gemini API Key (Main)
                     </label>

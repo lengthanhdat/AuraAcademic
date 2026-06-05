@@ -2,7 +2,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
 import { API_BASE } from "@/lib/api";
@@ -60,6 +60,7 @@ const SUBJECT_ICON: Record<string, string> = {
 export default function ExamBankPage() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("StudentExamBank");
 
   const [searchTerm, setSearchTerm]           = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
@@ -154,20 +155,20 @@ export default function ExamBankPage() {
   const featureCards = [
     {
       icon: "search",
-      title: "Tìm đề nhanh",
-      description: "Tra cứu theo tên đề và lọc đúng môn học cần ôn.",
+      title: t('feature1_title'),
+      description: t('feature1_desc'),
       cls: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300",
     },
     {
       icon: "folder_open",
-      title: "Ôn theo chuyên đề",
-      description: "Vào thẳng các thư mục đề được phân loại sẵn.",
+      title: t('feature2_title'),
+      description: t('feature2_desc'),
       cls: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300",
     },
     {
       icon: "trending_up",
-      title: "Đề phổ biến",
-      description: "Ưu tiên những đề được luyện nhiều trong hệ thống.",
+      title: t('feature3_title'),
+      description: t('feature3_desc'),
       cls: "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300",
     },
   ];
@@ -218,29 +219,29 @@ export default function ExamBankPage() {
                 className="flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl text-white font-bold backdrop-blur-sm ring-1 ring-white/30 w-fit"
               >
                 <span className="material-symbols-outlined text-[20px]">query_stats</span>
-                Lịch sử làm bài
+                {t('history_btn')}
               </Link>
             </div>
             <h1 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight mb-3">
-              Ngân hàng Đề thi
+              {t('title')}
             </h1>
             <p className="text-white/85 max-w-2xl leading-relaxed text-sm sm:text-base">
-              Khám phá đề luyện tập theo môn học, chuyên đề và mức độ phổ biến. Chọn đề, làm bài và xem kết quả ngay trong một luồng gọn gàng.
+              {t('subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3 rounded-2xl bg-white/12 p-3 ring-1 ring-white/15 backdrop-blur-sm">
             <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
               <p className="text-2xl font-black leading-none">{exams.length}</p>
-              <p className="mt-1 text-xs font-bold text-slate-500">Tổng đề</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">{t('stat_total')}</p>
             </div>
             <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
               <p className="text-2xl font-black leading-none">{activeSubjectCount}</p>
-              <p className="mt-1 text-xs font-bold text-slate-500">Môn học</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">{t('stat_subjects')}</p>
             </div>
             <div className="rounded-xl bg-white/95 p-4 text-[#0C2E5E]">
               <p className="text-2xl font-black leading-none">{folders.length}</p>
-              <p className="mt-1 text-xs font-bold text-slate-500">Chuyên đề</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">{t('stat_folders')}</p>
             </div>
           </div>
         </div>
@@ -270,7 +271,7 @@ export default function ExamBankPage() {
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
             <input
               type="text"
-              placeholder="Tìm đề thi theo tên..."
+              placeholder={t('search_placeholder')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="h-12 w-full pl-12 pr-10 bg-slate-50 dark:bg-[#071A33]/70 border border-slate-200 dark:border-cyan-950/40 rounded-xl focus:ring-2 focus:ring-[#00C6FF]/30 outline-none transition-all text-sm font-medium text-on-surface dark:text-slate-200 placeholder:text-slate-400"
@@ -279,7 +280,7 @@ export default function ExamBankPage() {
               <button
                 onClick={() => setSearchTerm("")}
                 className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-300 transition-colors cursor-pointer"
-                title="Xoá tìm kiếm"
+                title={t('clear_search')}
               >
                 <span className="material-symbols-outlined text-sm">close</span>
               </button>
@@ -290,12 +291,12 @@ export default function ExamBankPage() {
             className={`flex h-12 items-center justify-center gap-2 px-4 rounded-xl lg:min-w-[140px] font-bold transition-all border ${showFavoritesOnly ? "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-[#071A33] dark:text-slate-400 dark:border-cyan-950/40"}`}
           >
              <span className={`material-symbols-outlined text-lg ${showFavoritesOnly ? "font-variation-fill text-rose-500" : ""}`}>favorite</span>
-             Đề yêu thích
+             {showFavoritesOnly ? t('filter_fav_active') : t('filter_fav_idle')}
           </button>
           <div className="flex h-12 items-center justify-center gap-2 px-4 bg-[#0C2E5E] text-white rounded-xl lg:min-w-[124px]">
             <span className="material-symbols-outlined text-white/80 text-lg">quiz</span>
             <span className="text-sm font-extrabold">
-              {filteredExams.length} đề thi
+              {t('exams_count', { count: filteredExams.length })}
             </span>
           </div>
         </div>
@@ -370,14 +371,14 @@ export default function ExamBankPage() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-cyan-950/40">
               <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Môn học
+                {t('subject_title')}
               </span>
               {selectedSubject && (
                 <button
                   onClick={() => setSelectedSubject(null)}
                   className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  Xoá lọc
+                  {t('clear_filter')}
                 </button>
               )}
             </div>
@@ -447,7 +448,7 @@ export default function ExamBankPage() {
                       <span className="material-symbols-outlined text-[13px]">
                         {showAllSubjects ? "expand_less" : "expand_more"}
                       </span>
-                      {showAllSubjects ? "Thu gọn" : `Xem thêm ${subjectRows.length - SHOW_LIMIT} môn`}
+                      {showAllSubjects ? t('collapse') : t('show_more', { count: subjectRows.length - SHOW_LIMIT })}
                     </button>
                   )}
                 </>
@@ -530,7 +531,7 @@ export default function ExamBankPage() {
                         ${user?.favoritePracticeIds?.includes(exam.id) 
                           ? "bg-rose-50 text-rose-500 dark:bg-rose-900/30" 
                           : "text-slate-300 hover:bg-slate-100 hover:text-rose-400 dark:text-slate-600 dark:hover:bg-cyan-950/40"}`}
-                      title={user?.favoritePracticeIds?.includes(exam.id) ? "Bỏ yêu thích" : "Yêu thích"}
+                      title={user?.favoritePracticeIds?.includes(exam.id) ? t('btn_unfavorite') : t('btn_favorite')}
                     >
                       <span className={`material-symbols-outlined text-xl ${user?.favoritePracticeIds?.includes(exam.id) ? "font-variation-fill" : ""}`}>favorite</span>
                     </button>
@@ -577,18 +578,18 @@ export default function ExamBankPage() {
                         )}
                         <span className="flex items-center gap-1">
                           <span className="material-symbols-outlined text-[12px]">format_list_bulleted</span>
-                          {exam.questionCount} câu
+                          {t('meta_questions', { count: exam.questionCount })}
                         </span>
                         {exam.submissionCount > 0 && (
                           <span className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-[12px]">play_circle</span>
-                            {exam.submissionCount.toLocaleString()} lượt
+                            {t('meta_submissions', { count: exam.submissionCount.toLocaleString() })}
                           </span>
                         )}
                         {exam.duration > 0 && (
                           <span className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-[12px]">schedule</span>
-                            {exam.duration} phút
+                            {t('meta_duration', { count: exam.duration })}
                           </span>
                         )}
                       </div>
@@ -603,7 +604,7 @@ export default function ExamBankPage() {
                         }}
                         className="h-10 px-3 rounded-xl bg-[#0C2E5E] text-white text-xs font-extrabold flex items-center gap-1.5 hover:bg-[#14508F] transition-colors cursor-pointer"
                       >
-                        Làm đề
+                        {t('btn_start')}
                         <span className="material-symbols-outlined text-base">chevron_right</span>
                       </button>
                     </div>
@@ -619,7 +620,7 @@ export default function ExamBankPage() {
           <div className="bg-white dark:bg-[#0A1F3E]/80 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-slate-100 dark:border-cyan-950/40 flex items-center gap-2">
               <span className="material-symbols-outlined text-rose-500 text-base">local_fire_department</span>
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Phổ biến</span>
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('trending_title')}</span>
             </div>
 
             <div className="p-3">
@@ -637,7 +638,7 @@ export default function ExamBankPage() {
                   ))}
                 </div>
               ) : trendingExams.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-8">Chưa có dữ liệu</p>
+                <p className="text-xs text-slate-400 text-center py-8">{t('empty_trending')}</p>
               ) : (
                 <ol className="space-y-1">
                   {trendingExams.map((exam: any, idx: number) => {

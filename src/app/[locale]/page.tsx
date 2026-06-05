@@ -4,16 +4,15 @@ import type { CSSProperties, ReactNode } from "react";
 import { ArrowRight, BookOpenCheck, Camera, FileText, ShieldCheck } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Link } from "@/navigation";
+import { useTranslations } from "next-intl";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import Image from "next/image";
 
 type LogoWordmark = {
   name: string;
   style: CSSProperties;
-};
-
-type FeatureCard = {
-  title: string;
-  Icon: typeof Camera;
-  body: string;
 };
 
 const heroBrands: LogoWordmark[] = [
@@ -37,16 +36,9 @@ const partners: LogoWordmark[] = [
   { name: "Institutions", style: { fontFamily: "Palatino, serif", fontWeight: 500, letterSpacing: "0.03em", fontSize: "15px" } },
 ];
 
-const heroFeatures: FeatureCard[] = [
-  { title: "AI Camera", Icon: Camera, body: "Nhận diện bất thường trong lúc làm bài" },
-  { title: "Exam Builder", Icon: FileText, body: "Tạo đề từ tài liệu hoặc ngân hàng câu hỏi" },
-  { title: "Secure Room", Icon: ShieldCheck, body: "Quản lý phiên thi, mã phòng và trạng thái" },
-  { title: "Auto Report", Icon: BookOpenCheck, body: "Tổng hợp kết quả và vi phạm sau kỳ thi" },
-];
-
 function PillButton({ children, href = "/login" }: { children: ReactNode; href?: string }) {
   return (
-    <a
+    <Link
       href={href}
       className="inline-flex items-center gap-3 bg-gradient-to-r from-[#0C2E5E] via-[#0E3E7A] to-[#00C6FF] text-white text-base md:text-lg font-bold pl-8 pr-2 py-2.5 rounded-full hover:shadow-[0_10px_30px_rgba(0,198,255,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 group"
     >
@@ -54,11 +46,9 @@ function PillButton({ children, href = "/login" }: { children: ReactNode; href?:
       <span className="bg-white/95 text-[#0C2E5E] rounded-full p-2 group-hover:scale-110 transition-transform duration-300">
         <ArrowRight className="w-5 h-5" />
       </span>
-    </a>
+    </Link>
   );
 }
-
-import { Navbar } from "@/components/layout/Navbar";
 
 function HeroMarquee() {
   return (
@@ -101,6 +91,15 @@ function HeroVisual() {
 }
 
 function HeroSection() {
+  const t = useTranslations("Landing");
+
+  const heroFeatures = [
+    { title: t("features.item1_title"), Icon: Camera, body: t("features.item1_desc") },
+    { title: t("features.item2_title"), Icon: FileText, body: t("features.item2_desc") },
+    { title: t("features.item3_title"), Icon: ShieldCheck, body: t("features.item3_desc") },
+    { title: t("features.item4_title"), Icon: BookOpenCheck, body: t("features.item4_desc") },
+  ];
+
   return (
     <section className="flex-1 px-4 sm:px-6 pt-32 pb-6 flex flex-col relative min-h-screen">
       <style>{`
@@ -142,26 +141,26 @@ function HeroSection() {
           <ScrollReveal variant="fade-up" delay={50}>
             <div className="inline-flex items-center gap-2 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md px-4 py-2 rounded-full border border-[#00C6FF]/30 dark:border-[#00C6FF]/20 shadow-sm mb-6">
               <span className="w-2 h-2 bg-[#00C6FF] rounded-full animate-ping"></span>
-              <span className="text-xs font-bold text-[#0C2E5E] dark:text-[#00C6FF] tracking-wider uppercase">Hệ thống Giáo dục AI Thế hệ Mới</span>
+              <span className="text-xs font-bold text-[#0C2E5E] dark:text-[#00C6FF] tracking-wider uppercase">{t("badge")}</span>
             </div>
           </ScrollReveal>
 
           <ScrollReveal variant="fade-up" delay={200}>
             <h1 className="text-[#0C2E5E] dark:text-white text-5xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight">
-              Thi trực tuyến<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0C2E5E] via-[#00C6FF] to-[#DCA837] dark:from-white dark:via-[#00C6FF] dark:to-[#DCA837] drop-shadow-[0_2px_20px_rgba(0,198,255,0.15)]">Thông minh đột phá</span>
+              {t("title1")}<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0C2E5E] via-[#00C6FF] to-[#DCA837] dark:from-white dark:via-[#00C6FF] dark:to-[#DCA837] drop-shadow-[0_2px_20px_rgba(0,198,255,0.15)]">{t("title2")}</span>
             </h1>
           </ScrollReveal>
 
           <ScrollReveal variant="fade-up" delay={350}>
             <p className="text-slate-600 dark:text-slate-200 text-lg lg:text-xl max-w-lg mb-10 leading-relaxed font-medium">
-              Nền tảng tạo đề, tổ chức phòng thi và tích hợp trí tuệ nhân tạo giám sát bảo mật tối đa, kiến tạo sự công bằng hoàn hảo.
+              {t("desc")}
             </p>
           </ScrollReveal>
 
           <ScrollReveal variant="fade-up" delay={500}>
             <div className="flex flex-wrap gap-4">
-               <PillButton href="/login">Khám phá ngay</PillButton>
+               <PillButton href="/login">{t("explore_btn")}</PillButton>
             </div>
           </ScrollReveal>
 
@@ -193,8 +192,8 @@ function HeroSection() {
               <div className="absolute -right-8 -bottom-8 lg:-right-14 lg:-bottom-14 opacity-95 pointer-events-none z-20" style={{ animation: 'floatImg 7s ease-in-out infinite', transformStyle: 'preserve-3d' }}>
                 <div className="relative">
                   <div className="absolute inset-0 bg-[#DCA837]/40 rounded-full blur-[40px] -z-10 animate-pulse"></div>
-                  <img src="/logoweb.png" alt="Glowing Icon" className="w-28 h-28 lg:w-36 lg:h-36 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)] dark:hidden" />
-                  <img src="/logoweb-dark.png" alt="Glowing Icon" className="w-28 h-28 lg:w-36 lg:h-36 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)] hidden dark:block" />
+                  <Image src="/logoweb.png" alt="Glowing Icon" width={180} height={180} className="w-28 h-28 lg:w-36 lg:h-36 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)] dark:hidden" />
+                  <Image src="/logoweb-dark.png" alt="Glowing Icon" width={180} height={180} className="w-28 h-28 lg:w-36 lg:h-36 object-contain drop-shadow-[0_25px_30px_rgba(12,46,94,0.35)] hidden dark:block" />
                 </div>
               </div>
             </div>
@@ -206,6 +205,8 @@ function HeroSection() {
 }
 
 function InfoSection() {
+  const t = useTranslations("Landing");
+
   return (
     <section className="bg-[#F8FAFC] dark:bg-[#030712] px-6 py-32 relative overflow-hidden border-t border-slate-200/50 dark:border-white/5 transition-colors duration-500">
       {/* Dynamic mesh elements background */}
@@ -213,19 +214,18 @@ function InfoSection() {
       <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-[#DCA837]/5 rounded-full blur-[100px] -z-10"></div>
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-20 items-end">
-
           <ScrollReveal variant="fade-up" delay={100}>
             <div>
               <h2 className="text-[#0C2E5E] dark:text-white text-4xl md:text-6xl font-black leading-tight mb-8 tracking-tight">
-                Kiến tạo hệ sinh thái<br/>
+                {t("info.title")}<br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0C2E5E]">AuraAcademic.</span>
               </h2>
-              <PillButton href="/register">Gia nhập ngay</PillButton>
+              <PillButton href="/register">{t("info.join_btn")}</PillButton>
             </div>
           </ScrollReveal>
           <ScrollReveal variant="fade-up" delay={250}>
             <p className="text-slate-600 dark:text-slate-300 text-xl md:text-2xl leading-relaxed font-medium border-l-4 border-[#00C6FF] pl-8 py-2">
-              Sự giao thoa đỉnh cao giữa tri thức truyền thống và công nghệ giám sát AI tự động, tối ưu hóa quy trình từ tạo ngân hàng câu hỏi đến thống kê vi phạm.
+              {t("info.desc")}
             </p>
           </ScrollReveal>
         </div>
@@ -256,10 +256,10 @@ function InfoSection() {
                     <FileText className="w-8 h-8 text-[#00C6FF]" />
                   </div>
                   <h3 className="text-[#0C2E5E] dark:text-white text-4xl font-extrabold leading-tight mb-6 tracking-tight">
-                    Biên Soạn Đề Thi<br />Tự Động Siêu Tốc
+                    {t("info.card1_title")}
                   </h3>
                   <p className="text-slate-600 dark:text-slate-350 text-lg font-medium leading-relaxed max-w-sm">
-                    Trích xuất thông minh tài liệu từ DOCX, PDF hoặc ra lệnh cho AI sinh đề cấu trúc phân hóa chỉ trong một lần chạm.
+                    {t("info.card1_desc")}
                   </p>
                 </div>
               </div>
@@ -275,10 +275,10 @@ function InfoSection() {
                 </div>
                 <div>
                   <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
-                    Phòng Thi<br />Khép Kín.
+                    {t("info.card2_title")}
                   </h3>
                   <p className="text-white/70 text-base font-medium leading-relaxed">
-                    Môi trường bảo mật tuyệt đối, ghi nhận sự cố mất kết nối và theo dõi màn hình thí sinh thời gian thực.
+                    {t("info.card2_desc")}
                   </p>
                 </div>
               </div>
@@ -294,10 +294,10 @@ function InfoSection() {
                 </div>
                 <div>
                   <h3 className="text-white text-3xl font-black leading-tight mb-4 tracking-tight">
-                    Proctoring AI<br />Đỉnh Cao
+                    {t("info.card3_title")}
                   </h3>
                   <p className="text-white/70 text-base font-medium leading-relaxed">
-                    Nhận diện đa nhân diện, phát hiện đổi người, rời khỏi camera hoặc có tạp âm lạ chính xác tuyệt đối.
+                    {t("info.card3_desc")}
                   </p>
                 </div>
               </div>
@@ -310,12 +310,14 @@ function InfoSection() {
 }
 
 function BackedBySection() {
+  const t = useTranslations("Landing");
+
   return (
     <section className="bg-[#F5F5F5] dark:bg-slate-950 px-6 py-6 border-y border-slate-200/50 dark:border-white/5 transition-colors duration-500">
       <ScrollReveal variant="fade-up" delay={50}>
         <div className="max-w-[88rem] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 items-center overflow-hidden">
           <p className="text-black/70 dark:text-white/70 text-base leading-relaxed whitespace-pre-line font-semibold">
-            Xây dựng cho nhà trường,{"\n"}giảng viên và đội ngũ vận hành thi.
+            {t("backed_by")}
           </p>
           <div className="md:col-span-3 overflow-hidden">
             <style>{`
@@ -344,24 +346,26 @@ function BackedBySection() {
 }
 
 function UseCasesSection() {
+  const t = useTranslations("Landing");
+
   return (
     <section className="bg-[#F8FAFC] dark:bg-[#030712] px-6 py-32 transition-colors duration-500">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <ScrollReveal variant="fade-right" delay={100}>
           <div className="lg:pr-12">
-            <p className="text-[#00C6FF] text-sm mb-4 font-black tracking-[0.2em] uppercase">Vận hành chuyên nghiệp</p>
+            <p className="text-[#00C6FF] text-sm mb-4 font-black tracking-[0.2em] uppercase">{t("usecase.badge")}</p>
             <h2 className="text-[#0C2E5E] dark:text-white text-5xl md:text-7xl font-black leading-[1.05] mb-8 tracking-tight">
-              Quy trình khép kín
+              {t("usecase.title")}
             </h2>
             <p className="text-slate-600 dark:text-slate-350 text-lg leading-relaxed mb-10 font-medium">
-              Tích hợp xuyên suốt từ bước chuẩn bị đề bài, quản lý tài liệu đến phát mã phòng và tổng hợp báo cáo phổ điểm cuối kỳ thi.
+              {t("usecase.desc")}
             </p>
-            <a href="/login" className="group inline-flex items-center gap-4 text-[#0C2E5E] dark:text-[#00C6FF] text-xl font-extrabold">
+            <Link href="/login" className="group inline-flex items-center gap-4 text-[#0C2E5E] dark:text-[#00C6FF] text-xl font-extrabold">
               <span className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-xl shadow-[#00C6FF]/30 dark:shadow-[#00C6FF]/10 animate-pulse">
                 <ArrowRight className="w-6 h-6 text-white" />
               </span>
-              Trải nghiệm ứng dụng ngay
-            </a>
+              {t("usecase.btn")}
+            </Link>
           </div>
         </ScrollReveal>
 
@@ -405,20 +409,20 @@ function UseCasesSection() {
                      <ShieldCheck className="w-8 h-8 text-white" />
                    </div>
                    <h3 className="text-4xl md:text-6xl font-black leading-tight mb-6 tracking-tight text-[#0C2E5E] dark:text-white">
-                     Trung Tâm<br/>Theo Dõi
+                     {t("usecase.monitor_title")}
                    </h3>
                    <p className="text-slate-600 dark:text-slate-350 text-lg font-medium leading-relaxed max-w-md">
-                     Bảng điều khiển giám sát trung tâm giúp quản trị viên phát hiện sự cố và duy trì tính chính trực của bài thi.
+                     {t("usecase.monitor_desc")}
                    </p>
                  </div>
                  
                  <div className="grid grid-cols-3 gap-5 floating-stats-3d">
-                   {["Chờ thi", "Đang làm", "Đã nộp"].map((label, index) => (
-                     <div key={label} className="stat-card-3d rounded-2xl bg-white dark:bg-slate-900/65 shadow-[0_20px_50px_-10px_rgba(12,46,94,0.08)] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.4)] p-6 border border-slate-100 dark:border-white/10 flex flex-col items-center text-center">
-                       <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] mb-2">{[24, 18, 42][index]}</p>
-                       <p className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</p>
-                     </div>
-                   ))}
+                    {[t("usecase.stat_waiting"), t("usecase.stat_ongoing"), t("usecase.stat_submitted")].map((label, index) => (
+                      <div key={label} className="stat-card-3d rounded-2xl bg-white dark:bg-slate-900/65 shadow-[0_20px_50px_-10px_rgba(12,46,94,0.08)] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.4)] p-6 border border-slate-100 dark:border-white/10 flex flex-col items-center text-center">
+                        <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] mb-2">{[24, 18, 42][index]}</p>
+                        <p className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</p>
+                      </div>
+                    ))}
                  </div>
               </div>
             </div>
@@ -428,8 +432,6 @@ function UseCasesSection() {
     </section>
   );
 }
-
-import { Footer } from "@/components/layout/Footer";
 
 export default function Home() {
   return (
@@ -448,22 +450,24 @@ export default function Home() {
 }
 
 function FeaturesSection() {
+  const t = useTranslations("Landing");
+
   const features = [
     {
-      title: "Ngân Hàng Đề Thi Thông Minh",
-      description: "Quản lý hệ thống câu hỏi đa dạng với khả năng phân loại theo mức độ khó, chủ đề. Hỗ trợ tạo đề tự động và import nhanh từ định dạng Word/PDF.",
+      title: t("core_features.feat1_title"),
+      description: t("core_features.feat1_desc"),
       image: "/feature_1.png",
       reverse: false
     },
     {
-      title: "Giám Sát AI Thời Gian Thực",
-      description: "Tích hợp công nghệ nhận diện khuôn mặt và hành vi tiên tiến. Tự động cảnh báo các dấu hiệu bất thường như rời khỏi khung hình, người lạ xuất hiện hoặc âm thanh đáng ngờ.",
+      title: t("core_features.feat2_title"),
+      description: t("core_features.feat2_desc"),
       image: "/feature_2.png",
       reverse: true
     },
     {
-      title: "Phân Tích Phổ Điểm Chuyên Sâu",
-      description: "Hệ thống chấm điểm tự động tức thì. Báo cáo kết quả bằng biểu đồ trực quan, phân tích chi tiết độ phân hóa của câu hỏi giúp giáo viên tối ưu hóa kỳ thi.",
+      title: t("core_features.feat3_title"),
+      description: t("core_features.feat3_desc"),
       image: "/feature_3.png",
       reverse: false
     }
@@ -477,10 +481,10 @@ function FeaturesSection() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <ScrollReveal variant="fade-up" className="text-center max-w-3xl mx-auto mb-20 lg:mb-28">
           <h2 className="text-[#0C2E5E] dark:text-white text-4xl md:text-5xl lg:text-6xl font-black mb-6 tracking-tight leading-tight">
-            Nền Tảng <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0072FF]">Toàn Diện</span>
+            {t("core_features.title")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00C6FF] to-[#0072FF]">{t("core_features.title_highlight")}</span>
           </h2>
           <p className="text-slate-600 dark:text-slate-400 text-lg md:text-xl font-medium leading-relaxed">
-            Hàng loạt tính năng nổi bật giúp tối ưu hóa quy trình từ khâu chuẩn bị đến khi kết thúc bài thi.
+            {t("core_features.desc")}
           </p>
         </ScrollReveal>
 
@@ -491,7 +495,7 @@ function FeaturesSection() {
                 <div className="relative group">
                   <div className="absolute -inset-4 bg-gradient-to-tr from-[#00C6FF]/20 to-[#0C2E5E]/10 dark:from-[#00C6FF]/10 dark:to-emerald-400/10 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                   <div className="relative rounded-3xl overflow-hidden border border-slate-200/50 dark:border-white/10 shadow-2xl shadow-slate-200/50 dark:shadow-none bg-slate-50 dark:bg-slate-900 aspect-[16/10] flex items-center justify-center group-hover:-translate-y-2 transition-transform duration-500">
-                    <img src={feature.image} alt={feature.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <Image src={feature.image} alt={feature.title} width={1600} height={1000} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
               </ScrollReveal>

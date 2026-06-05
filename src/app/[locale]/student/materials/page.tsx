@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import Image from "next/image";
 
 const FILE_TYPES: Record<string, { icon: string; color: string; bg: string }> = {
   pdf:   { icon: "picture_as_pdf", color: "text-red-600",    bg: "bg-red-50"    },
@@ -10,8 +11,6 @@ const FILE_TYPES: Record<string, { icon: string; color: string; bg: string }> = 
   video: { icon: "play_circle",    color: "text-violet-600", bg: "bg-violet-50" },
   link:  { icon: "link",           color: "text-teal-600",   bg: "bg-teal-50"   },
 };
-
-
 
 type Material = {
   id: string; title: string; description: string; subject: string;
@@ -22,6 +21,7 @@ type Material = {
 
 export default function StudentMaterials() {
   const t = useTranslations('StudentMaterials');
+  const locale = useLocale();
   const CAT_LABELS: Record<string, string> = { lecture: t('cat_lecture'), exercise: t('cat_exercise'), reference: t('cat_reference'), guide: t('cat_guide'), faq: t('cat_faq') };
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,9 +39,8 @@ export default function StudentMaterials() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [pptxRenderer, setPptxRenderer] = useState<any>(null);
 
-  // Xử lý chuyển đổi Base64 -> Blob URL an toàn để trình duyệt xem mượt mà
   useEffect(() => {
-    setDocxHtml(null); // Reset HTML khi đổi file
+    setDocxHtml(null);
     setPptxSlideCount(0);
     setCurrentSlide(0);
     setPptxRenderer(null);
@@ -51,7 +50,6 @@ export default function StudentMaterials() {
       return;
     }
     
-    // Nếu fileUrl đã là link https:// thì dùng luôn
     if (!previewItem.fileUrl.startsWith("data:")) {
       setBlobUrl(previewItem.fileUrl);
       return;
@@ -72,17 +70,14 @@ export default function StudentMaterials() {
       const url = URL.createObjectURL(blob);
       setBlobUrl(url);
 
-      // XỬ LÝ ĐẶC BIỆT CHO DOCX
       if (previewItem.fileType === 'docx' || mime.includes("wordprocessingml.document")) {
         renderDocx(blob);
       }
       
-      // XỬ LÝ ĐẶC BIỆT CHO PPTX
       if (previewItem.fileType === 'pptx' || mime.includes("presentationml.presentation")) {
         renderPptx(blob);
       }
 
-      // Dọn dẹp bộ nhớ khi đóng modal
       return () => URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Lỗi parse file preview:", e);
@@ -92,7 +87,6 @@ export default function StudentMaterials() {
 
   const renderDocx = async (blob: Blob) => {
     try {
-      // Tải động thư viện mammoth để parse Docx -> Html trên Client
       if (!(window as any).mammoth) {
         const script = document.createElement("script");
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
@@ -113,7 +107,6 @@ export default function StudentMaterials() {
   const renderPptx = async (blob: Blob) => {
     setPptxLoading(true);
     try {
-      // Bước 1: Nạp thư viện nén JSZip bắt buộc (Standard UMD script)
       if (!(window as any).JSZip) {
         const jsZipScript = document.createElement("script");
         jsZipScript.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
@@ -122,7 +115,6 @@ export default function StudentMaterials() {
         await new Promise(r => jsZipScript.onload = r);
       }
 
-      // Bước 1.5: Nạp Chart.js (Một số slide có đồ thị yêu cầu bắt buộc này)
       if (!(window as any).Chart) {
         const chartScript = document.createElement("script");
         chartScript.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
@@ -131,7 +123,6 @@ export default function StudentMaterials() {
         await new Promise(r => chartScript.onload = r);
       }
 
-      // Bước 2: Nạp thư viện PptxViewJS nguyên khối (Standard UMD script)
       if (!(window as any).PptxViewJS) {
         const pptxScript = document.createElement("script");
         pptxScript.src = "https://cdn.jsdelivr.net/npm/pptxviewjs@1.1.9/dist/PptxViewJS.min.js";
@@ -140,19 +131,13 @@ export default function StudentMaterials() {
         await new Promise(r => pptxScript.onload = r);
       }
 
-      // Chờ thêm 100ms đảm bảo window đã nhận diện namespace toàn cục
       await new Promise(r => setTimeout(r, 150));
 
       const lib = (window as any).PptxViewJS;
       if (!lib) throw new Error("PptxViewJS not exposed to window");
 
-      // Khởi tạo Presentation để lấy số slide trước
-      // Thư viện này cần Canvas để gắn kết lúc Render
-      // Sẽ lưu instance thư viện lại vào state
       const PPTXViewer = lib.PPTXViewer;
-      // Lưu trữ reference thư viện và blob để useEffect xử lý render canvas sau
       setPptxRenderer({ PPTXViewer, blob });
-      // Mặc định set tạm slide, số lượng thật sẽ update khi parse xong ở hook
       setPptxLoading(false);
     } catch (err: any) {
       console.error("Lỗi nạp UMD PowerPoint:", err);
@@ -160,7 +145,6 @@ export default function StudentMaterials() {
     }
   };
 
-  // Hook render Canvas PowerPoint khi đổi slide hoặc khi lib sẵn sàng
   useEffect(() => {
     if (!pptxRenderer?.PPTXViewer || !pptxRenderer?.blob) return;
     
@@ -169,29 +153,22 @@ export default function StudentMaterials() {
       if (!canvas) return;
 
       try {
-        // Nếu chưa có instance renderer thật sự, khởi tạo nó gắn với canvas
         if (!pptxRenderer.instance) {
           const viewerInstance = new pptxRenderer.PPTXViewer({ canvas });
           
-          // Quan trọng: Lắng nghe sự kiện đã nạp xong hoàn toàn trước khi cập nhật UI
           viewerInstance.on('loadComplete', (data: any) => {
             const count = viewerInstance.getSlideCount();
-            console.log("Loaded slides count:", count);
             setPptxSlideCount(count > 0 ? count : 1);
             viewerInstance.goToSlide(0).catch(()=>{});
           });
 
-          // CHUYỂN ĐỔI BLOB SANG ARRAYBUFFER ĐỂ THƯ VIỆN TIÊU THỤ CHUẨN XÁC
           const buffer = await pptxRenderer.blob.arrayBuffer();
           await viewerInstance.loadFile(buffer);
           
-          // Chạy render lần đầu để dựng hình cơ bản
           await viewerInstance.render().catch(()=>{});
           
-          // Cập nhật instance
           setPptxRenderer((prev: any) => ({ ...prev, instance: viewerInstance }));
         } else {
-          // Chuyển slide bằng instance đã cache
           await pptxRenderer.instance.goToSlide(currentSlide).catch(()=>{});
         }
       } catch (err: any) {
@@ -218,7 +195,6 @@ export default function StudentMaterials() {
     await fetch(`http://localhost:8088/api/materials/${m.id}/download`, {
       method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {}
     }).catch(()=>{});
-    // Trigger download by creating link from base64
     if (m.fileUrl?.startsWith("data:")) {
       const link = document.createElement("a");
       link.href = m.fileUrl;
@@ -255,8 +231,8 @@ export default function StudentMaterials() {
     docx: "Word",
     video: "Video",
     link: "Link",
-  }[type || ""] || (type || "Tệp").toUpperCase());
-  const formatDate = (value?: string) => value ? new Date(value).toLocaleDateString("vi-VN") : "—";
+  }[type || ""] || (type || t("file")).toUpperCase());
+  const formatDate = (value?: string) => value ? new Date(value).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US") : "—";
 
   return (
     <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -267,7 +243,7 @@ export default function StudentMaterials() {
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-bold uppercase tracking-widest text-sky-700 dark:border-cyan-800/60 dark:bg-cyan-950/40 dark:text-cyan-200">
               <span className="material-symbols-outlined text-base">auto_stories</span>
-              Kho tài liệu học tập
+              {t('tag_repo')}
             </div>
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">{t('title')}</h1>
@@ -276,10 +252,10 @@ export default function StudentMaterials() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: "folder_open", label: "Tài liệu", value: materials.length },
-              { icon: "school", label: "Môn học", value: subjects.length - 1 },
-              { icon: "download", label: "Lượt tải", value: totalDownloads },
-              { icon: "new_releases", label: "Mới tuần này", value: recentCount },
+              { icon: "folder_open", label: t('stat_docs'), value: materials.length },
+              { icon: "school", label: t('stat_subjects'), value: subjects.length - 1 },
+              { icon: "download", label: t('stat_downloads'), value: totalDownloads },
+              { icon: "new_releases", label: t('stat_new'), value: recentCount },
             ].map(item => (
               <div key={item.label} className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 dark:border-cyan-900/40 dark:bg-[#0B2445]">
                 <span className="material-symbols-outlined text-xl text-sky-600 dark:text-cyan-300">{item.icon}</span>
@@ -295,7 +271,7 @@ export default function StudentMaterials() {
       {!loading && featured.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
-            <span className="material-symbols-outlined text-amber-500 text-lg">star</span>Tài liệu nổi bật
+            <span className="material-symbols-outlined text-amber-500 text-lg">star</span>{t('featured')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {featured.map(m => {
@@ -312,7 +288,7 @@ export default function StudentMaterials() {
                     <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-2">{m.uploaderName} · {CAT_LABELS[m.category]||m.category}</p>
                   </div>
                   <div className="flex flex-col gap-2 flex-shrink-0">
-                    <button onClick={()=>setPreviewItem(m)} className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-sky-50 hover:text-sky-700 dark:bg-[#0B2445] dark:text-slate-300 dark:hover:bg-cyan-950/50 dark:hover:text-cyan-200 transition-all" title="Xem trước">
+                    <button onClick={()=>setPreviewItem(m)} className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-sky-50 hover:text-sky-700 dark:bg-[#0B2445] dark:text-slate-300 dark:hover:bg-cyan-950/50 dark:hover:text-cyan-200 transition-all" title={t('btn_preview')}>
                       <span className="material-symbols-outlined text-lg">visibility</span>
                     </button>
                     <button onClick={()=>trackDownload(m)} className="p-2 rounded-xl bg-sky-600 text-white hover:bg-sky-700 dark:bg-cyan-400 dark:text-[#06172E] dark:hover:bg-cyan-300 transition-all" title={t('btn_download')}>
@@ -378,7 +354,7 @@ export default function StudentMaterials() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-slate-950 dark:text-white text-sm leading-snug group-hover:text-sky-700 dark:group-hover:text-cyan-200 transition-colors line-clamp-2">{m.title}</h3>
-                      <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-1">{m.subject || "Chưa phân loại"} {m.subject&&"·"} {CAT_LABELS[m.category]||m.category}</p>
+                      <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-1">{m.subject || t('uncategorized')} {m.subject&&"·"} {CAT_LABELS[m.category]||m.category}</p>
                     </div>
                     <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black uppercase text-slate-500 dark:bg-[#0B2445] dark:text-slate-300">{fileTypeLabel(m.fileType)}</span>
                   </div>
@@ -397,7 +373,7 @@ export default function StudentMaterials() {
                     </div>
                     <div className="flex gap-1">
                       <button onClick={()=>setPreviewItem(m)}
-                        className="p-2 rounded-xl text-slate-500 hover:bg-sky-50 hover:text-sky-700 dark:text-slate-400 dark:hover:bg-cyan-950/50 dark:hover:text-cyan-200 transition-all" title="Xem trước">
+                        className="p-2 rounded-xl text-slate-500 hover:bg-sky-50 hover:text-sky-700 dark:text-slate-400 dark:hover:bg-cyan-950/50 dark:hover:text-cyan-200 transition-all" title={t('btn_preview')}>
                         <span className="material-symbols-outlined text-lg">visibility</span>
                       </button>
                       <button onClick={()=>trackDownload(m)}
@@ -415,72 +391,73 @@ export default function StudentMaterials() {
 
       {/* Preview Modal */}
       {previewItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-surface-container-low dark:bg-cyan-950/30 dark:bg-[#0A1F3E]/80 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-3 backdrop-blur-md animate-in fade-in duration-200 sm:p-6">
+          <div className="flex h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-[28px] border border-white/20 bg-white shadow-2xl animate-in zoom-in-95 duration-300 dark:border-cyan-900/40 dark:bg-[#06172E]">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-cyan-950/40 bg-white/80 dark:bg-[#0A1F3E]/90 backdrop-blur-md z-10">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-10 h-10 rounded-xl ${(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).bg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                  <span className={`material-symbols-outlined ${(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).color}`}>{(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).icon}</span>
+            <div className="z-10 flex items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur-md dark:border-cyan-900/40 dark:bg-[#071A33]/95">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).bg} shadow-sm`}>
+                  <span className={`material-symbols-outlined text-2xl ${(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).color}`}>{(FILE_TYPES[previewItem.fileType]||FILE_TYPES.pdf).icon}</span>
                 </div>
-                <div className="truncate">
-                  <h3 className="font-bold text-on-surface dark:text-slate-200 truncate leading-tight">{previewItem.title}</h3>
-                  <p className="text-xs text-on-surface-variant dark:text-slate-400/80 mt-0.5 flex items-center gap-1.5">
-                    <span className="font-medium">{previewItem.uploaderName}</span>
-                    <span className="opacity-40">•</span>
+                <div className="min-w-0">
+                  <h3 className="truncate text-lg font-black leading-tight text-slate-950 dark:text-white">{previewItem.title}</h3>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                    <span>{previewItem.uploaderName}</span>
+                    <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                     <span>{CAT_LABELS[previewItem.category]||previewItem.category}</span>
-                  </p>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase text-slate-600 dark:bg-cyan-950/50 dark:text-cyan-200">{fileTypeLabel(previewItem.fileType)}</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex flex-shrink-0 items-center gap-2">
                 <button onClick={()=>trackDownload(previewItem)}
-                  className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary/90 flex items-center gap-2 transition-all shadow-md shadow-primary/20 active:scale-95">
-                  <span className="material-symbols-outlined text-base">download</span>Tải xuống
+                  className="hidden items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-slate-900/15 transition-all hover:-translate-y-0.5 hover:bg-slate-800 active:scale-95 dark:bg-cyan-400 dark:text-[#06172E] dark:hover:bg-cyan-300 sm:flex">
+                  <span className="material-symbols-outlined text-base">download</span>{t('btn_download')}
                 </button>
-                <div className="w-px h-6 bg-outline-variant mx-1" />
-                <button onClick={()=>setPreviewItem(null)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-cyan-950/50 dark:text-slate-200 text-on-surface-variant hover:text-on-surface dark:text-slate-200 transition-all">
+                <button onClick={()=>setPreviewItem(null)} className="rounded-2xl p-2.5 text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-cyan-950/50 dark:hover:text-white" aria-label={t('btn_close_preview')}>
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
             </div>
 
             {/* Modal Content Split */}
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-[#121212]/5">
+            <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden bg-slate-100 lg:grid-cols-[minmax(0,1fr)_320px] dark:bg-[#020B18]">
               
               {/* Left/Main Pane: The actual viewer */}
-              <div className="flex-1 bg-slate-900/5 relative flex items-center justify-center overflow-hidden border-b lg:border-b-0 lg:border-r border-outline-variant">
+              <div className="relative flex min-h-0 items-center justify-center overflow-hidden border-b border-slate-200 bg-slate-100 lg:border-b-0 lg:border-r dark:border-cyan-900/40 dark:bg-[#020B18]">
                 {!blobUrl ? (
                    <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
-                      <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-                      <p className="text-sm font-medium">Đang tải tệp tin...</p>
+                      <div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-200 border-t-sky-600" />
+                      <p className="text-sm font-medium">{t('loading_file')}</p>
                    </div>
                 ) : previewItem.fileType === 'pdf' || previewItem.fileUrl?.includes("application/pdf") ? (
                   <iframe 
-                    src={`${blobUrl}#toolbar=0&navpanes=0`} 
-                    className="w-full h-full border-none shadow-inner bg-slate-800"
+                    src={`${blobUrl}#toolbar=1&navpanes=0&view=FitH`} 
+                    className="h-full w-full border-none bg-slate-200 shadow-inner dark:bg-slate-950"
                     title="PDF Viewer"
                   />
                 ) : previewItem.fileType === 'video' || previewItem.fileUrl?.includes("video/") ? (
                   <video src={blobUrl} controls controlsList="nodownload" className="max-w-full max-h-full bg-black object-contain" />
                 ) : previewItem.fileType === 'image' || previewItem.fileUrl?.includes("image/") ? (
-                  <img src={blobUrl} alt={previewItem.title} className="max-w-full max-h-full object-contain drop-shadow-2xl p-4" />
+                  <Image src={blobUrl} alt={previewItem.title} fill unoptimized className="object-contain drop-shadow-2xl p-4" />
                 ) : (previewItem.fileType === 'docx' || previewItem.fileUrl?.includes("wordprocessingml.document")) ? (
                    docxHtml === "ERR" ? (
                     <div className="flex flex-col items-center justify-center text-center p-8">
                       <span className="material-symbols-outlined text-6xl text-red-400 mb-4">error_outline</span>
-                      <h4 className="font-bold text-on-surface dark:text-slate-200">Lỗi đọc tài liệu Word</h4>
-                      <p className="text-sm text-on-surface-variant dark:text-slate-400">Không thể mở tệp xem trước.</p>
+                      <h4 className="font-bold text-on-surface dark:text-slate-200">{t('error_word')}</h4>
+                      <p className="text-sm text-on-surface-variant dark:text-slate-400">{t('error_word_desc')}</p>
                     </div>
                   ) : !docxHtml ? (
                     <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
-                      <div className="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
-                      <p className="text-sm font-medium text-blue-600">Đang chuyển đổi Docx...</p>
+                      <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+                      <p className="text-sm font-medium text-blue-600">{t('converting_word')}</p>
                     </div>
                   ) : (
-                    <div className="w-full h-full overflow-y-auto bg-[#f8fafc] p-8 sm:p-12 shadow-inner scrollbar-thin">
+                    <div className="h-full w-full overflow-y-auto bg-slate-200/70 p-4 shadow-inner scrollbar-thin sm:p-8 dark:bg-[#020B18]">
                       <style>{`
-                        .docx-preview-content p { margin-bottom: 1rem; line-height: 1.6; }
+                        .docx-preview-content { font-size: 16px; }
+                        .docx-preview-content p { margin-bottom: 1rem; line-height: 1.65; }
                         .docx-preview-content h1 { font-size: 1.8em; font-weight: 800; margin: 1.5em 0 0.5em; color: #1e293b; }
                         .docx-preview-content h2 { font-size: 1.5em; font-weight: 700; margin: 1.2em 0 0.5em; color: #1e293b; }
                         .docx-preview-content h3 { font-size: 1.25em; font-weight: 600; margin: 1em 0 0.5em; color: #334155; }
@@ -490,22 +467,22 @@ export default function StudentMaterials() {
                         .docx-preview-content li { margin-bottom: 0.25rem; }
                       `}</style>
                       <div 
-                        className="max-w-3xl mx-auto bg-white dark:bg-[#0A1F3E] border border-slate-200 shadow-lg rounded-sm p-8 sm:p-12 docx-preview-content text-slate-800 min-h-[800px]"
+                        className="docx-preview-content mx-auto min-h-full max-w-[900px] rounded-xl border border-slate-200 bg-white p-8 text-slate-800 shadow-xl sm:p-12"
                         dangerouslySetInnerHTML={{ __html: docxHtml }} 
                       />
                     </div>
                   )
                 ) : (previewItem.fileType === 'pptx' || previewItem.fileUrl?.includes("presentationml.presentation")) ? (
                   pptxLoading === true ? (
-                    <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
-                      <div className="w-10 h-10 border-4 border-orange-300 border-t-orange-500 rounded-full animate-spin" />
-                      <p className="text-sm font-medium text-orange-500">Đang chuẩn bị bản trình chiếu...</p>
+                    <div className="flex flex-col items-center justify-center gap-3 text-slate-400">
+                      <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
+                      <p className="text-sm font-bold text-orange-500">{t('preparing_slide')}</p>
                     </div>
                   ) : (!pptxRenderer || typeof pptxLoading === "string") ? (
                     <div className="flex flex-col items-center justify-center text-center p-8">
                       <span className="material-symbols-outlined text-6xl text-red-400 mb-4">warning_amber</span>
-                      <h4 className="font-bold text-on-surface dark:text-slate-200">Không thể giải mã bản trình chiếu</h4>
-                      <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mb-4">Rất tiếc, trình duyệt không thể tự dựng hình tệp tin PPTX này.</p>
+                      <h4 className="font-bold text-on-surface dark:text-slate-200">{t('error_slide')}</h4>
+                      <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-md mb-4">{t('error_slide_desc')}</p>
                       {typeof pptxLoading === "string" && (
                         <p className="text-[10px] font-mono bg-red-50 text-red-600 p-2 rounded border border-red-100 max-w-md overflow-hidden truncate">
                           Debug: {pptxLoading}
@@ -513,51 +490,60 @@ export default function StudentMaterials() {
                       )}
                     </div>
                   ) : (
-                    <div className="w-full h-full bg-[#1e1e1e] flex flex-col">
-                      {/* Navigation Overlay Bottom */}
-                      <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden">
-                        <div className="relative bg-white dark:bg-[#0A1F3E] shadow-2xl max-w-full flex items-center justify-center">
-                          <canvas id="pptx-canvas" className="max-w-full max-h-[calc(85vh-180px)] object-contain" />
+                    <div className="flex h-full w-full flex-col bg-slate-100 dark:bg-[#07111F]">
+                      <div className="flex items-center justify-between border-b border-slate-200 bg-white/80 px-5 py-3 text-sm backdrop-blur dark:border-cyan-900/40 dark:bg-[#0B2445]/80">
+                        <div className="flex items-center gap-2 font-black text-slate-800 dark:text-white">
+                          <span className="material-symbols-outlined text-orange-500">slideshow</span>
+                          {t('slide_title')}
+                        </div>
+                        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black text-slate-600 dark:border-cyan-900/40 dark:bg-[#071A33] dark:text-cyan-200">
+                          Slide {currentSlide + 1} / {pptxSlideCount || 1}
+                        </div>
+                      </div>
+
+                      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-5 sm:p-8">
+                        <div className="relative flex aspect-video w-full max-w-[min(100%,calc((90vh-250px)*1.777))] items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-cyan-900/40 dark:bg-white">
+                          <canvas id="pptx-canvas" className="h-full w-full object-contain" />
                         </div>
                         
-                        {/* Previous/Next Hover zones */}
                         <button 
                           disabled={currentSlide === 0}
                           onClick={()=>setCurrentSlide(s => Math.max(0, s-1))}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all disabled:opacity-20 group cursor-pointer active:scale-90"
+                          className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer rounded-full border border-slate-200 bg-white/90 p-3 text-slate-800 shadow-lg transition-all hover:-translate-x-0.5 hover:bg-white active:scale-90 disabled:cursor-not-allowed disabled:opacity-25 dark:border-cyan-900/40 dark:bg-[#0B2445]/90 dark:text-white"
+                          title={t('slide_prev')}
                         >
                           <span className="material-symbols-outlined text-2xl">chevron_left</span>
                         </button>
                         <button 
                           disabled={currentSlide >= pptxSlideCount - 1}
                           onClick={()=>setCurrentSlide(s => Math.min(pptxSlideCount - 1, s+1))}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all disabled:opacity-20 group cursor-pointer active:scale-90"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer rounded-full border border-slate-200 bg-white/90 p-3 text-slate-800 shadow-lg transition-all hover:translate-x-0.5 hover:bg-white active:scale-90 disabled:cursor-not-allowed disabled:opacity-25 dark:border-cyan-900/40 dark:bg-[#0B2445]/90 dark:text-white"
+                          title={t('slide_next')}
                         >
                           <span className="material-symbols-outlined text-2xl">chevron_right</span>
                         </button>
                       </div>
                       
-                      {/* Control Bar */}
-                      <div className="bg-black/90 backdrop-blur-md px-6 py-3 flex items-center justify-between text-white/90 text-sm border-t border-white/10">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-orange-400 flex items-center gap-1"><span className="material-symbols-outlined text-base">slideshow</span> SLIDE</span>
-                          <div className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-lg border border-white/10">
-                             <span className="font-black text-white">{currentSlide + 1}</span>
-                             <span className="opacity-40">/</span>
-                             <span className="font-medium text-white/60">{pptxSlideCount}</span>
+                      <div className="flex items-center justify-between border-t border-slate-200 bg-white px-5 py-3 text-sm text-slate-600 dark:border-cyan-900/40 dark:bg-[#0B2445] dark:text-slate-300">
+                        <div className="min-w-0 flex-1 pr-4">
+                          <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-[#071A33]">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-orange-400 to-sky-500 transition-all"
+                              style={{ width: `${((currentSlide + 1) / Math.max(pptxSlideCount || 1, 1)) * 100}%` }}
+                            />
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-shrink-0 gap-2">
                           <button 
                             disabled={currentSlide === 0}
                             onClick={()=>setCurrentSlide(0)}
-                            className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30" title="Về đầu trang">
+                            className="rounded-xl p-2 transition hover:bg-slate-100 disabled:opacity-30 dark:hover:bg-cyan-950/40" title={t('slide_first')}>
                             <span className="material-symbols-outlined text-lg">first_page</span>
                           </button>
                           <button 
                             disabled={currentSlide >= pptxSlideCount - 1}
                             onClick={()=>setCurrentSlide(pptxSlideCount - 1)}
-                            className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30" title="Cuối trang">
+                            className="rounded-xl p-2 transition hover:bg-slate-100 disabled:opacity-30 dark:hover:bg-cyan-950/40" title={t('slide_last')}>
                             <span className="material-symbols-outlined text-lg">last_page</span>
                           </button>
                         </div>
@@ -566,48 +552,53 @@ export default function StudentMaterials() {
                   )
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center p-8">
-                    <span className="material-symbols-outlined text-6xl text-primary/30 mb-4">insert_drive_file</span>
-                    <h4 className="font-bold text-on-surface dark:text-slate-200 mb-2">Định dạng này yêu cầu tải xuống</h4>
-                    <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-xs mb-6">Rất tiếc, trình duyệt không hỗ trợ xem trước trực tiếp định dạng {previewItem.fileType}. Vui lòng tải về máy để xem nội dung.</p>
-                    <button onClick={()=>trackDownload(previewItem)} className="px-6 py-2.5 bg-surface-container-high dark:bg-cyan-950/50 dark:bg-cyan-950/50 text-on-surface dark:text-slate-200 font-bold rounded-xl hover:bg-outline-variant transition-all flex items-center gap-2">
-                       <span className="material-symbols-outlined text-lg">download_for_offline</span> Tải ngay ({previewItem.fileSizeBytes?fmt(previewItem.fileSizeBytes):"Unknown"})
+                    <span className="material-symbols-outlined mb-4 text-6xl text-sky-300">insert_drive_file</span>
+                    <h4 className="font-bold text-on-surface dark:text-slate-200 mb-2">{t('req_download')}</h4>
+                    <p className="text-sm text-on-surface-variant dark:text-slate-400 max-w-xs mb-6">{t('req_download_desc', { type: previewItem.fileType })}</p>
+                    <button onClick={()=>trackDownload(previewItem)} className="flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 font-bold text-white transition-all hover:bg-slate-800 dark:bg-cyan-400 dark:text-[#06172E]">
+                       <span className="material-symbols-outlined text-lg">download_for_offline</span> {t('btn_download_now')} ({previewItem.fileSizeBytes?fmt(previewItem.fileSizeBytes):t('unknown_size')})
                     </button>
                   </div>
                 )}
               </div>
 
               {/* Right Pane: Sidebar for info */}
-              <div className="w-full lg:w-72 flex-shrink-0 bg-slate-50 dark:bg-[#0A1F3E] border-l border-slate-200 dark:border-cyan-950/40 overflow-y-auto p-6 space-y-6 flex flex-col">
-                <div>
-                  <h4 className="text-xs font-black text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-2">Mô tả tài liệu</h4>
-                  <p className="text-sm text-on-surface dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-[#051329] p-4 rounded-xl border border-slate-200 dark:border-cyan-950/40 border border-outline-variant">
-                    {previewItem.description || <span className="italic opacity-50">Không có mô tả bổ sung.</span>}
+              <div className="flex max-h-[34vh] flex-col gap-4 overflow-y-auto border-t border-slate-200 bg-white p-4 lg:max-h-none lg:border-l lg:border-t-0 lg:p-5 dark:border-cyan-900/40 dark:bg-[#071A33]">
+                <button onClick={()=>trackDownload(previewItem)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-0.5 hover:bg-slate-800 active:scale-95 dark:bg-cyan-400 dark:text-[#06172E] dark:hover:bg-cyan-300 sm:hidden">
+                  <span className="material-symbols-outlined text-base">download</span>{t('btn_download')}
+                </button>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-cyan-900/40 dark:bg-[#0B2445]">
+                  <h4 className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('desc_title')}</h4>
+                  <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                    {previewItem.description || <span className="italic opacity-50">{t('desc_empty')}</span>}
                   </p>
                 </div>
 
                 {previewItem.tags?.length>0 && (
-                  <div>
-                    <h4 className="text-xs font-black text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-2">Từ khóa (Tags)</h4>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-cyan-900/40 dark:bg-[#0B2445]">
+                    <h4 className="mb-3 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('tags_title')}</h4>
                     <div className="flex flex-wrap gap-1.5">
                       {previewItem.tags.map(t=>(
-                        <span key={t} className="px-2.5 py-1 bg-primary/10 dark:bg-cyan-950/40 text-primary dark:text-cyan-300 rounded-lg text-[11px] font-bold">#{t}</span>
+                        <span key={t} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 shadow-sm dark:bg-cyan-950/50 dark:text-cyan-200">#{t}</span>
                       ))}
                     </div>
                   </div>
                 )}
 
-                <div className="mt-auto pt-6 space-y-2">
-                  <h4 className="text-xs font-black text-on-surface-variant dark:text-slate-400 uppercase tracking-wider mb-3">Thông tin tệp</h4>
+                <div className="space-y-2">
+                  <h4 className="px-1 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('info_title')}</h4>
                   {[
                     { icon: "database", label: t("modal_size"), value: previewItem.fileSizeBytes ? fmt(previewItem.fileSizeBytes) : "—" },
-                    { icon: "download", label: t("modal_downloads"), value: `${previewItem.downloadCount} lượt` },
-                    { icon: "calendar_today", label: t("modal_date"), value: new Date(previewItem.createdAt).toLocaleDateString("vi-VN") },
+                    { icon: "download", label: t("modal_downloads"), value: `${previewItem.downloadCount} ${t('downloads')}` },
+                    { icon: "calendar_today", label: t("modal_date"), value: new Date(previewItem.createdAt).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US") },
                   ].map(({icon, label, value})=>(
-                    <div key={label} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#051329] rounded-xl border border-slate-200 dark:border-cyan-950/40">
-                      <span className="material-symbols-outlined text-on-surface-variant dark:text-slate-400 text-lg">{icon}</span>
+                    <div key={label} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-cyan-900/40 dark:bg-[#0B2445]">
+                      <span className="material-symbols-outlined text-lg text-slate-500 dark:text-slate-400">{icon}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-on-surface-variant dark:text-slate-400 font-bold uppercase leading-none mb-1">{label}</p>
-                        <p className="text-sm font-black text-on-surface dark:text-slate-200 truncate">{value}</p>
+                        <p className="mb-1 text-[10px] font-bold uppercase leading-none text-slate-400 dark:text-slate-500">{label}</p>
+                        <p className="truncate text-sm font-black text-slate-900 dark:text-white">{value}</p>
                       </div>
                     </div>
                   ))}

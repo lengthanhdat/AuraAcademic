@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface NotificationItem {
   id: string;
@@ -13,6 +15,7 @@ interface NotificationItem {
 }
 
 export default function NotificationBell() {
+  const t = useTranslations("NotificationBell");
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -80,6 +83,7 @@ export default function NotificationBell() {
   // Re-fetch on filter change
   useEffect(() => {
     fetchNotifications(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterType, filterRead]);
 
   // Subscribe to real-time notification push (SSE)
@@ -100,6 +104,24 @@ export default function NotificationBell() {
         });
         setUnreadCount(prev => prev + 1);
         setTotalItems(prev => prev + 1);
+
+        // Show a Toast notification instantly using sonner
+        toast.success(newNotif.title, {
+          description: newNotif.content,
+          action: {
+            label: t("view"),
+            onClick: () => {
+              const path = window.location.pathname;
+              const matches = path.match(/^\/([a-z]{2})\/(admin|teacher|student)/);
+              if (matches) {
+                const [, locale, role] = matches;
+                window.location.href = `/${locale}/${role}/notifications`;
+              } else {
+                window.location.href = "/notifications";
+              }
+            }
+          }
+        });
 
         // Show a temporary in-app audio-visual alert or toast if possible
         if ("Notification" in window && Notification.permission === "granted") {
@@ -200,16 +222,32 @@ export default function NotificationBell() {
   // Map type to icons & colors beautifully
   const getNotifMeta = (type: string) => {
     switch (type?.toUpperCase()) {
+      case "WELCOME":
+        return { icon: "waving_hand", color: "text-sky-600 bg-sky-50 border-sky-100 shadow-sky-100 dark:text-cyan-200 dark:bg-cyan-500/10 dark:border-cyan-400/25 dark:shadow-cyan-950/30" };
+      case "VERIFICATION_APPROVED":
+        return { icon: "verified", color: "text-emerald-600 bg-emerald-50 border-emerald-100 shadow-emerald-100 dark:text-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-400/25 dark:shadow-emerald-950/30" };
+      case "VERIFICATION_REJECTED":
+        return { icon: "gpp_bad", color: "text-rose-600 bg-rose-50 border-rose-100 shadow-rose-100 dark:text-rose-200 dark:bg-rose-500/10 dark:border-rose-400/25 dark:shadow-rose-950/30" };
+      case "CLASSROOM":
+      case "CLASSROOM_JOIN_REQUEST":
+      case "CLASSROOM_MEMBER_ADDED":
+      case "CLASSROOM_MEMBER_REMOVED":
+        return { icon: "groups", color: "text-indigo-600 bg-indigo-50 border-indigo-100 shadow-indigo-100 dark:text-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-400/25 dark:shadow-indigo-950/30" };
       case "SYSTEM":
-        return { icon: "lock_open", color: "text-rose-500 bg-rose-50 border-rose-100" };
+        return { icon: "settings_suggest", color: "text-slate-600 bg-slate-50 border-slate-200 shadow-slate-100 dark:text-slate-200 dark:bg-slate-500/10 dark:border-slate-400/20 dark:shadow-slate-950/30" };
       case "EXAM":
-        return { icon: "quiz", color: "text-purple-500 bg-purple-50 border-purple-100" };
+      case "EXAM_ASSIGNED":
+      case "EXAM_RESULT":
+        // Purple Ban: replaced violet with blue
+        return { icon: "assignment", color: "text-blue-600 bg-blue-50 border-blue-100 shadow-blue-100 dark:text-blue-200 dark:bg-blue-500/10 dark:border-blue-400/25 dark:shadow-blue-950/30" };
       case "MATERIAL":
-        return { icon: "library_books", color: "text-emerald-500 bg-emerald-50 border-emerald-100" };
+      case "MATERIAL_APPROVED":
+      case "MATERIAL_REJECTED":
+        return { icon: "library_books", color: "text-teal-600 bg-teal-50 border-teal-100 shadow-teal-100 dark:text-teal-200 dark:bg-teal-500/10 dark:border-teal-400/25 dark:shadow-teal-950/30" };
       case "WARNING":
-        return { icon: "warning", color: "text-amber-500 bg-amber-50 border-amber-100" };
+        return { icon: "warning", color: "text-amber-600 bg-amber-50 border-amber-100 shadow-amber-100 dark:text-amber-200 dark:bg-amber-500/10 dark:border-amber-400/25 dark:shadow-amber-950/30" };
       default:
-        return { icon: "info", color: "text-blue-500 bg-blue-50 border-blue-100" };
+        return { icon: "info", color: "text-blue-600 bg-blue-50 border-blue-100 shadow-blue-100 dark:text-cyan-200 dark:bg-cyan-500/10 dark:border-cyan-400/25 dark:shadow-cyan-950/30" };
     }
   };
 
@@ -219,22 +257,22 @@ export default function NotificationBell() {
       const now = new Date();
       const date = new Date(dateStr);
       const diffMs = now.getTime() - date.getTime();
-      if (diffMs < 0) return "Vừa xong";
+      if (diffMs < 0) return t("time.just_now");
 
       const diffMins = Math.floor(diffMs / 60000);
-      if (diffMins < 1) return "Vừa xong";
-      if (diffMins < 60) return `${diffMins} phút trước`;
+      if (diffMins < 1) return t("time.just_now");
+      if (diffMins < 60) return t("time.minutes_ago", { count: diffMins });
 
       const diffHours = Math.floor(diffMins / 60);
-      if (diffHours < 24) return `${diffHours} giờ trước`;
+      if (diffHours < 24) return t("time.hours_ago", { count: diffHours });
 
       const diffDays = Math.floor(diffHours / 24);
-      if (diffDays === 1) return "Hôm qua";
-      if (diffDays < 30) return `${diffDays} ngày trước`;
+      if (diffDays === 1) return t("time.yesterday");
+      if (diffDays < 30) return t("time.days_ago", { count: diffDays });
 
       return date.toLocaleDateString("vi-VN", { day: "numeric", month: "numeric", year: "numeric" });
     } catch {
-      return "Vừa xong";
+      return t("time.just_now");
     }
   };
 
@@ -257,7 +295,7 @@ export default function NotificationBell() {
 
       {/* Notifications Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 sm:right-0 mt-3 w-screen max-w-[360px] sm:w-[400px] bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 flex flex-col overflow-hidden max-h-[550px] animate-slide-up">
+        <div className="absolute right-0 sm:right-0 mt-3 w-screen max-w-[360px] sm:w-[400px] rounded-2xl border border-slate-100 bg-white shadow-2xl z-50 flex flex-col overflow-hidden max-h-[550px] animate-slide-up dark:border-cyan-900/50 dark:bg-[#071829] dark:shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
           <style>{`
             @keyframes slide-up {
               from { transform: translateY(10px); opacity: 0; }
@@ -269,36 +307,36 @@ export default function NotificationBell() {
           `}</style>
 
           {/* Header */}
-          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 dark:border-cyan-900/40 dark:bg-[#0A1F3E]">
             <div>
-              <h3 className="font-headline font-black text-[#00355f] text-sm tracking-tight">Thông báo</h3>
-              <p className="text-[10px] text-slate-500 font-medium">Bạn có {unreadCount} thông báo chưa đọc</p>
+              <h3 className="font-headline font-black text-[#00355f] text-sm tracking-tight dark:text-cyan-100">{t("title")}</h3>
+              <p className="text-[10px] text-slate-500 font-medium dark:text-slate-400">{t("unread_count", { count: unreadCount })}</p>
             </div>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-xs font-bold text-[#0f4c81] hover:underline"
+                className="text-xs font-bold text-[#0f4c81] hover:underline dark:text-cyan-300"
               >
-                Đánh dấu đọc tất cả
+                {t("mark_all_read")}
               </button>
             )}
           </div>
 
           {/* Search and Filters Section */}
-          <div className="p-3 bg-slate-50/30 border-b border-slate-100 space-y-2">
+          <div className="p-3 bg-slate-50/30 border-b border-slate-100 space-y-2 dark:border-cyan-900/40 dark:bg-[#061326]">
             {/* Search Input */}
-            <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-[#00355f]/15 transition-all">
-              <span className="material-symbols-outlined text-slate-400 text-base">search</span>
+            <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-[#00355f]/15 transition-all dark:border-cyan-900/50 dark:bg-[#0A1F3E] dark:focus-within:border-cyan-500/60 dark:focus-within:ring-cyan-500/15">
+              <span className="material-symbols-outlined text-slate-400 text-base dark:text-slate-500">search</span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && fetchNotifications(true)}
-                placeholder="Tìm kiếm thông báo..."
-                className="w-full bg-transparent border-none text-xs text-slate-700 placeholder-slate-400 focus:ring-0 outline-none px-1.5"
+                placeholder={t("search_placeholder")}
+                className="w-full bg-transparent border-none text-xs text-slate-700 placeholder-slate-400 focus:ring-0 outline-none px-1.5 dark:text-slate-100 dark:placeholder-slate-500"
               />
               {searchQuery && (
-                <button onClick={() => { setSearchQuery(""); fetchNotifications(true); }} className="material-symbols-outlined text-slate-400 text-sm">close</button>
+                <button onClick={() => { setSearchQuery(""); fetchNotifications(true); }} className="material-symbols-outlined text-slate-400 text-sm hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200">close</button>
               )}
             </div>
 
@@ -307,33 +345,35 @@ export default function NotificationBell() {
               <select
                 value={filterType}
                 onChange={e => setFilterType(e.target.value)}
-                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-600 outline-none"
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-600 outline-none dark:border-cyan-900/50 dark:bg-[#0A1F3E] dark:text-slate-200"
               >
-                <option value="all">Tất cả loại</option>
-                <option value="SYSTEM">Hệ thống</option>
-                <option value="EXAM">Kỳ thi</option>
-                <option value="MATERIAL">Tài liệu</option>
-                <option value="WARNING">Cảnh báo</option>
+                <option value="all">{t("types.all")}</option>
+                <option value="WELCOME">{t("types.welcome")}</option>
+                <option value="SYSTEM">{t("types.system")}</option>
+                <option value="EXAM">{t("types.exam")}</option>
+                <option value="MATERIAL">{t("types.material")}</option>
+                <option value="CLASSROOM">{t("types.classroom")}</option>
+                <option value="WARNING">{t("types.warning")}</option>
               </select>
 
               <select
                 value={filterRead}
                 onChange={e => setFilterRead(e.target.value)}
-                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-600 outline-none"
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-600 outline-none dark:border-cyan-900/50 dark:bg-[#0A1F3E] dark:text-slate-200"
               >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="unread">Chưa đọc</option>
-                <option value="read">Đã đọc</option>
+                <option value="all">{t("states.all")}</option>
+                <option value="unread">{t("states.unread")}</option>
+                <option value="read">{t("states.read")}</option>
               </select>
             </div>
           </div>
 
           {/* List items */}
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-100 max-h-[300px]">
+          <div className="flex-1 overflow-y-auto divide-y divide-slate-100 max-h-[300px] dark:divide-cyan-950/50 dark:bg-[#071829]">
             {notifications.length === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center">
-                <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">notifications_off</span>
-                <p className="text-xs text-slate-400 font-medium">Không tìm thấy thông báo nào</p>
+                <span className="material-symbols-outlined text-slate-300 text-4xl mb-2 dark:text-slate-600">notifications_off</span>
+                <p className="text-xs text-slate-400 font-medium dark:text-slate-500">{t("empty")}</p>
               </div>
             ) : (
               notifications.map(item => {
@@ -342,27 +382,29 @@ export default function NotificationBell() {
                   <div
                     key={item.id}
                     onClick={() => markAsRead(item.id)}
-                    className={`p-4 flex gap-3 transition-colors duration-200 cursor-pointer ${
-                      item.read ? "bg-white hover:bg-slate-50/50" : "bg-blue-50/20 hover:bg-blue-50/40"
+                    className={`p-4 flex gap-3 transition-colors duration-200 cursor-pointer group ${
+                      item.read
+                        ? "bg-white hover:bg-slate-50/50 dark:bg-[#071829] dark:hover:bg-[#0A1F3E]"
+                        : "bg-blue-50/20 hover:bg-blue-50/40 dark:bg-cyan-500/10 dark:hover:bg-cyan-500/15"
                     }`}
                   >
                     {/* Icon container */}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 ${meta.color}`}>
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 shadow-sm ring-1 ring-white/70 dark:ring-white/5 ${meta.color}`}>
                       <span className="material-symbols-outlined text-lg">{meta.icon}</span>
                     </div>
 
                     {/* Text contents */}
                     <div className="flex-1 min-w-0 space-y-0.5">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`text-xs tracking-tight leading-snug truncate ${item.read ? "text-slate-700 font-semibold" : "text-[#00355f] font-black"}`}>
+                        <p className={`text-xs tracking-tight leading-snug truncate ${item.read ? "text-slate-700 font-semibold dark:text-slate-300" : "text-[#00355f] font-black dark:text-cyan-100"}`}>
                           {item.title}
                         </p>
-                        {!item.read && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />}
+                        {!item.read && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5 dark:bg-cyan-400" />}
                       </div>
-                      <p className="text-[10px] text-slate-500 leading-relaxed break-words line-clamp-2">
+                      <p className="text-[10px] text-slate-500 leading-relaxed break-words line-clamp-2 dark:text-slate-400">
                         {item.content}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-medium">
+                      <p className="text-[9px] text-slate-400 font-medium dark:text-slate-500">
                         {formatTime(item.createdAt)}
                       </p>
                     </div>
@@ -370,7 +412,7 @@ export default function NotificationBell() {
                     {/* Delete button */}
                     <button
                       onClick={e => deleteNotification(item.id, e)}
-                      className="p-1 text-slate-300 hover:text-red-500 rounded-lg self-center opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity"
+                      className="p-1 text-slate-300 hover:text-red-500 rounded-lg self-center opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity dark:text-slate-600 dark:hover:text-rose-300"
                     >
                       <span className="material-symbols-outlined text-base">delete</span>
                     </button>
@@ -385,13 +427,13 @@ export default function NotificationBell() {
             <button
               onClick={() => fetchNotifications()}
               disabled={loading}
-              className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-center text-xs font-bold text-[#00355f] border-t border-slate-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+              className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-center text-xs font-bold text-[#00355f] border-t border-slate-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1 dark:border-cyan-900/40 dark:bg-[#0A1F3E] dark:text-cyan-200 dark:hover:bg-cyan-950/50"
             >
               {loading ? (
-                <span>Đang tải...</span>
+                <span>{t("loading")}</span>
               ) : (
                 <>
-                  <span>Xem thêm</span>
+                  <span>{t("load_more")}</span>
                   <span className="material-symbols-outlined text-xs">expand_more</span>
                 </>
               )}

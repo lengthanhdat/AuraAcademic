@@ -1,6 +1,7 @@
 "use client";
 import { Link, usePathname } from "@/navigation";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const navSections = [
   {
@@ -82,21 +83,25 @@ export function AdminSidebar({ isCollapsed = false, onClose }: SidebarProps) {
           <Link href="/admin/dashboard" className="group flex flex-col items-center justify-center transition-all duration-300">
             {isCollapsed ? (
               <div className="w-11 h-11 flex items-center justify-center hover:scale-105 transition-all">
-                <img src="/logoweb.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain dark:hidden" />
-                <img src="/logoweb-dark.png" alt="AuraAcademic Logo" className="h-5 w-auto object-contain hidden dark:block" />
+                <Image src="/logoweb.png" width={180} height={44} alt="AuraAcademic Logo" className="h-5 w-auto object-contain dark:hidden" priority />
+                <Image src="/logoweb-dark.png" width={180} height={44} alt="AuraAcademic Logo" className="h-5 w-auto object-contain hidden dark:block" priority />
               </div>
             ) : (
               /* Center and scale up the vertical logo in a premium card */
               <div className="flex flex-col items-center justify-center py-2 w-full transition-all duration-300">
-                <img 
+                <Image 
                   src="/logoweb.png" 
                   alt="AuraAcademic" 
+                  width={180} height={44}
                   className="h-20 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] dark:hidden" 
+                  priority
                 />
-                <img 
+                <Image 
                   src="/logoweb-dark.png" 
                   alt="AuraAcademic" 
+                  width={180} height={44}
                   className="h-20 w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] hidden dark:block" 
+                  priority
                 />
               </div>
             )}

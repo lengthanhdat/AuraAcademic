@@ -5,8 +5,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAlert } from "@/components/ui/AlertProvider";
-import { useTranslations, useLocale } from "next-intl";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "850775217149-9jm0o8ioj9nbe7v0sfbc7ph9jvda9rga.apps.googleusercontent.com";
 
@@ -14,7 +14,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { showAlert } = useAlert();
   const t = useTranslations('Login');
-  const currentLocale = useLocale();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -118,7 +117,7 @@ export default function LoginPage() {
 
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center gap-3 text-white mb-12 hover:opacity-90 transition-all hover:scale-[1.02]">
-              <img src="/logoweb-dark.png" alt="AuraAcademic" className="h-11 object-contain brightness-125" />
+              <Image src="/logoweb-dark.png" alt="AuraAcademic" width={200} height={44} className="h-11 w-auto object-contain brightness-125" priority />
             </Link>
             <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10 mb-8 shadow-lg">
               <span className="material-symbols-outlined text-[#00C6FF]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
@@ -152,10 +151,6 @@ export default function LoginPage() {
 
         {/* Right Panel: Login Form */}
         <div className="w-full lg:w-[55%] p-8 sm:p-12 md:p-16 lg:p-20 flex flex-col justify-center relative bg-white/40 dark:bg-[#020b18]/40">
-          <div className="absolute top-8 right-8 z-20">
-            <LanguageSwitcher />
-          </div>
-
           <div className="max-w-md w-full mx-auto">
             <div className="text-center sm:text-left mb-10">
               <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">{t('welcome')}</h2>
@@ -163,7 +158,7 @@ export default function LoginPage() {
             </div>
 
             <div className="w-full mb-8 flex justify-center items-center hover:scale-[1.01] transition-transform duration-200">
-              <GoogleOAuthProvider clientId={googleClientId} locale={currentLocale}>
+              <GoogleOAuthProvider clientId={googleClientId} locale="vi">
                 <GoogleLogin
                   onSuccess={async (creds) => {
                     try {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -17,83 +18,55 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Real-time password validation state
-  const [criteria, setCriteria] = useState({
-    length: false,
-    uppercase: false,
-    lowercase: false,
-    number: false,
-    special: false,
-    match: false,
-  });
-
-  useEffect(() => {
-    setCriteria({
-      length: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /[0-9]/.test(password),
-      special: /[@$!%*#?&._^()\-+=]/.test(password),
-      match: password.length > 0 && password === confirmPassword,
-    });
-  }, [password, confirmPassword]);
+  const criteria = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /\d/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+    match: password.length > 0 && password === confirmPassword,
+  };
 
   const isValid = Object.values(criteria).every(Boolean);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
     if (!token) {
-      setError("Token đặt lại mật khẩu không hợp lệ hoặc đã thiếu.");
-      return;
+      setError("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
     }
-    if (!isValid) {
-      setError("Vui lòng đáp ứng tất cả các tiêu chí mật khẩu bảo mật.");
-      return;
-    }
+  }, [token]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isValid || !token) return;
 
     setLoading(true);
-    setMessage("");
     setError("");
+    setMessage("");
 
     try {
-      const res = await fetch("http://localhost:8088/api/auth/reset-password", {
+      const response = await fetch("http://localhost:8088/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword: password }),
       });
 
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok) {
-        setMessage(data.message || "Đặt lại mật khẩu thành công. Bạn đang được chuyển hướng về trang đăng nhập...");
-        setTimeout(() => {
-          router.push("/login");
-        }, 3000);
-      } else {
-        setError(data.message || "Có lỗi xảy ra hoặc token đã hết hạn. Vui lòng thử lại.");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể đặt lại mật khẩu.");
       }
+
+      setMessage("Mật khẩu đã được đặt lại thành công. Đang chuyển về trang đăng nhập...");
+      setTimeout(() => router.push("/login"), 1500);
     } catch (err) {
-      setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối.");
+      setError(err instanceof Error ? err.message : "Không thể kết nối đến máy chủ.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-[#020C1B] transition-colors duration-300">
-      {/* Premium Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-8 py-6 flex justify-between items-center bg-transparent pointer-events-none">
-        <div className="pointer-events-auto">
-          {/* Logo visible on mobile/tablet but hidden on desktop since it is in the left panel */}
-          <Link href="/" className="lg:hidden hover:opacity-90 transition-all hover:scale-[1.02]">
-            <img src="/logoweb.png" alt="Aura Academic Logo" className="h-8 object-contain dark:hidden" />
-            <img src="/logoweb-dark.png" alt="Aura Academic Logo" className="h-8 object-contain hidden dark:block" />
-          </Link>
-        </div>
-      </header>
-
-      <main className="flex-grow flex flex-col lg:flex-row min-h-screen">
-        {/* Left Panel: Branding & High-End Visuals */}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#061326] flex flex-col">
+      <main className="flex-1 flex min-h-screen">
         <section className="hidden lg:flex lg:w-[45%] bg-gradient-to-br from-[#0C2E5E] via-[#0E3E7A] to-[#051630] relative items-center justify-center p-16 overflow-hidden">
           {/* Grid Pattern Overlay */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem]"></div>
@@ -103,7 +76,7 @@ export default function ResetPasswordPage() {
 
           <div className="absolute top-12 left-12 z-20">
             <Link href="/" className="hover:opacity-90 transition-all hover:scale-[1.02]">
-              <img src="/logoweb-dark.png" alt="Aura Academic Logo" className="h-11 object-contain brightness-125" />
+              <Image src="/logoweb-dark.png" alt="Aura Academic Logo" width={200} height={44} className="h-11 w-auto object-contain brightness-125" priority />
             </Link>
           </div>
 
@@ -123,7 +96,7 @@ export default function ResetPasswordPage() {
           </div>
 
           <div className="absolute bottom-[-10%] right-[-10%] w-[80%] h-[80%] opacity-10 rotate-12 pointer-events-none">
-            <img className="w-full h-full object-contain" alt="Abstract digital network visualization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1wQU1_5JaGL5yUrnjfLOk2yd0Ig6_YkehO-ZtSe6PYTMDWiAs48UXK6w0Z90EMnGHmVn4PqbXmiqEAuyaSjtKgGSY123DNY7NLj361uXNLbKnZ7BiO7AxOEcrvSEpHsJZZ1YYhE4USYJHst3itrbox9z9c6RUsXvWHvXxktZLTZSoAr50vNcB_mwbKugxdHXZ5TWEGNw8djuJZyoFu4j1RhO-uT8tL3zCpro9MqB0KvH7M1VxjVTORsOroiBZbGw3ZU7_Th-us90" />
+            <Image className="w-full h-full object-contain" alt="Abstract digital network visualization" width={800} height={800} unoptimized src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1wQU1_5JaGL5yUrnjfLOk2yd0Ig6_YkehO-ZtSe6PYTMDWiAs48UXK6w0Z90EMnGHmVn4PqbXmiqEAuyaSjtKgGSY123DNY7NLj361uXNLbKnZ7BiO7AxOEcrvSEpHsJZZ1YYhE4USYJHst3itrbox9z9c6RUsXvWHvXxktZLTZSoAr50vNcB_mwbKugxdHXZ5TWEGNw8djuJZyoFu4j1RhO-uT8tL3zCpro9MqB0KvH7M1VxjVTORsOroiBZbGw3ZU7_Th-us90" />
           </div>
         </section>
 

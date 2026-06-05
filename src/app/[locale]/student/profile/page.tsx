@@ -18,6 +18,7 @@ type StudentProfile = {
   department?: string;
   avatarUrl?: string;
   provider?: string;
+  hasPassword?: boolean;
   emailVerified?: boolean;
   twoFactorEnabled?: boolean;
   createdAt?: string;
@@ -88,7 +89,12 @@ const compressAvatar = (file: File): Promise<string> => new Promise((resolve, re
   img.src = url;
 });
 
+import { useTranslations, useLocale } from "next-intl";
+
 export default function StudentProfilePage() {
+  const t = useTranslations("StudentProfile");
+  const tCommon = useTranslations("TeacherProfile");
+  const locale = useLocale();
   const { showAlert } = useAlert();
 
   const [user, setUser] = useState<StudentProfile | null>(null);
@@ -155,7 +161,7 @@ export default function StudentProfilePage() {
           }
         }
       } catch {
-        if (!ignore) showAlert({ title: "Không tải được hồ sơ", message: "Vui lòng thử lại sau.", type: "error" });
+        if (!ignore) showAlert({ title: tCommon("toast_error_load"), message: tCommon("toast_error_load"), type: "error" });
       } finally {
         if (!ignore) setIsLoading(false);
       }
@@ -167,22 +173,23 @@ export default function StudentProfilePage() {
     };
   }, [showAlert]);
 
-  const displayName = user?.fullName || user?.email || "Học sinh";
+  const displayName = user?.fullName || user?.email || t("default_name");
   const initials = displayName.trim().slice(0, 2).toUpperCase();
   const totalExams = results.length;
   const averageScore = totalExams > 0 ? results.reduce((sum, item) => sum + Number(item.score || 0), 0) / totalExams : 0;
   const bestScore = totalExams > 0 ? Math.max(...results.map(item => Number(item.score || 0))) : 0;
   const passCount = results.filter(item => Number(item.score || 0) >= 5).length;
+  const needsPasswordSetup = user ? !user.hasPassword : false;
 
   const infoItems = [
-    { icon: "mail", label: "Email", value: user?.email },
-    { icon: "badge", label: "Mã học sinh", value: user?.studentId },
-    { icon: "groups", label: "Lớp", value: user?.department },
-    { icon: "school", label: "Hệ đào tạo", value: user?.title },
-    { icon: "call", label: "Số điện thoại", value: user?.phoneNumber },
-    { icon: "cake", label: "Ngày sinh", value: user?.birthDate ? formatDate(user.birthDate) : "" },
-    { icon: "wc", label: "Giới tính", value: user?.gender },
-    { icon: "login", label: "Đăng nhập gần nhất", value: formatDateTime(user?.lastLoginAt) },
+    { icon: "mail", label: t("detail_email"), value: user?.email },
+    { icon: "badge", label: t("field_student_id"), value: user?.studentId },
+    { icon: "groups", label: t("field_class"), value: user?.department },
+    { icon: "school", label: t("field_program"), value: user?.title },
+    { icon: "call", label: t("detail_phone"), value: user?.phoneNumber },
+    { icon: "cake", label: t("detail_dob"), value: user?.birthDate ? formatDate(user.birthDate) : "" },
+    { icon: "wc", label: t("detail_gender"), value: user?.gender },
+    { icon: "login", label: tCommon("lbl_last_login"), value: formatDateTime(user?.lastLoginAt) },
   ].filter(item => hasValue(item.value));
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,7 +197,7 @@ export default function StudentProfilePage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      showAlert({ title: "File không hợp lệ", message: "Chỉ chấp nhận file ảnh.", type: "error" });
+      showAlert({ title: t("avatar_type_error"), message: t("avatar_type_error"), type: "error" });
       return;
     }
 
@@ -205,9 +212,9 @@ export default function StudentProfilePage() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.message || data.error || "AVATAR_FAILED");
         updateLocalUser(data);
-        showAlert({ title: "Đã cập nhật ảnh", message: "Ảnh đại diện đã được lưu.", type: "success" });
+        showAlert({ title: t("avatar_success"), message: t("avatar_success"), type: "success" });
       } catch (error: any) {
-        showAlert({ title: "Không lưu được ảnh", message: error.message || "Vui lòng thử lại với ảnh khác.", type: "error" });
+        showAlert({ title: t("avatar_error"), message: error.message || t("avatar_error"), type: "error" });
       } finally {
         event.target.value = "";
       }
@@ -230,9 +237,9 @@ export default function StudentProfilePage() {
       updateLocalUser(data);
       fillForm(data);
       setIsEditing(false);
-      showAlert({ title: "Đã lưu hồ sơ", message: "Thông tin học sinh đã được cập nhật.", type: "success" });
+      showAlert({ title: t("profile_success"), message: t("profile_success"), type: "success" });
     } catch (error: any) {
-      showAlert({ title: "Không lưu được hồ sơ", message: error.message || "Vui lòng kiểm tra lại thông tin.", type: "error" });
+      showAlert({ title: t("profile_error"), message: error.message || t("profile_error"), type: "error" });
     } finally {
       setIsSaving(false);
     }
@@ -241,7 +248,7 @@ export default function StudentProfilePage() {
   const handleChangePassword = async (event: React.FormEvent) => {
     event.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      showAlert({ title: "Mật khẩu không khớp", message: "Vui lòng nhập lại mật khẩu xác nhận.", type: "warning" });
+      showAlert({ title: t("pw_mismatch"), message: t("pw_mismatch"), type: "warning" });
       return;
     }
 
@@ -259,9 +266,16 @@ export default function StudentProfilePage() {
       if (!res.ok) throw new Error(data.message || data.error || "PASSWORD_FAILED");
 
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      showAlert({ title: "Đã đổi mật khẩu", message: "Bạn có thể tiếp tục sử dụng tài khoản.", type: "success" });
+      if (user) {
+        updateLocalUser({ ...user, hasPassword: true });
+      }
+      showAlert({
+        title: needsPasswordSetup ? tCommon("toast_pw_setup_success") : tCommon("toast_pw_change_success"),
+        message: needsPasswordSetup ? tCommon("toast_pw_setup_success") : tCommon("toast_pw_change_success"),
+        type: "success",
+      });
     } catch (error: any) {
-      showAlert({ title: "Không đổi được mật khẩu", message: error.message || "Vui lòng kiểm tra mật khẩu hiện tại.", type: "error" });
+      showAlert({ title: t("pw_error"), message: error.message || t("pw_error"), type: "error" });
     } finally {
       setIsChangingPassword(false);
     }
@@ -281,17 +295,17 @@ export default function StudentProfilePage() {
         const message = data.message || data.error || "";
         if (message.includes("được xác thực") || message.includes("đã xác thực")) {
           updateLocalUser({ ...user, emailVerified: true });
-          showAlert({ title: "Email đã xác minh", message: "Tài khoản này đã được xác minh email trước đó.", type: "info" });
+          showAlert({ title: tCommon("toast_email_verify_already"), message: tCommon("toast_email_verify_already"), type: "info" });
           return;
         }
         throw new Error(message || "VERIFY_EMAIL_FAILED");
       }
 
-      showAlert({ title: "Đã gửi mã xác minh", message: "Vui lòng kiểm tra email và nhập mã OTP.", type: "success" });
+      showAlert({ title: tCommon("toast_email_verify_sent"), message: tCommon("toast_email_verify_sent"), type: "success" });
       setEmailVerificationPending(true);
       setEmailVerificationCode("");
     } catch (error: any) {
-      showAlert({ title: "Không gửi được mã", message: error.message || "Vui lòng thử lại sau.", type: "error" });
+      showAlert({ title: tCommon("toast_error_load"), message: error.message || tCommon("toast_error_load"), type: "error" });
     } finally {
       setIsSendingVerification(false);
     }
@@ -300,7 +314,7 @@ export default function StudentProfilePage() {
   const handleConfirmEmailVerification = async () => {
     if (!user?.email) return;
     if (emailVerificationCode.trim().length !== 6) {
-      showAlert({ title: "Thiếu mã OTP", message: "Nhập mã OTP 6 số đã gửi về email.", type: "warning" });
+      showAlert({ title: tCommon("toast_otp_missing"), message: tCommon("toast_otp_missing"), type: "warning" });
       return;
     }
 
@@ -317,9 +331,9 @@ export default function StudentProfilePage() {
       updateLocalUser({ ...user, emailVerified: true });
       setEmailVerificationPending(false);
       setEmailVerificationCode("");
-      showAlert({ title: "Email đã xác minh", message: "Tài khoản đã được xác minh email.", type: "success" });
+      showAlert({ title: tCommon("toast_email_verify_success"), message: tCommon("toast_email_verify_success"), type: "success" });
     } catch (error: any) {
-      showAlert({ title: "Không xác minh được email", message: error.message || "Vui lòng kiểm tra lại mã OTP.", type: "error" });
+      showAlert({ title: tCommon("toast_email_verify_error"), message: error.message || tCommon("toast_email_verify_error"), type: "error" });
     } finally {
       setIsSendingVerification(false);
     }
@@ -334,9 +348,9 @@ export default function StudentProfilePage() {
 
       setTwoFactorPending(true);
       setTwoFactorCode("");
-      showAlert({ title: "Đã gửi mã 2FA", message: "Mã OTP 6 số đã được gửi tới email của bạn.", type: "success" });
+      showAlert({ title: tCommon("toast_2fa_sent"), message: tCommon("toast_2fa_sent"), type: "success" });
     } catch (error: any) {
-      showAlert({ title: "Không gửi được mã 2FA", message: error.message || "Vui lòng thử lại sau.", type: "error" });
+      showAlert({ title: tCommon("toast_error_load"), message: error.message || tCommon("toast_error_load"), type: "error" });
     } finally {
       setIsTwoFactorBusy(false);
     }
@@ -344,7 +358,7 @@ export default function StudentProfilePage() {
 
   const handleConfirmTwoFactor = async () => {
     if (!twoFactorCode.trim()) {
-      showAlert({ title: "Thiếu mã 2FA", message: "Nhập mã OTP 6 số đã gửi về email.", type: "warning" });
+      showAlert({ title: tCommon("toast_otp_missing"), message: tCommon("toast_otp_missing"), type: "warning" });
       return;
     }
 
@@ -363,12 +377,12 @@ export default function StudentProfilePage() {
       setTwoFactorPending(false);
       setTwoFactorCode("");
       showAlert({
-        title: user?.twoFactorEnabled ? "Đã tắt 2FA" : "Đã bật 2FA",
-        message: user?.twoFactorEnabled ? "Xác thực hai bước đã được tắt." : "Tài khoản đã được bảo vệ bằng email OTP.",
+        title: user?.twoFactorEnabled ? tCommon("toast_2fa_disabled") : tCommon("toast_2fa_enabled"),
+        message: user?.twoFactorEnabled ? tCommon("toast_2fa_disabled") : tCommon("toast_2fa_enabled"),
         type: "success",
       });
     } catch (error: any) {
-      showAlert({ title: "Không xác nhận được 2FA", message: error.message || "Vui lòng kiểm tra lại mã.", type: "error" });
+      showAlert({ title: tCommon("toast_2fa_error"), message: error.message || tCommon("toast_2fa_error"), type: "error" });
     } finally {
       setIsTwoFactorBusy(false);
     }
@@ -396,12 +410,12 @@ export default function StudentProfilePage() {
                 )}
                 <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-1 bg-black/45 text-xs font-black text-white opacity-0 transition hover:opacity-100">
                   <span className="material-symbols-outlined text-[24px]">photo_camera</span>
-                  Đổi ảnh
+                  {t("change_photo")}
                   <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                 </label>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">Hồ sơ học sinh</p>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">{t("title")}</p>
                 <h1 className="mt-2 break-words text-3xl font-black md:text-4xl">{displayName}</h1>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {user?.studentId && <Badge icon="badge" text={user.studentId} />}
@@ -416,35 +430,35 @@ export default function StudentProfilePage() {
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-sky-600/20 hover:bg-sky-700"
             >
               <span className="material-symbols-outlined text-[20px]">{isEditing ? "close" : "edit"}</span>
-              {isEditing ? "Đóng sửa" : "Sửa hồ sơ"}
+              {isEditing ? t("btn_close") : t("btn_edit")}
             </button>
           </div>
         </section>
 
         <section className="grid gap-4 md:grid-cols-4">
-          <StatCard icon="assignment" label="Bài đã làm" value={totalExams.toString()} tone="text-sky-600" />
-          <StatCard icon="speed" label="Điểm trung bình" value={averageScore.toFixed(1)} tone="text-indigo-600" />
-          <StatCard icon="workspace_premium" label="Điểm cao nhất" value={bestScore.toFixed(1)} tone="text-emerald-600" />
-          <StatCard icon="task_alt" label="Đạt yêu cầu" value={`${passCount}/${totalExams}`} tone="text-rose-600" />
+          <StatCard icon="assignment" label={t("summary_exams")} value={totalExams.toString()} tone="text-sky-600" />
+          <StatCard icon="speed" label={t("summary_avg")} value={averageScore.toFixed(1)} tone="text-indigo-600" />
+          <StatCard icon="workspace_premium" label={t("stat_best")} value={bestScore.toFixed(1)} tone="text-emerald-600" />
+          <StatCard icon="task_alt" label={t("stat_pass")} value={`${passCount}/${totalExams}`} tone="text-rose-600" />
         </section>
 
         {isEditing && (
-          <Panel title="Cập nhật hồ sơ" icon="edit">
+          <Panel title={t("update_title")} icon="edit">
             <form onSubmit={handleSaveProfile} className="grid gap-4 md:grid-cols-2">
-              <Input label="Họ tên" value={form.fullName} onChange={value => setForm({ ...form, fullName: value })} required />
-              <Input label="Mã học sinh" value={form.studentId} onChange={value => setForm({ ...form, studentId: value })} />
-              <Input label="Lớp" value={form.department} onChange={value => setForm({ ...form, department: value })} />
-              <Input label="Hệ đào tạo" value={form.title} onChange={value => setForm({ ...form, title: value })} />
-              <Input label="Số điện thoại" value={form.phoneNumber} onChange={value => setForm({ ...form, phoneNumber: value })} />
-              <Input label="Ngày sinh" type="date" value={form.birthDate} onChange={value => setForm({ ...form, birthDate: value })} />
-              <Select label="Giới tính" value={form.gender} onChange={value => setForm({ ...form, gender: value })} />
+              <Input label={t("field_fullname")} value={form.fullName} onChange={value => setForm({ ...form, fullName: value })} required />
+              <Input label={t("field_student_id")} value={form.studentId} onChange={value => setForm({ ...form, studentId: value })} />
+              <Input label={t("field_class")} value={form.department} onChange={value => setForm({ ...form, department: value })} />
+              <Input label={t("field_program")} value={form.title} onChange={value => setForm({ ...form, title: value })} />
+              <Input label={t("field_phone")} value={form.phoneNumber} onChange={value => setForm({ ...form, phoneNumber: value })} />
+              <Input label={t("detail_dob")} type="date" value={form.birthDate} onChange={value => setForm({ ...form, birthDate: value })} />
+              <Select label={t("detail_gender")} value={form.gender} onChange={value => setForm({ ...form, gender: value })} t={t} />
               <div className="flex items-end">
                 <button
                   type="submit"
                   disabled={isSaving}
                   className="w-full rounded-2xl bg-sky-600 px-4 py-3 font-black text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                  {isSaving ? t("btn_saving") : t("btn_save")}
                 </button>
               </div>
             </form>
@@ -453,7 +467,7 @@ export default function StudentProfilePage() {
 
         <section className="grid gap-6 xl:grid-cols-[1fr_420px]">
           <div className="space-y-6">
-            <Panel title="Thông tin hiện có" icon="person">
+            <Panel title={tCommon("panel_info")} icon="person">
               {infoItems.length > 0 ? (
                 <div className="grid gap-3 md:grid-cols-2">
                   {infoItems.map(item => (
@@ -467,62 +481,81 @@ export default function StudentProfilePage() {
                   ))}
                 </div>
               ) : (
-                <EmptyState icon="person_add" text="Chưa có thông tin hồ sơ để hiển thị." />
+                <EmptyState icon="person_add" text={tCommon("empty_info")} />
               )}
             </Panel>
 
-            <Panel title="Kết quả gần đây" icon="bar_chart">
+            <Panel title={t("results_title")} icon="bar_chart">
               {results.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="text-xs font-black uppercase tracking-wide text-slate-400">
-                        <th className="px-3 py-3">Bài thi</th>
-                        <th className="px-3 py-3">Điểm</th>
-                        <th className="px-3 py-3">Nộp lúc</th>
-                        <th className="px-3 py-3">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {results.slice(0, 6).map((item, index) => {
-                        const score = Number(item.score || 0);
-                        return (
-                          <tr key={item.id || index}>
-                            <td className="px-3 py-4 font-bold text-slate-800 dark:text-white">{item.examTitle || `Bài thi #${item.examId || index + 1}`}</td>
-                            <td className="px-3 py-4 font-black text-sky-600">{score.toFixed(1)}</td>
-                            <td className="px-3 py-4 text-sm text-slate-500">{formatDateTime(item.submittedAt) || "--"}</td>
-                            <td className="px-3 py-4">
-                              <span className={`rounded-full px-3 py-1 text-xs font-black ${score >= 5 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
-                                {score >= 5 ? "Đạt" : "Chưa đạt"}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <div className="overflow-hidden">
+                  <div className="hidden grid-cols-[minmax(180px,1fr)_84px_150px_112px] items-center gap-4 border-b border-slate-100 px-3 pb-3 text-xs font-black uppercase tracking-wide text-slate-400 dark:border-slate-800 md:grid">
+                    <span>{t("col_exam")}</span>
+                    <span className="text-center">{t("col_score")}</span>
+                    <span>{t("col_date")}</span>
+                    <span className="text-center">{t("col_status")}</span>
+                  </div>
+
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {results.slice(0, 6).map((item, index) => {
+                      const score = Number(item.score || 0);
+                      const passed = score >= 5;
+                      return (
+                        <div
+                          key={item.id || index}
+                          className="grid gap-3 px-3 py-4 md:grid-cols-[minmax(180px,1fr)_84px_150px_112px] md:items-center md:gap-4"
+                        >
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 font-black leading-snug text-slate-900 dark:text-white">
+                              {item.examTitle || `${t("col_exam")} #${item.examId || index + 1}`}
+                            </p>
+                            <p className="mt-1 text-xs font-semibold text-slate-400 md:hidden">
+                              {formatDateTime(item.submittedAt) || "--"}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between md:block md:text-center">
+                            <span className="text-xs font-black uppercase tracking-wide text-slate-400 md:hidden">{t("col_score")}</span>
+                            <span className={`text-2xl font-black tabular-nums ${passed ? "text-emerald-600" : "text-sky-600"}`}>
+                              {score.toFixed(1)}
+                            </span>
+                          </div>
+
+                          <div className="hidden text-sm font-semibold leading-5 text-slate-500 dark:text-slate-400 md:block">
+                            {formatDateTime(item.submittedAt) || "--"}
+                          </div>
+
+                          <div className="flex items-center justify-between md:justify-center">
+                            <span className="text-xs font-black uppercase tracking-wide text-slate-400 md:hidden">{t("col_status")}</span>
+                            <span className={`inline-flex min-w-[82px] items-center justify-center whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-black ${passed ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"}`}>
+                              {passed ? t("status_pass") : t("status_fail")}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
-                <EmptyState icon="assignment_late" text="Chưa có kết quả thi nào." />
+                <EmptyState icon="assignment_late" text={t("no_data")} />
               )}
             </Panel>
           </div>
 
           <div className="space-y-6">
-            <Panel title="Bảo mật" icon="lock">
+            <Panel title={tCommon("panel_security")} icon="lock">
               <div className="mb-5 space-y-3">
                 <SecurityActionRow
-                  label="Email"
-                  value={user?.emailVerified ? "Đã xác minh" : "Chưa xác minh"}
+                  label={tCommon("lbl_email")}
+                  value={user?.emailVerified ? tCommon("sec_verified") : tCommon("sec_unverified")}
                   ok={!!user?.emailVerified}
-                  actionLabel={!user?.emailVerified ? (isSendingVerification ? "Đang gửi..." : "Xác minh") : undefined}
+                  actionLabel={!user?.emailVerified ? (isSendingVerification ? tCommon("btn_sending") : tCommon("btn_verify")) : undefined}
                   onAction={!user?.emailVerified ? handleSendEmailVerification : undefined}
                   disabled={isSendingVerification}
                 />
                 {emailVerificationPending && !user?.emailVerified && (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/60">
                     <div className="mb-4 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-                      Mã OTP 6 số đã được gửi về {user?.email}. Nhập mã bên dưới để xác minh email.
+                      {tCommon("msg_otp_sent_email", { email: user?.email || "" })}
                     </div>
                     <div className="flex gap-2">
                       <input
@@ -530,7 +563,7 @@ export default function StudentProfilePage() {
                         onChange={event => setEmailVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                         maxLength={6}
                         inputMode="numeric"
-                        placeholder="Mã 6 số"
+                        placeholder={tCommon("placeholder_otp")}
                         className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-black tracking-[0.3em] outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900"
                       />
                       <button
@@ -539,17 +572,21 @@ export default function StudentProfilePage() {
                         disabled={isSendingVerification || emailVerificationCode.length !== 6}
                         className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-black text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        Xác nhận
+                        {tCommon("btn_confirm")}
                       </button>
                     </div>
                   </div>
                 )}
-                <SecurityActionRow label="Đăng nhập" value={user?.provider ? `Qua ${user.provider}` : "Mật khẩu"} ok />
+                <SecurityActionRow
+                  label="Đăng nhập"
+                  value={needsPasswordSetup ? (user?.provider === "google" ? "Google" : "Chưa có mật khẩu") : user?.provider === "google" ? "Google + Mật khẩu" : "Mật khẩu"}
+                  ok
+                />
                 <SecurityActionRow
                   label="2FA"
-                  value={user?.twoFactorEnabled ? "Đang bật" : "Chưa bật"}
+                  value={user?.twoFactorEnabled ? tCommon("sec_enabled") : tCommon("sec_disabled")}
                   ok={!!user?.twoFactorEnabled}
-                  actionLabel={user?.twoFactorEnabled ? "Gửi mã tắt" : "Gửi mã bật"}
+                  actionLabel={user?.twoFactorEnabled ? tCommon("btn_send_disable") : tCommon("btn_send_enable")}
                   onAction={handleSendTwoFactorOtp}
                   disabled={isTwoFactorBusy}
                 />
@@ -558,7 +595,7 @@ export default function StudentProfilePage() {
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/60">
                     {twoFactorPending && (
                       <div className="mb-4 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-                        Mã OTP 6 số đã được gửi về email. Nhập mã bên dưới để {user?.twoFactorEnabled ? "tắt" : "bật"} 2FA.
+                        {tCommon("msg_otp_sent_2fa", { action: user?.twoFactorEnabled ? tCommon("btn_disable").toLowerCase() : tCommon("btn_confirm").toLowerCase() })}
                       </div>
                     )}
                     <div className="flex gap-2">
@@ -567,7 +604,7 @@ export default function StudentProfilePage() {
                         onChange={event => setTwoFactorCode(event.target.value)}
                         maxLength={6}
                         inputMode="numeric"
-                        placeholder="Mã 6 số"
+                        placeholder={tCommon("placeholder_otp")}
                         className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-black tracking-[0.3em] outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900"
                       />
                       <button
@@ -576,23 +613,41 @@ export default function StudentProfilePage() {
                         disabled={isTwoFactorBusy}
                         className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-black text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {user?.twoFactorEnabled ? "Tắt" : "Xác nhận"}
+                        {user?.twoFactorEnabled ? tCommon("btn_disable") : tCommon("btn_confirm")}
                       </button>
                     </div>
                   </div>
                 )}
               </div>
 
-              <form onSubmit={handleChangePassword} className="space-y-3 border-t border-slate-100 pt-5 dark:border-slate-800">
-                <Input label="Mật khẩu hiện tại" type="password" value={passwordForm.currentPassword} onChange={value => setPasswordForm({ ...passwordForm, currentPassword: value })} required />
-                <Input label="Mật khẩu mới" type="password" value={passwordForm.newPassword} onChange={value => setPasswordForm({ ...passwordForm, newPassword: value })} required />
-                <Input label="Nhập lại mật khẩu mới" type="password" value={passwordForm.confirmPassword} onChange={value => setPasswordForm({ ...passwordForm, confirmPassword: value })} required />
+              <form onSubmit={handleChangePassword} className="space-y-4 border-t border-slate-100 pt-5 dark:border-slate-800">
+                <div className={`rounded-2xl border p-4 ${needsPasswordSetup ? "border-sky-200 bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10" : "border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10"}`}>
+                  <div className="flex items-start gap-3">
+                    <span className={`material-symbols-outlined rounded-2xl p-2 ${needsPasswordSetup ? "bg-white text-sky-600 dark:bg-sky-950/60 dark:text-sky-300" : "bg-white text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-300"}`}>
+                      {needsPasswordSetup ? "add_moderator" : "verified_user"}
+                    </span>
+                    <div>
+                      <h3 className="font-black text-slate-900 dark:text-white">
+                        {needsPasswordSetup ? tCommon("pw_setup_title") : tCommon("pw_change_title")}
+                      </h3>
+                      <p className="mt-1 text-sm font-semibold leading-6 text-slate-600 dark:text-slate-300">
+                        {needsPasswordSetup ? tCommon("pw_setup_desc") : tCommon("pw_change_desc")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {user?.hasPassword && (
+                  <PasswordInput label={t("pw_current")} value={passwordForm.currentPassword} onChange={value => setPasswordForm({ ...passwordForm, currentPassword: value })} autoComplete="current-password" required t={tCommon} />
+                )}
+                <PasswordInput label={t("pw_new")} value={passwordForm.newPassword} onChange={value => setPasswordForm({ ...passwordForm, newPassword: value })} autoComplete="new-password" required t={tCommon} />
+                <PasswordInput label={t("pw_confirm")} value={passwordForm.confirmPassword} onChange={value => setPasswordForm({ ...passwordForm, confirmPassword: value })} autoComplete="new-password" required t={tCommon} />
                 <button
                   type="submit"
                   disabled={isChangingPassword}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-black text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
-                  {isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}
+                  {isChangingPassword ? t("btn_pw_processing") : needsPasswordSetup ? tCommon("btn_setup_pw") : t("btn_pw_update")}
                 </button>
               </form>
             </Panel>
@@ -672,7 +727,49 @@ function Input({
   );
 }
 
-function Select({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function PasswordInput({
+  label,
+  value,
+  onChange,
+  autoComplete,
+  required = false,
+  t,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete?: string;
+  required?: boolean;
+  t?: any;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <label className="block">
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
+      <div className="mt-2 flex items-center rounded-2xl border border-slate-200 bg-white pr-2 transition focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:focus-within:ring-sky-500/10">
+        <input
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={event => onChange(event.target.value)}
+          required={required}
+          autoComplete={autoComplete}
+          className="min-w-0 flex-1 rounded-2xl bg-transparent px-4 py-3 font-semibold outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setVisible(prev => !prev)}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          aria-label={visible ? (t ? t("hide_pw") : "Ẩn") : (t ? t("show_pw") : "Hiện")}
+        >
+          <span className="material-symbols-outlined text-[20px]">{visible ? "visibility_off" : "visibility"}</span>
+        </button>
+      </div>
+    </label>
+  );
+}
+
+function Select({ label, value, onChange, t }: { label: string; value: string; onChange: (value: string) => void, t?: any }) {
   return (
     <label className="block">
       <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
@@ -681,10 +778,10 @@ function Select({ label, value, onChange }: { label: string; value: string; onCh
         onChange={event => onChange(event.target.value)}
         className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-sky-500/10"
       >
-        <option value="">Chưa cập nhật</option>
-        <option value="Nam">Nam</option>
-        <option value="Nữ">Nữ</option>
-        <option value="Khác">Khác</option>
+        <option value="">{t ? t("not_updated") : "Chưa cập nhật"}</option>
+        <option value="Nam">{t ? t("gender_male") : "Nam"}</option>
+        <option value="Nữ">{t ? t("gender_female") : "Nữ"}</option>
+        <option value="Khác">{t ? t("gender_other") : "Khác"}</option>
       </select>
     </label>
   );
