@@ -37,7 +37,9 @@ jobs:
 
       # 5. Build Next.js → output vào thư mục /out
       - name: Build Next.js (static export)
-        run: npm run build
+        run: |
+          npm run build
+          echo '<meta http-equiv="refresh" content="0; url=/vi" />' > out/index.html
       # next.config.mjs có output: 'export' → tạo thư mục out/
 
       # 6. Cấu hình AWS credentials
