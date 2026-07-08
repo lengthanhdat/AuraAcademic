@@ -27,7 +27,7 @@ export default function StudentExams() {
   const fetchRecentResults = async (studentId: string) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/exams/results/student/${studentId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/results/student/${studentId}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -46,7 +46,7 @@ export default function StudentExams() {
     const code = accessCode.trim().toUpperCase();
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/exams/lobby/${code}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/lobby/${code}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {

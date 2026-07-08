@@ -1,5 +1,5 @@
 // Centralized API utility for Chat operations
-const BASE = "http://localhost:8088";
+const BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "";
 
 function getToken(): string {
   if (typeof window === "undefined") return "";

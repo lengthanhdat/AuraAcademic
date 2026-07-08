@@ -43,7 +43,7 @@ export default function TeacherExamRoom() {
   const getToken = () => localStorage.getItem("accessToken") || "";
 
   const fetchExam = async () => {
-    const res = await fetch(`http://localhost:8088/api/exams/${examId}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examId}`, {
       headers: { "Authorization": `Bearer ${getToken()}` }
     });
     if (res.ok) setExam(await res.json());
@@ -58,7 +58,7 @@ export default function TeacherExamRoom() {
   useEffect(() => {
     if (!exam) return;
     if (!exam.accessCode) {
-      fetch(`http://localhost:8088/api/exams/${examId}/generate-code`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examId}/generate-code`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${getToken()}` }
       }).then(r => { if (r.ok) fetchExam(); });
@@ -70,7 +70,7 @@ export default function TeacherExamRoom() {
     if (!exam?.accessCode) return;
     const code = exam.accessCode;
 
-    const es = new EventSource(`http://localhost:8088/api/exams/${code}/stream?token=${getToken()}`);
+    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/stream?token=${getToken()}`);
 
     es.addEventListener("count", (e) => {
       const data = JSON.parse(e.data);
@@ -115,7 +115,7 @@ export default function TeacherExamRoom() {
 
   const fetchActiveCount = async (code: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${code}/active-count`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/active-count`, {
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
       if (res.ok) {
@@ -131,7 +131,7 @@ export default function TeacherExamRoom() {
 
   const fetchResults = async (code: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${code}/results`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/results`, {
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
       if (res.ok) setResults(await res.json());
@@ -140,7 +140,7 @@ export default function TeacherExamRoom() {
 
   const fetchViolations = async (code: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${code}/violations`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/violations`, {
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
       if (res.ok) setViolations(await res.json());
@@ -152,7 +152,7 @@ export default function TeacherExamRoom() {
     setIsStarting(true);
     setMsg({ type: "", text: "" });
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${examId}/start`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examId}/start`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
@@ -173,7 +173,7 @@ export default function TeacherExamRoom() {
     if (!auto && !confirm(t('msg.close_confirm'))) return;
     setIsClosing(true);
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${examId}/close`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examId}/close`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
@@ -191,7 +191,7 @@ export default function TeacherExamRoom() {
   const handleFinish = async () => {
     setIsClosing(true);
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${examId}/finish`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examId}/finish`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${getToken()}` }
       });
@@ -303,7 +303,7 @@ export default function TeacherExamRoom() {
   const updateScheduledTime = async (val: string) => {
     const newTime = val ? new Date(val).getTime() : null;
     try {
-      await fetch(`http://localhost:8088/api/exams/${examId}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examId}`, {
         method: "PUT",
         headers: { 
           "Authorization": `Bearer ${getToken()}`,

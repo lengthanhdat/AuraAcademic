@@ -68,7 +68,7 @@ function ExamBuilderContent() {
     const editId = searchParams.get("edit");
     if (!editId) return;
     setIsLoadingFromUrl(true);
-    fetch(`http://localhost:8088/api/exams/${editId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${editId}`, {
       headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
     }).then(r => r.ok ? r.json() : null).then(exam => {
       if (!exam) return;
@@ -162,7 +162,7 @@ function ExamBuilderContent() {
       formData.append("file", file);
       formData.append("questionCount", String(questionCount));
 
-      const uploadRes = await fetch("http://localhost:8088/api/ai/generate-questions", {
+      const uploadRes = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/ai/generate-questions", {
         method: "POST",
         headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` },
         body: formData,
@@ -216,7 +216,7 @@ function ExamBuilderContent() {
       }
 
       try {
-        const pollRes = await fetch(`http://localhost:8088/api/ai/jobs/${jobId}`, {
+        const pollRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/ai/jobs/${jobId}`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
         });
 
@@ -267,7 +267,7 @@ function ExamBuilderContent() {
 
     let jobId = "";
     try {
-      const res = await fetch("http://localhost:8088/api/ai/generate-from-prompt", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/ai/generate-from-prompt", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -305,7 +305,7 @@ function ExamBuilderContent() {
       }
 
       try {
-        const poll = await fetch(`http://localhost:8088/api/ai/jobs/${jobId}`, {
+        const poll = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/ai/jobs/${jobId}`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
         });
         if (!poll.ok) return;
@@ -338,7 +338,7 @@ function ExamBuilderContent() {
       const formData = new FormData();
       formData.append("file", file);
       const token = localStorage.getItem("accessToken");
-      const res = await fetch("http://localhost:8088/api/questions/extract", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/questions/extract", {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` },
         body: formData,
@@ -427,8 +427,8 @@ function ExamBuilderContent() {
       };
 
       const url = editingId
-        ? `http://localhost:8088/api/exams/${editingId}`
-        : "http://localhost:8088/api/exams";
+        ? `${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${editingId}`
+        : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/exams";
 
       const method = editingId ? "PUT" : "POST";
 
@@ -487,8 +487,8 @@ function ExamBuilderContent() {
       };
 
       const url = editingId
-        ? `http://localhost:8088/api/exams/${editingId}`
-        : "http://localhost:8088/api/exams";
+        ? `${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${editingId}`
+        : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/exams";
 
       const method = editingId ? "PUT" : "POST";
 

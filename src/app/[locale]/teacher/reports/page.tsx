@@ -21,7 +21,7 @@ export default function ReportsPage() {
 
   const fetchExams = async (teacherId: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/teacher/${teacherId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/teacher/${teacherId}`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem("accessToken")}` }
       });
       if (res.ok) {

@@ -76,7 +76,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
       if (!token) return;
 
       try {
-        const res = await originalFetch("http://localhost:8088/api/users/me", {
+        const res = await originalFetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/users/me", {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.status === 503) {

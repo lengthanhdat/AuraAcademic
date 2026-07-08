@@ -53,7 +53,7 @@ export default function NotificationBell() {
         query: searchQuery,
       });
 
-      const res = await fetch(`http://localhost:8088/api/notifications?${params}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/notifications?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -91,7 +91,7 @@ export default function NotificationBell() {
     const token = getToken();
     if (!token) return;
 
-    const eventSource = new EventSource(`http://localhost:8088/api/notifications/stream?token=${token}`);
+    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/notifications/stream?token=${token}`);
 
     eventSource.addEventListener("NOTIFICATION", (event: any) => {
       try {
@@ -163,7 +163,7 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:8088/api/notifications/${id}/read`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/notifications/${id}/read`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -184,7 +184,7 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:8088/api/notifications/read-all", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/notifications/read-all", {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -204,7 +204,7 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:8088/api/notifications/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/notifications/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

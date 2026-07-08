@@ -33,7 +33,7 @@ export default function ContentPage() {
 
     setLoadingMedia(true);
     try {
-      const res = await fetch("http://localhost:8088/api/materials/admin/all", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/materials/admin/all", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -54,7 +54,7 @@ export default function ContentPage() {
 
     setLoadingAnnouncements(true);
     try {
-      const res = await fetch("http://localhost:8088/api/notifications?type=all&limit=50", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/notifications?type=all&limit=50", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -104,7 +104,7 @@ export default function ContentPage() {
 
       showToast("Đang tải tệp lên máy chủ...");
       try {
-        const res = await fetch("http://localhost:8088/api/materials/upload", {
+        const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/materials/upload", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -143,7 +143,7 @@ export default function ContentPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:8088/api/materials/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/materials/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -170,7 +170,7 @@ export default function ContentPage() {
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:8088/api/notifications/system", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/notifications/system", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -206,7 +206,7 @@ export default function ContentPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:8088/api/notifications/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/notifications/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

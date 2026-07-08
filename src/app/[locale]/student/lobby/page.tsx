@@ -35,7 +35,7 @@ export default function StudentLobby() {
     setIsEntering(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/api/exams/join/${accessCode}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/join/${accessCode}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -58,7 +58,7 @@ export default function StudentLobby() {
   const startSSE = (examCode: string) => {
     if (esRef.current) return;
     const token = localStorage.getItem("accessToken");
-    const es = new EventSource(`http://localhost:8088/api/exams/${examCode}/stream?token=${token}`);
+    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examCode}/stream?token=${token}`);
     esRef.current = es;
 
     es.addEventListener("status", (e) => {
@@ -88,7 +88,7 @@ export default function StudentLobby() {
     const fetchLobbyInfo = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const res = await fetch(`http://localhost:8088/api/exams/lobby/${code}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/lobby/${code}`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) {
@@ -117,7 +117,7 @@ export default function StudentLobby() {
     const sendHeartbeat = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const res = await fetch(`http://localhost:8088/api/exams/${code}/heartbeat`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/heartbeat`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
@@ -137,7 +137,7 @@ export default function StudentLobby() {
 
     const sendLeaveFetch = () => {
       const token = localStorage.getItem("accessToken");
-      fetch(`http://localhost:8088/api/exams/${code}/leave`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/leave`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -149,7 +149,7 @@ export default function StudentLobby() {
 
     const sendLeaveBeacon = () => {
       navigator.sendBeacon(
-        `http://localhost:8088/api/exams/${code}/leave`,
+        `${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/leave`,
         new Blob([JSON.stringify({ studentId: user.id })], { type: "application/json" })
       );
     };

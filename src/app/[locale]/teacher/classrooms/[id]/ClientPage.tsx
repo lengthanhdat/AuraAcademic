@@ -85,7 +85,7 @@ export default function TeacherClassroomDetailPage() {
       data.exams.forEach(async (exam: any) => {
         if (!exam.accessCode) return;
         try {
-          const r = await fetch(`http://localhost:8088/api/exams/${exam.accessCode}/results`, {
+          const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${exam.accessCode}/results`, {
             headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
           });
           if (r.ok) {
@@ -164,7 +164,7 @@ export default function TeacherClassroomDetailPage() {
     if (stompRef.current?.active) return;
     const token = localStorage.getItem("accessToken") || "";
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8088/ws"),
+      webSocketFactory: () => new SockJS((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/ws"),
       connectHeaders: { Authorization: `Bearer ${token}` },
       onConnect: () => {
         setWsConnected(true);
@@ -241,7 +241,7 @@ export default function TeacherClassroomDetailPage() {
   const handleStartExam = async (examId: string) => {
     const exam = exams.find((e: any) => e.id === examId);
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${examId}/start`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examId}/start`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`
@@ -264,7 +264,7 @@ export default function TeacherClassroomDetailPage() {
 
   const handleCloseExam = async (examId: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${examId}/close`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examId}/close`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`
@@ -505,7 +505,7 @@ export default function TeacherClassroomDetailPage() {
                     const content = (document.getElementById("postInput") as HTMLTextAreaElement)?.value;
                     if (!content?.trim()) return;
                     try {
-                      const r = await fetch(`http://localhost:8088/api/classrooms/${classroomId}/posts`, {
+                      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/${classroomId}/posts`, {
                         method: 'POST',
                         headers: { 
                           'Content-Type': 'application/json',
@@ -636,7 +636,7 @@ export default function TeacherClassroomDetailPage() {
                         onClick={async () => {
                           if (window.confirm("Bạn có chắc chắn muốn xóa học sinh này khỏi lớp?")) {
                             try {
-                              const r = await fetch(`http://localhost:8088/api/classrooms/${classroomId}/remove/${stud.id}`, {
+                              const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/${classroomId}/remove/${stud.id}`, {
                                 method: 'POST',
                                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
                               });
@@ -1145,7 +1145,7 @@ function LinkExamFromRepositoryModal({ isOpen, onClose, classroomId, onSuccess }
       const u = localStorage.getItem("user");
       if (u) {
         const user = JSON.parse(u);
-        const res = await fetch(`http://localhost:8088/api/exams/teacher/${user.id}/templates`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/teacher/${user.id}/templates`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`
           }
@@ -1387,7 +1387,7 @@ function CreateClassroomExamModal({ isOpen, onClose, classroomId, onSuccess }: C
         ]
       };
 
-      const res = await fetch("http://localhost:8088/api/exams", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/exams", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "@/navigation";
 
-const API_BASE = "http://localhost:8088/api";
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api";
 
 export default function TeacherVerifyPage() {
   const router = useRouter();

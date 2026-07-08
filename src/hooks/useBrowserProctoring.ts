@@ -39,7 +39,7 @@ export function useBrowserProctoring({
   const reportViolation = useCallback(async (type: BrowserViolationType) => {
     try {
       const token = localStorage.getItem("accessToken");
-      await fetch(`http://localhost:8088/api/exams/${examCode}/violation`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examCode}/violation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

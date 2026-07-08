@@ -183,7 +183,7 @@ export default function StudentMaterials() {
   const fetchMaterials = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch("http://localhost:8088/api/materials/published", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/materials/published", {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       if (res.ok) setMaterials(await res.json());
@@ -192,7 +192,7 @@ export default function StudentMaterials() {
 
   const trackDownload = async (m: Material) => {
     const token = localStorage.getItem("accessToken");
-    await fetch(`http://localhost:8088/api/materials/${m.id}/download`, {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/materials/${m.id}/download`, {
       method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {}
     }).catch(()=>{});
     if (m.fileUrl?.startsWith("data:")) {

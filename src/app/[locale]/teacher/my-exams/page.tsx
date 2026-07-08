@@ -8,7 +8,7 @@ import { StatCardSkeleton, TableRowSkeleton } from "@/components/ui/Skeleton";
 import { toast } from "sonner";
 import { useAlert } from "@/components/ui/AlertProvider";
 
-const API_BASE = "http://localhost:8088/api";
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api";
 
 // ─── Exam Countdown Component ───────────────────────────────────────────────
 function ExamCountdown({

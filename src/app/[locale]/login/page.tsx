@@ -30,7 +30,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8088/api/auth/login", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -162,7 +162,7 @@ export default function LoginPage() {
                 <GoogleLogin
                   onSuccess={async (creds) => {
                     try {
-                      const r = await fetch("http://localhost:8088/api/auth/google", {
+                      const r = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/auth/google", {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ idToken: creds.credential })
                       });

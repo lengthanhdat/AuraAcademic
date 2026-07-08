@@ -5,7 +5,7 @@ import { fetchAdminExams, deleteAdminExam } from "@/lib/adminApi";
 import { toast } from "sonner";
 import { useAlert } from "@/components/ui/AlertProvider";
 
-const API_BASE = "http://localhost:8088/api";
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api";
 
 // ─── Classroom Name Dynamic Loader & Cache ──────────────────────────────────
 const classroomCache: Record<string, string> = {};
@@ -27,7 +27,7 @@ function ClassroomName({ id }: { id?: string }) {
     const fetchName = async () => {
       try {
         if (!pendingClassroomRequests[id]) {
-          pendingClassroomRequests[id] = fetch(`http://localhost:8088/api/classrooms/${id}`, {
+          pendingClassroomRequests[id] = fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/${id}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             },

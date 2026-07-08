@@ -149,7 +149,7 @@ export default function StudentClassroomDetailPage() {
     if (stompRef.current?.active) return;
     const token = localStorage.getItem("accessToken") || "";
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8088/ws"),
+      webSocketFactory: () => new SockJS((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/ws"),
       connectHeaders: { Authorization: `Bearer ${token}` },
       onConnect: () => {
         setWsConnected(true);

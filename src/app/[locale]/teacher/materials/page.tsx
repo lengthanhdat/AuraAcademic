@@ -77,7 +77,7 @@ export default function TeacherMaterials() {
 
   const fetchMaterials = async () => {
     try {
-      const res = await fetch("http://localhost:8088/api/materials/my", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/materials/my", {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) setMaterials(await res.json());
@@ -121,7 +121,7 @@ export default function TeacherMaterials() {
       // Bước 2: Đang gửi & AI kiểm duyệt (đây là bước nặng nhất ~1-3s)
       setQueue(q => q.map(i => i.key === item.key ? { ...i, progress: 40 } : i));
       try {
-        const res = await fetch("http://localhost:8088/api/materials/upload", {
+        const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/materials/upload", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
           body: JSON.stringify({
@@ -178,7 +178,7 @@ export default function TeacherMaterials() {
   const removeFromQueue = (key: string) => setQueue(q => q.filter(i => i.key !== key));
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`http://localhost:8088/api/materials/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/materials/${id}`, {
       method: "DELETE", headers: { Authorization: `Bearer ${token()}` }
     });
     if (res.ok) { fetchMaterials(); showAlert({ title: "Đã xóa", message: "Tài liệu đã được xóa.", type: "success" }); }
@@ -191,7 +191,7 @@ export default function TeacherMaterials() {
 
   const saveEdit = async () => {
     if (!editItem) return;
-    const res = await fetch(`http://localhost:8088/api/materials/${editItem.id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/materials/${editItem.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
       body: JSON.stringify({ ...editForm, tags: editForm.tags.split(",").map(t => t.trim()).filter(Boolean) })

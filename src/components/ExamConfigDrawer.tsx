@@ -42,7 +42,7 @@ export default function ExamConfigDrawer({
       setClassroomId(defaultClassroomId || "");
       // Fetch teacher classrooms
       setIsLoadingClassrooms(true);
-      fetch("http://localhost:8088/api/classrooms/teacher", {
+      fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/classrooms/teacher", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
@@ -73,7 +73,7 @@ export default function ExamConfigDrawer({
         scheduledStartTime: scheduledStartTime ? new Date(scheduledStartTime).getTime() : null,
       };
 
-      const res = await fetch(`http://localhost:8088/api/exams/${exam.id}/clone-to-session`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${exam.id}/clone-to-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -44,7 +44,7 @@ export default function MaintenancePage() {
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
         // Gọi thử một API công khai để kiểm tra trạng thái hệ thống
-        const res = await fetch("http://localhost:8088/api/health/status", {
+        const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/health/status", {
           headers,
           cache: "no-store",
         }).catch(() => null);

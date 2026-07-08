@@ -312,7 +312,7 @@ export default function TakeExam() {
     const sendHeartbeat = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const res = await fetch(`http://localhost:8088/api/exams/${accessCode}/heartbeat`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${accessCode}/heartbeat`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -445,7 +445,7 @@ export default function TakeExam() {
 
       // 2. GỬI KẾT QUẢ LÊN BACKEND
       const token = localStorage.getItem("accessToken");
-      const res = await fetch("http://localhost:8088/api/exams/submit", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/exams/submit", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

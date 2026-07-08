@@ -55,8 +55,8 @@ export default function AdminMaterials() {
     setLoading(true);
     try {
       const [allRes, pendRes] = await Promise.all([
-        fetch("http://localhost:8088/api/materials/admin/all", { headers: { Authorization: `Bearer ${token()}` } }),
-        fetch("http://localhost:8088/api/materials/admin/pending", { headers: { Authorization: `Bearer ${token()}` } }),
+        fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/materials/admin/all", { headers: { Authorization: `Bearer ${token()}` } }),
+        fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/materials/admin/pending", { headers: { Authorization: `Bearer ${token()}` } }),
       ]);
       if (allRes.ok) setMaterials(await allRes.json());
       if (pendRes.ok) setPending(await pendRes.json());
@@ -64,7 +64,7 @@ export default function AdminMaterials() {
   };
 
   const review = async (id: string, action: "approve"|"reject", reason?: string) => {
-    const res = await fetch(`http://localhost:8088/api/materials/admin/${id}/review`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/materials/admin/${id}/review`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
       body: JSON.stringify({ action, reason: reason || "" })
@@ -77,7 +77,7 @@ export default function AdminMaterials() {
   };
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`http://localhost:8088/api/materials/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/materials/${id}`, {
       method: "DELETE", headers: { Authorization: `Bearer ${token()}` }
     });
     if (res.ok) { fetchAll(); showAlert({ title: "Đã xóa", message: "", type: "success" }); }
@@ -110,7 +110,7 @@ export default function AdminMaterials() {
     reader.onload = async () => {
       setQueue(q => q.map(i => i.key===item.key ? {...i,progress:50} : i));
       try {
-        const res = await fetch("http://localhost:8088/api/materials/upload", {
+        const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/materials/upload", {
           method: "POST",
           headers: { "Content-Type":"application/json", Authorization:`Bearer ${token()}` },
           body: JSON.stringify({

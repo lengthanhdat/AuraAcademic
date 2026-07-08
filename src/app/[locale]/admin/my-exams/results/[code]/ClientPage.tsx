@@ -18,7 +18,7 @@ export default function ExamResults() {
 
   const fetchResults = async (accessCode: string) => {
     try {
-      const res = await fetch(`http://localhost:8088/api/exams/${accessCode}/results`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${accessCode}/results`, {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
         }
