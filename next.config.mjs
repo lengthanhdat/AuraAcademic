@@ -4,6 +4,10 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ── Static Export for S3 + CloudFront hosting ──────────────────
+  output: 'export',
+  trailingSlash: true,   // /login → /login/index.html (S3 compatible)
+
   // Enable gzip/brotli compression
   compress: true,
 
@@ -12,8 +16,9 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'sonner', '@stomp/stompjs', 'recharts', 'date-fns', 'katex'],
   },
 
-  // Image optimization
+  // S3 không chạy được Next.js image optimization → dùng <img> thuần
   images: {
+    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
   },
 };
