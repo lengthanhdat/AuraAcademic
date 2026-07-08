@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 
 export default function MaintenancePage() {
   const router = useRouter();

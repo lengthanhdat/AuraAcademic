@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { useLocale } from "next-intl";
 import useSWR from "swr";
 import { authFetcher, getStoredUser } from "@/hooks/useAuthFetch";

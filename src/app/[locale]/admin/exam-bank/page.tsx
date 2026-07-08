@@ -4,7 +4,7 @@ import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import PublishToBankModal from "@/components/PublishToBankModal";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { useLocale } from "next-intl";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
 import { ALL_SUBJECTS } from "@/lib/curriculum";

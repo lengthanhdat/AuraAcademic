@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
 import ExamConfigDrawer from "@/components/ExamConfigDrawer";

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { useLocale } from "next-intl";
 import { ALL_SUBJECTS } from "@/lib/curriculum";
 import { API_BASE } from "@/lib/api";

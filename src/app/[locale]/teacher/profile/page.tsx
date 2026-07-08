@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { API_BASE, getAuthHeaders } from "@/lib/api";
 import { classroomApi } from "@/lib/classroomApi";

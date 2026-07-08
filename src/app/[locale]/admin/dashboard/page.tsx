@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { fetchAdminStats, fetchUsers, deleteUser, updateUserRole, toggleUserLock, createUser } from "@/lib/adminApi";
 
 type User = { id: string; fullName: string; email: string; role: string; emailVerified: boolean; accountLocked: boolean; createdAt: string; };

@@ -5,7 +5,7 @@ import { authFetcher } from "@/hooks/useAuthFetch";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import PublishToBankModal from "@/components/PublishToBankModal";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { useLocale } from "next-intl";
 import { toast } from "sonner";
 import { API_BASE, getAuthHeaders } from "@/lib/api";

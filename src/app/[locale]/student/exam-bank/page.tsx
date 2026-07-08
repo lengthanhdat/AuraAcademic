@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import useSWR from "swr";

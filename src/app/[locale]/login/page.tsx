@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAlert } from "@/components/ui/AlertProvider";
 import { useTranslations } from "next-intl";

@@ -1,6 +1,6 @@
 "use client";
 import { Link, usePathname } from "@/navigation";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import Image from "next/image";
 
 const navSections = [

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { useLocale } from "next-intl";
 import { API_BASE } from "@/lib/api";
 export default function StudentExamBankFolderPage({ params }: { params: { locale: string; folderId: string } }) {
