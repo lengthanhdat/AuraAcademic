@@ -64,6 +64,7 @@ jobs:
 
       # 8. Xóa cache CloudFront để user thấy phiên bản mới ngay
       - name: Invalidate CloudFront cache
+        continue-on-error: true
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
