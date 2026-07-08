@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { AlertProvider } from "@/components/ui/AlertProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { Suspense } from 'react';
 
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-inter" });
 const manrope = Manrope({ subsets: ["latin", "vietnamese"], variable: "--font-manrope" });
@@ -46,7 +47,9 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
           <NextIntlClientProvider messages={messages}>
             <AlertProvider>
-              {children}
+              <Suspense fallback={<div>Loading...</div>}>
+                {children}
+              </Suspense>
             </AlertProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
