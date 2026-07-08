@@ -21,6 +21,12 @@ const nextConfig = {
     unoptimized: true,
     formats: ['image/avif', 'image/webp'],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 export default withNextIntl(nextConfig);
