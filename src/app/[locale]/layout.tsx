@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   description: "Hệ thống thi trắc nghiệm thông minh tích hợp AI",
 };
 
+export function generateStaticParams() {
+  return [{ locale: 'en' }, { locale: 'vi' }];
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
