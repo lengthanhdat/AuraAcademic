@@ -45,7 +45,7 @@ export default function GuidePage() {
           </p>
           <Link href="/contact" className="inline-block px-8 py-3 bg-gradient-to-r from-[#00C6FF] to-[#0072FF] text-white font-bold rounded-xl shadow-lg hover:shadow-cyan-500/25 transition-all hover:-translate-y-1 relative z-10">
             Liên hệ hỗ trợ ngay
-          </a>
+          </Link>
         </div>
       </div>
       
