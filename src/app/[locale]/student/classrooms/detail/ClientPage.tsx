@@ -60,7 +60,7 @@ export default function StudentClassroomDetailPage() {
 
   const params = { id: searchParams.get('id') as string, code: searchParams.get('code') as string, folderId: searchParams.get('folderId') as string, locale: useParams().locale as string };
   const router = useRouter();
-  const classroomId = id as string;
+  const classroomId = id || (typeof window !== 'undefined' ? sessionStorage.getItem('studentClassroomDetailId') : '') || '';
 
   const [tab, setTab] = useState<Tab>("timeline");
   const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; posts?: any[]; teacherAvatarUrl?: string } | null>(null);

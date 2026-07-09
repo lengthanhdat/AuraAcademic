@@ -63,13 +63,7 @@ export default function TeacherClassroomDetailPage() {
   const searchParams = useSearchParams();
   const params = { id: searchParams.get('id') as string, code: searchParams.get('code') as string, folderId: searchParams.get('folderId') as string, locale: useParams().locale as string };
   const router = useRouter();
-  const classroomId = params.id as string;
-
-  // Guard: nếu không có id thì redirect về danh sách lớp luôn
-  if (!classroomId || classroomId === 'null') {
-    if (typeof window !== 'undefined') router.replace('/teacher/classrooms');
-    return null;
-  }
+  const classroomId = params.id || (typeof window !== 'undefined' ? sessionStorage.getItem('classroomDetailId') : '') || '';
 
   const [tab, setTab] = useState<Tab>("stream");
   const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; pendingStudents?: any[]; removedStudents?: any[]; posts?: any[]; teacherAvatarUrl?: string } | null>(null);

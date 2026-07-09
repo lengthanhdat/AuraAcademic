@@ -111,7 +111,7 @@ export default function TeacherClassroomsPage() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-500 group-hover:scale-125" />
               
               <div 
-                onClick={() => router.push(`/teacher/classrooms/detail/?id=${cls.id}`)}
+                onClick={() => { sessionStorage.setItem('classroomDetailId', cls.id); router.push(`/teacher/classrooms/detail/?id=${cls.id}`); }}
                 className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-[2rem] p-6 transition-all duration-300 hover:border-[#00C6FF]/50 dark:hover:border-[#00C6FF]/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden cursor-pointer"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-500 group-hover:scale-125" />
