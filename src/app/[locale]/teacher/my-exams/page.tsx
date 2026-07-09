@@ -430,7 +430,7 @@ export default function TeacherMyExamsPage() {
         </div>
         <div className="flex items-center gap-3 shrink-0 relative z-10">
           <button
-            onClick={() => router.push("/teacher/exams?mode=ai")}
+            onClick={() => router.push("/teacher/exams/?mode=ai")}
             className="px-5 py-3 bg-white text-[#0C2E5E] font-black rounded-xl text-xs shadow-xl transition-all hover:scale-105 hover:shadow-2xl active:scale-95"
           >
             Thiết kế đề thi mới
@@ -670,7 +670,7 @@ export default function TeacherMyExamsPage() {
                       {isLive && (
                         <>
                           <button
-                            onClick={() => router.push(`/teacher/exam-room/detail?id=${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exam-room/detail/?id=${exam.id}`)}
                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">meeting_room</span>
@@ -689,7 +689,7 @@ export default function TeacherMyExamsPage() {
                       {isPublished && (
                         <>
                           <button
-                            onClick={() => router.push(`/teacher/exam-room/detail?id=${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exam-room/detail/?id=${exam.id}`)}
                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">meeting_room</span>
@@ -703,7 +703,7 @@ export default function TeacherMyExamsPage() {
                             Bắt đầu ngay
                           </button>
                           <button
-                            onClick={() => router.push(`/teacher/exams?edit=${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exams/?edit=${exam.id}`)}
                             className="p-2 text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
                             title="Chỉnh sửa kỳ thi"
                           >
@@ -722,7 +722,7 @@ export default function TeacherMyExamsPage() {
                       {isFinished && (
                         <>
                           <button
-                            onClick={() => router.push(`/teacher/exams/results/detail?code=${exam.accessCode}`)}
+                            onClick={() => router.push(`/teacher/exams/results/detail/?code=${exam.accessCode}`)}
                             className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">assignment_turned_in</span>
@@ -753,7 +753,7 @@ export default function TeacherMyExamsPage() {
                             Bắt đầu thi
                           </button>
                           <button
-                            onClick={() => router.push(`/teacher/exams?edit=${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exams/?edit=${exam.id}`)}
                             className="p-2 text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-cyan-950/40 rounded-xl transition-all"
                             title="Chỉnh sửa kỳ thi"
                           >

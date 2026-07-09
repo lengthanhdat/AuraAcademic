@@ -252,8 +252,8 @@ export default function TeacherClassroomDetailPage() {
       
       // Chuyển hướng thẳng tới trang giám sát realtime của giáo viên
       if (exam && exam.accessCode) {
-        const returnTo = encodeURIComponent(`/teacher/classrooms/detail?id=${classroomId}?tab=exams`);
-        router.push(`/teacher/exams/results/detail?code=${exam.accessCode}?returnTo=${returnTo}`);
+        const returnTo = encodeURIComponent(`/teacher/classrooms/detail/?id=${classroomId}?tab=exams`);
+        router.push(`/teacher/exams/results/detail/?code=${exam.accessCode}?returnTo=${returnTo}`);
       } else {
         fetchData();
       }
@@ -505,7 +505,7 @@ export default function TeacherClassroomDetailPage() {
                     const content = (document.getElementById("postInput") as HTMLTextAreaElement)?.value;
                     if (!content?.trim()) return;
                     try {
-                      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/detail?id=${classroomId}/posts`, {
+                      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/detail/?id=${classroomId}/posts`, {
                         method: 'POST',
                         headers: { 
                           'Content-Type': 'application/json',
@@ -636,7 +636,7 @@ export default function TeacherClassroomDetailPage() {
                         onClick={async () => {
                           if (window.confirm("Bạn có chắc chắn muốn xóa học sinh này khỏi lớp?")) {
                             try {
-                              const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/detail?id=${classroomId}/remove/${stud.id}`, {
+                              const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/detail/?id=${classroomId}/remove/${stud.id}`, {
                                 method: 'POST',
                                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
                               });
@@ -787,7 +787,7 @@ export default function TeacherClassroomDetailPage() {
                   <Plus className="w-4 h-4" /> Thêm từ Kho đề
                 </button>
                 <button
-                  onClick={() => router.push(`/teacher/exams?classroomId=${classroomId}&mode=ai`)}
+                  onClick={() => router.push(`/teacher/exams/?classroomId=${classroomId}&mode=ai`)}
                   className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_12px_rgba(0,198,255,0.25)]"
                 >
                   <Plus className="w-4 h-4" /> Tạo đề thi mới
@@ -915,8 +915,8 @@ export default function TeacherClassroomDetailPage() {
                             <button
                               type="button"
                               onClick={() => {
-                                const returnTo = encodeURIComponent(`/teacher/classrooms/detail?id=${classroomId}?tab=exams`);
-                                router.push(`/teacher/exams/results/detail?code=${exam.accessCode}?returnTo=${returnTo}`);
+                                const returnTo = encodeURIComponent(`/teacher/classrooms/detail/?id=${classroomId}?tab=exams`);
+                                router.push(`/teacher/exams/results/detail/?code=${exam.accessCode}?returnTo=${returnTo}`);
                               }}
                               className="min-w-[150px] inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 text-sm font-black text-white shadow-lg shadow-cyan-500/25 hover:from-blue-500 hover:to-cyan-400 active:scale-[0.98] transition-all"
                             >
@@ -927,7 +927,7 @@ export default function TeacherClassroomDetailPage() {
 
                           <button
                             type="button"
-                            onClick={() => router.push(`/teacher/exam-room/detail?id=${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exam-room/detail/?id=${exam.id}`)}
                             className="min-w-[150px] inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-500 active:scale-[0.98] transition-all"
                           >
                             <DoorOpen className="w-5 h-5" />

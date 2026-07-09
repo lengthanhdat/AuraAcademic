@@ -70,7 +70,7 @@ export default function AdminFolderDetailPage({
     <main className="p-8 space-y-8 max-w-5xl mx-auto w-full">
       {/* Back */}
       <button
-        onClick={() => router.push(`/${locale}/admin/exam-bank`)}
+        onClick={() => router.push(`/admin/exam-bank`)}
         className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors"
       >
         <span className="material-symbols-outlined text-sm">arrow_back</span>
@@ -113,7 +113,7 @@ export default function AdminFolderDetailPage({
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <button
-              onClick={() => router.push(`/${locale}/admin/exams/import?folderId=${folderId}`)}
+              onClick={() => router.push(`/admin/exams/import/?folderId=${folderId}`)}
               className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-[#00C6FF] text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-lg">upload_file</span>
@@ -250,7 +250,7 @@ export default function AdminFolderDetailPage({
                   <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() =>
-                        router.push(`/${locale}/admin/exams/${exam.id}`)
+                        router.push(`/admin/exams/${exam.id}`)
                       }
                       title="Xem chi tiết"
                       className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"

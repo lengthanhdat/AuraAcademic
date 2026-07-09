@@ -120,7 +120,7 @@ export default function ExamBankUploadPage() {
       }
 
       // Thành công, điều hướng về trang Ngân hàng
-      router.push(`/${locale}/admin/exam-bank`);
+      router.push(`/admin/exam-bank`);
       
     } catch (err: any) {
       setError(err.message || "Có lỗi xảy ra trong quá trình xử lý.");
@@ -134,7 +134,7 @@ export default function ExamBankUploadPage() {
     <main className="min-h-screen bg-[#f8fafc] p-8">
       {/* Nút quay lại */}
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => router.push(`/${locale}/admin/exam-bank`)} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
+        <button onClick={() => router.push(`/admin/exam-bank`)} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
           <span className="material-symbols-outlined text-slate-600">arrow_back</span>
         </button>
         <div>

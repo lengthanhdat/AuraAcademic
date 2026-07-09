@@ -86,7 +86,7 @@ async function askGemini(prompt: string) {
   if (!apiKey) return null;
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent/?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

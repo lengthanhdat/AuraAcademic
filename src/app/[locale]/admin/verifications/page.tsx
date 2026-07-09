@@ -46,9 +46,9 @@ export default function AdminVerificationsPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const swrKey = `${API_BASE}/admin/verification-requests?status=${activeTab}`;
+  const swrKey = `${API_BASE}/admin/verification-requests/?status=${activeTab}`;
   const { data, isLoading } = useSWR<{ requests: TeacherRequest[]; pendingCount: number }>(swrKey, authFetcher, { revalidateOnFocus: false });
-  const { data: allData } = useSWR<{ pendingCount: number }>(`${API_BASE}/admin/verification-requests?status=PENDING`, authFetcher, { dedupingInterval: 15000 });
+  const { data: allData } = useSWR<{ pendingCount: number }>(`${API_BASE}/admin/verification-requests/?status=PENDING`, authFetcher, { dedupingInterval: 15000 });
 
   const requests = data?.requests ?? [];
   const pendingCount = allData?.pendingCount ?? 0;
@@ -70,7 +70,7 @@ export default function AdminVerificationsPage() {
       if (res.ok) {
         showToast("success", "Đã duyệt tài khoản giáo viên thành công.");
         globalMutate(swrKey);
-        globalMutate(`${API_BASE}/admin/verification-requests?status=PENDING`);
+        globalMutate(`${API_BASE}/admin/verification-requests/?status=PENDING`);
       } else {
         const d = await res.json();
         showToast("error", d.error || "Lỗi khi duyệt.");
@@ -101,7 +101,7 @@ export default function AdminVerificationsPage() {
         showToast("success", "Đã từ chối yêu cầu và gửi thông báo cho giáo viên.");
         setRejectModalOpen(false);
         globalMutate(swrKey);
-        globalMutate(`${API_BASE}/admin/verification-requests?status=PENDING`);
+        globalMutate(`${API_BASE}/admin/verification-requests/?status=PENDING`);
       } else {
         showToast("error", "Lỗi khi từ chối.");
       }

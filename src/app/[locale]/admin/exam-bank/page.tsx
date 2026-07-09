@@ -97,7 +97,7 @@ export default function AdminExamBankPage() {
               </p>
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => router.push(`/${locale}/admin/my-exams/import?isBank=true`)}
+                  onClick={() => router.push(`/admin/my-exams/import/?isBank=true`)}
                   className="h-12 px-5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-colors flex items-center justify-center gap-2 hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-white/70 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-lg">upload_file</span>
@@ -305,7 +305,7 @@ export default function AdminExamBankPage() {
                   <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() =>
-                        router.push(`/${locale}/admin/exams/${exam.id}`)
+                        router.push(`/admin/exams/${exam.id}`)
                       }
                       title="Xem chi tiết"
                       className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"

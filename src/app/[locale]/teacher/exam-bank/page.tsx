@@ -341,14 +341,14 @@ export default function TeacherExamBankPage() {
 
           <div className="w-full border-t border-slate-100 dark:border-cyan-950/40 pt-6 mt-2 flex flex-col gap-3">
             <button
-              onClick={() => router.push(`/${locale}/teacher/verify`)}
+              onClick={() => router.push(`/teacher/verify`)}
               className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-orange-500 hover:opacity-95 text-white font-black text-sm rounded-2xl shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-base">verified</span>
               {t("btn_verify")}
             </button>
             <button
-              onClick={() => router.push(`/${locale}/teacher/dashboard`)}
+              onClick={() => router.push(`/teacher/dashboard`)}
               className="w-full py-3.5 bg-slate-100 dark:bg-cyan-950/30 dark:text-slate-300 text-slate-600 font-bold text-sm rounded-2xl hover:bg-slate-200 transition-colors"
             >
               {t("btn_dashboard")}

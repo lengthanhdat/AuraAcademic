@@ -4,12 +4,13 @@ import React, { useEffect, useState } from "react";
 import { classroomApi } from "@/lib/classroomApi";
 import { BookOpen, LogIn, Users, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { Link } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
 export default function StudentClassroomsPage() {
   const locale = useLocale();
   const t = useTranslations("StudentClassrooms");
+  const router = useRouter();
   const [classrooms, setClassrooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -114,10 +115,10 @@ export default function StudentClassroomsPage() {
           {classrooms.map((cls, idx) => {
             const accent = ACCENT_COLORS[idx % ACCENT_COLORS.length];
             return (
-              <Link
+              <div
                 key={cls.id}
-                href={`/${locale}/student/classrooms/detail?id=${cls.id}`}
-                className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-500/50 dark:hover:border-cyan-500/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden"
+                onClick={() => router.push(`/student/classrooms/detail/?id=${cls.id}`)}
+                className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-2xl p-6 transition-all duration-300 hover:border-cyan-500/50 dark:hover:border-cyan-500/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden cursor-pointer"
               >
                 {/* Glow accent */}
                 <div className={`absolute top-0 right-0 w-36 h-36 rounded-full bg-gradient-to-br ${accent} opacity-10 blur-3xl -mr-12 -mt-12 transition-all duration-500 group-hover:scale-125`} />
@@ -146,7 +147,7 @@ export default function StudentClassroomsPage() {
                 <p className="mt-3 text-xs font-semibold text-slate-400 dark:text-slate-500">
                   {t("teacher")}: <span className="text-slate-600 dark:text-slate-300 font-bold">{cls.teacherName || t("teacher_empty")}</span>
                 </p>
-              </Link>
+              </div>
             );
           })}
         </div>

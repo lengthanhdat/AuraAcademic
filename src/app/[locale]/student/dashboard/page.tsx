@@ -133,7 +133,7 @@ export default function StudentDashboard() {
       });
 
       if (res.ok) {
-        router.push(`/student/lobby?code=${cleanCode}`);
+        router.push(`/student/lobby/?code=${cleanCode}`);
       } else if (res.status === 401) {
         setError(t("session_expired"));
       } else {
@@ -255,7 +255,7 @@ export default function StudentDashboard() {
                 <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{t("recent_results")}</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{t("recent_results_desc")}</p>
               </div>
-              <Link href={`/${locale}/student/results`} className="inline-flex items-center gap-1 text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
+              <Link href={`/student/results`} className="inline-flex items-center gap-1 text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
                 {t("view_all")}
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </Link>
@@ -321,7 +321,7 @@ export default function StudentDashboard() {
                 <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{t("my_classes")}</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{t("my_classes_desc")}</p>
               </div>
-              <Link href={`/${locale}/student/classrooms`} className="inline-flex items-center gap-1 text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
+              <Link href={`/student/classrooms`} className="inline-flex items-center gap-1 text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
                 {t("open_class")}
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </Link>
@@ -344,7 +344,7 @@ export default function StudentDashboard() {
                   return (
                     <Link
                       key={roomId || index}
-                      href={roomId ? `/${locale}/student/classrooms/detail?id=${roomId}` : `/${locale}/student/classrooms`}
+                      href={roomId ? `/${locale}/student/classrooms/detail/?id=${roomId}` : `/${locale}/student/classrooms`}
                       className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-4 transition hover:border-cyan-300 hover:bg-cyan-50/50 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/20"
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -395,7 +395,7 @@ export default function StudentDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{t("recent_practice")}</h2>
-              <Link href={`/${locale}/student/exam-bank/results`} className="text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
+              <Link href={`/student/exam-bank/results`} className="text-sm font-bold text-cyan-700 hover:text-cyan-800 dark:text-cyan-300">
                 {t("view")}
               </Link>
             </div>

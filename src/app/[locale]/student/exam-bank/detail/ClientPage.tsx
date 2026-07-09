@@ -188,7 +188,7 @@ export default function TakePracticeExamPage({ params }: { params: { locale: str
       });
       if (res.ok) {
         const result = await res.json();
-        router.replace(`/${locale}/student/exam-bank/detail?id=${id}/result?resultId=${result.id}`);
+        router.replace(`/student/exam-bank/detail/?id=${id}/result/?resultId=${result.id}`);
       } else {
         setShowConfirm(false);
         alert("Có lỗi xảy ra khi nộp bài.");

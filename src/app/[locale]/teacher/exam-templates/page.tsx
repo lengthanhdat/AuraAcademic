@@ -170,7 +170,7 @@ export default function TeacherExamTemplatesPage() {
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0 relative z-10">
             <button
-              onClick={() => router.push(`/${locale}/teacher/exams`)}
+              onClick={() => router.push(`/teacher/exams`)}
               className="px-5 py-2.5 bg-white text-[#0C2E5E] font-extrabold rounded-xl text-sm shadow-xl transition-all flex items-center gap-2 hover:scale-105"
             >
               <span className="material-symbols-outlined text-lg">magic_button</span>
@@ -357,7 +357,7 @@ export default function TeacherExamTemplatesPage() {
                               {t("actions.use")}
                             </button>
                             <button
-                              onClick={() => router.push(`/${locale}/teacher/exams?edit=${exam.id}`)}
+                              onClick={() => router.push(`/teacher/exams/?edit=${exam.id}`)}
                               title={t("actions.edit")}
                               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"
                             >
@@ -441,7 +441,7 @@ export default function TeacherExamTemplatesPage() {
                       {t("actions.use")}
                     </button>
                     <button
-                      onClick={() => router.push(`/${locale}/teacher/exams?edit=${exam.id}`)}
+                      onClick={() => router.push(`/teacher/exams/?edit=${exam.id}`)}
                       title={t("actions.edit")}
                       className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-400 hover:text-indigo-600 transition-all"
                     >

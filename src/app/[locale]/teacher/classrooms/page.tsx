@@ -4,11 +4,12 @@ import React, { useEffect, useState } from "react";
 import { classroomApi } from "@/lib/classroomApi";
 import { Copy, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
-import { Link } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
 
 export default function TeacherClassroomsPage() {
   const t = useTranslations("TeacherClassrooms");
+  const router = useRouter();
   const [classrooms, setClassrooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -109,7 +110,12 @@ export default function TeacherClassroomsPage() {
             <div key={cls.id} className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-[2rem] p-6 transition-all duration-300 hover:border-[#00C6FF]/50 dark:hover:border-[#00C6FF]/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-500 group-hover:scale-125" />
               
-              <Link href={`/teacher/classrooms/detail?id=${cls.id}`}>
+              <div 
+                onClick={() => router.push(`/teacher/classrooms/detail/?id=${cls.id}`)}
+                className="group relative bg-white dark:bg-[#0A1F3E]/60 border border-slate-200/80 dark:border-cyan-950/40 rounded-[2rem] p-6 transition-all duration-300 hover:border-[#00C6FF]/50 dark:hover:border-[#00C6FF]/40 hover:shadow-[0_12px_30px_-6px_rgba(0,198,255,0.12)] hover:-translate-y-1 overflow-hidden cursor-pointer"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all duration-500 group-hover:scale-125" />
+                
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0C2E5E] to-[#00C6FF] flex items-center justify-center shadow-md shadow-blue-500/10">
                     <span className="material-symbols-outlined text-white text-xl">class</span>
@@ -130,7 +136,7 @@ export default function TeacherClassroomsPage() {
                     </div>
                   )}
                 </div>
-              </Link>
+              </div>
               
               <div className="mt-5 pt-4 border-t border-slate-100 dark:border-cyan-950/40 flex items-center justify-between">
                 <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t("join_code")}</div>

@@ -98,7 +98,7 @@ export default function ReportsPage() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <button
-                        onClick={() => router.push(`/${locale}/teacher/exams/results/detail?code=${exam.accessCode}`)}
+                        onClick={() => router.push(`/teacher/exams/results/detail/?code=${exam.accessCode}`)}
                         className="px-4 py-2 bg-purple-50 text-purple-700 font-bold text-sm rounded-lg hover:bg-purple-600 hover:text-white transition-all inline-flex items-center gap-2"
                       >
                         <span className="material-symbols-outlined text-sm">leaderboard</span>

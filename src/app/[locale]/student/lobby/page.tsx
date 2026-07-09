@@ -42,7 +42,7 @@ export default function StudentLobby() {
       if (res.ok) {
         const versionData = await res.json();
         sessionStorage.setItem("currentExam", JSON.stringify(versionData));
-        router.push(`/student/exams/take?code=${accessCode}`);
+        router.push(`/student/exams/take/?code=${accessCode}`);
       } else {
         const msg = await res.text();
         setError(msg);
@@ -59,7 +59,7 @@ export default function StudentLobby() {
   const startSSE = (examCode: string) => {
     if (esRef.current) return;
     const token = localStorage.getItem("accessToken");
-    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examCode}/stream?token=${token}`);
+    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examCode}/stream/?token=${token}`);
     esRef.current = es;
 
     es.addEventListener("status", (e) => {

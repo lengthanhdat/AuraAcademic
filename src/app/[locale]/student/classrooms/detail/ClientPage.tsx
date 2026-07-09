@@ -195,7 +195,7 @@ export default function StudentClassroomDetailPage() {
 
   const startExam = (exam: any) => {
     sessionStorage.setItem("exam_redirect_classroomId", classroomId);
-    router.push(`/student/lobby?code=${exam.accessCode}`);
+    router.push(`/student/lobby/?code=${exam.accessCode}`);
   };
 
   const getExamStatus = (exam: any, result: any) => {

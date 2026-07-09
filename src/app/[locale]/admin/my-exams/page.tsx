@@ -434,7 +434,7 @@ function ExamBuilderContent() {
         clearPersistedState();
         if (status === "WAITING") {
           // Công bố đề → vào thẳng trang phòng thi để chia sẻ mã và bắt đầu
-          router.push(`/admin/exam-room/detail?id=${savedExam.id}`);
+          router.push(`/admin/exam-room/detail/?id=${savedExam.id}`);
           toast.success(t('toast.publish_success'));
         } else {
           router.push("/admin/dashboard");

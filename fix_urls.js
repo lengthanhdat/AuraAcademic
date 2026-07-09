@@ -1,31 +1,35 @@
 const fs = require('fs');
 const path = require('path');
 
-function walkDir(dir, callback) {
+function walk(dir, callback) {
   fs.readdirSync(dir).forEach(f => {
     let dirPath = path.join(dir, f);
     let isDirectory = fs.statSync(dirPath).isDirectory();
-    isDirectory ? walkDir(dirPath, callback) : callback(path.join(dir, f));
+    isDirectory ? walk(dirPath, callback) : callback(path.join(dir, f));
   });
 }
 
-walkDir('./src', function(filePath) {
-  if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
-    let content = fs.readFileSync(filePath, 'utf8');
-    let original = content;
-    
-    // Replace backtick template literals
-    content = content.replace(/\`http:\/\/localhost:8088(.*?)\`/g, '\`${process.env.NEXT_PUBLIC_API_BASE_URL || \'http://localhost:8088\'}$1\`');
-    
-    // Replace double quote literals
-    content = content.replace(/\"http:\/\/localhost:8088(.*?)\"/g, '(process.env.NEXT_PUBLIC_API_BASE_URL || \"http://localhost:8088\") + \"$1\"');
-    
-    // Replace single quote literals
-    content = content.replace(/\'http:\/\/localhost:8088(.*?)\'/g, '(process.env.NEXT_PUBLIC_API_BASE_URL || \'http://localhost:8088\') + \'$1\'');
+let modifiedCount = 0;
 
-    if (content !== original) {
-      fs.writeFileSync(filePath, content);
-      console.log('Updated', filePath);
-    }
+walk('src/app', (filePath) => {
+  if (!filePath.endsWith('.tsx') && !filePath.endsWith('.ts')) return;
+  let content = fs.readFileSync(filePath, 'utf8');
+  let original = content;
+
+  // Replace /${locale}/ with / (when inside a template string used for routing)
+  content = content.replace(/href=\{\`\/\$\{locale\}\//g, 'href={`/');
+  content = content.replace(/router\.push\(\`\/\$\{locale\}\//g, 'router.push(`/');
+  content = content.replace(/router\.replace\(\`\/\$\{locale\}\//g, 'router.replace(`/');
+
+  // Insert trailing slash before ? for route paths to avoid Next.js redirect dropping query strings
+  // Example: detail?id= -> detail/?id=
+  content = content.replace(/([a-zA-Z0-9_-])\?([a-zA-Z0-9_]+)=/g, '$1/?$2=');
+
+  if (content !== original) {
+    fs.writeFileSync(filePath, content, 'utf8');
+    console.log('Fixed', filePath);
+    modifiedCount++;
   }
 });
+
+console.log('Total files modified:', modifiedCount);

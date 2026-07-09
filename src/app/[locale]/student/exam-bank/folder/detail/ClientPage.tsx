@@ -36,7 +36,7 @@ export default function StudentExamBankFolderPage({ params }: { params: { locale
       {/* Header */}
       <ScrollReveal variant="fade-up" duration={600}>
         <button 
-          onClick={() => router.push(`/${locale}/student/exam-bank`)}
+          onClick={() => router.push(`/student/exam-bank`)}
           className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 mb-6 transition-colors"
         >
           <span className="material-symbols-outlined text-sm">arrow_back</span>
@@ -142,7 +142,7 @@ export default function StudentExamBankFolderPage({ params }: { params: { locale
               return (
                 <div 
                   key={item.id} 
-                  onClick={() => router.push(`/${locale}/student/exam-bank/detail?id=${item.id}`)}
+                  onClick={() => router.push(`/student/exam-bank/detail/?id=${item.id}`)}
                   className="group flex flex-col md:flex-row items-center justify-between p-6 bg-white dark:bg-[#0A1F3E]/80 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-indigo-500/5 to-transparent rounded-bl-full pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>

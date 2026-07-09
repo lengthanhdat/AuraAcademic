@@ -650,7 +650,7 @@ export default function TeacherProfilePage() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => exam.accessCode && router.push(`/${locale}/teacher/exams/results/detail?code=${exam.accessCode}`)}
+                        onClick={() => exam.accessCode && router.push(`/teacher/exams/results/detail/?code=${exam.accessCode}`)}
                         disabled={!exam.accessCode}
                         className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-extrabold text-sky-700 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300"
                       >
@@ -683,7 +683,7 @@ export default function TeacherProfilePage() {
               {currentStatus.action && (
                 <button
                   type="button"
-                  onClick={() => router.push(`/${locale}/teacher/verify`)}
+                  onClick={() => router.push(`/teacher/verify`)}
                   className="mt-4 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
                 >
                   {currentStatus.action}
@@ -836,7 +836,7 @@ export default function TeacherProfilePage() {
                     <button
                       type="button"
                       key={classroom.id}
-                      onClick={() => router.push(`/teacher/classrooms/detail?id=${classroom.id}`)}
+                      onClick={() => router.push(`/teacher/classrooms/detail/?id=${classroom.id}`)}
                       className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-left hover:border-sky-200 hover:bg-sky-50 dark:border-slate-800 dark:bg-slate-950/60 dark:hover:border-sky-500/30 dark:hover:bg-sky-500/10"
                     >
                       <div className="min-w-0">

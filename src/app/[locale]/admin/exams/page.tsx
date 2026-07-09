@@ -27,7 +27,7 @@ function ClassroomName({ id }: { id?: string }) {
     const fetchName = async () => {
       try {
         if (!pendingClassroomRequests[id]) {
-          pendingClassroomRequests[id] = fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/detail?id=${id}`, {
+          pendingClassroomRequests[id] = fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/detail/?id=${id}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             },
@@ -554,7 +554,7 @@ export default function AdminExamsPage() {
                       {isLive && (
                         <>
                           <button
-                            onClick={() => router.push(`/teacher/exam-room/detail?id=${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exam-room/detail/?id=${exam.id}`)}
                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">meeting_room</span>
@@ -572,7 +572,7 @@ export default function AdminExamsPage() {
                       {isPublished && (
                         <>
                           <button
-                            onClick={() => router.push(`/teacher/exam-room/detail?id=${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exam-room/detail/?id=${exam.id}`)}
                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">meeting_room</span>
@@ -598,7 +598,7 @@ export default function AdminExamsPage() {
                       {isFinished && (
                         <>
                           <button
-                            onClick={() => router.push(`/admin/my-exams/results/detail?code=${exam.accessCode}`)}
+                            onClick={() => router.push(`/admin/my-exams/results/detail/?code=${exam.accessCode}`)}
                             className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">assignment_turned_in</span>

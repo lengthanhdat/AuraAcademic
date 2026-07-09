@@ -54,7 +54,7 @@ export default function ContentPage() {
 
     setLoadingAnnouncements(true);
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/notifications?type=all&limit=50", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088") + "/api/notifications/?type=all&limit=50", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {

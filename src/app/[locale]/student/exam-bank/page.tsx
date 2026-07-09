@@ -215,7 +215,7 @@ export default function ExamBankPage() {
                 <span className="material-symbols-outlined text-3xl text-white">library_books</span>
               </div>
               <Link
-                href={`/${locale}/student/exam-bank/results`}
+                href={`/student/exam-bank/results`}
                 className="flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl text-white font-bold backdrop-blur-sm ring-1 ring-white/30 w-fit"
               >
                 <span className="material-symbols-outlined text-[20px]">query_stats</span>
@@ -333,7 +333,7 @@ export default function ExamBankPage() {
               return (
                 <div
                   key={folder.id}
-                  onClick={() => router.push(`/${locale}/student/exam-bank/folder/detail?folderId=${folder.id}`)}
+                  onClick={() => router.push(`/student/exam-bank/folder/detail/?folderId=${folder.id}`)}
                   className="group relative overflow-hidden bg-white dark:bg-[#0A1F3E]/80 border border-slate-200/60 dark:border-cyan-950/40 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900/50 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[110px]"
                 >
                   <div className="flex justify-between items-start">
@@ -522,7 +522,7 @@ export default function ExamBankPage() {
                 return (
                   <div
                     key={exam.id}
-                    onClick={() => router.push(`/${locale}/student/exam-bank/detail?id=${exam.id}`)}
+                    onClick={() => router.push(`/student/exam-bank/detail/?id=${exam.id}`)}
                     className="group relative flex gap-4 p-4 bg-white dark:bg-[#0A1F3E]/80 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900/50 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer pr-12"
                   >
                     <button
@@ -600,7 +600,7 @@ export default function ExamBankPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/${locale}/student/exam-bank/detail?id=${exam.id}`);
+                          router.push(`/student/exam-bank/detail/?id=${exam.id}`);
                         }}
                         className="h-10 px-3 rounded-xl bg-[#0C2E5E] text-white text-xs font-extrabold flex items-center gap-1.5 hover:bg-[#14508F] transition-colors cursor-pointer"
                       >
@@ -647,7 +647,7 @@ export default function ExamBankPage() {
                     return (
                       <li key={exam.id}>
                         <button
-                          onClick={() => router.push(`/${locale}/student/exam-bank/detail?id=${exam.id}`)}
+                          onClick={() => router.push(`/student/exam-bank/detail/?id=${exam.id}`)}
                           className="w-full flex items-center gap-2 text-left p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-cyan-950/20 transition-colors group"
                         >
                           <span className={`text-xs font-black w-4 text-center shrink-0 ${rankColor}`}>{idx + 1}</span>

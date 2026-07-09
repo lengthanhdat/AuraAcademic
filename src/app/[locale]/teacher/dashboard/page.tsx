@@ -186,11 +186,11 @@ export default function TeacherDashboard() {
   }, [t, mutate]);
 
   const editExam = useCallback((exam: any) => {
-    router.push(`/teacher/exams?edit=${exam.id}`);
+    router.push(`/teacher/exams/?edit=${exam.id}`);
   }, [router]);
 
   const viewExam = useCallback((exam: any) => {
-    router.push(`/teacher/exam-room/detail?id=${exam.id}`);
+    router.push(`/teacher/exam-room/detail/?id=${exam.id}`);
   }, [router]);
 
   const openShareModal = useCallback((exam: any) => {
@@ -308,7 +308,7 @@ export default function TeacherDashboard() {
           </div>
           
           <div className="flex-shrink-0">
-            <button onClick={() => router.push("/teacher/exams?mode=ai")} className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-bold rounded-2xl shadow-[0_8px_20px_rgba(14,165,233,0.25)] transition-all hover:scale-[1.02] active:scale-95 overflow-hidden">
+            <button onClick={() => router.push("/teacher/exams/?mode=ai")} className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-bold rounded-2xl shadow-[0_8px_20px_rgba(14,165,233,0.25)] transition-all hover:scale-[1.02] active:scale-95 overflow-hidden">
               <div className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
               <span className="material-symbols-outlined text-[22px]">auto_awesome</span>
               <span className="text-[15px]">Tạo Đề Thi Mới</span>
@@ -324,7 +324,7 @@ export default function TeacherDashboard() {
           Thao tác nhanh
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <button onClick={() => router.push("/teacher/exams?mode=ai")} className="flex flex-col items-start p-5 bg-white dark:bg-[#111A2C] border border-slate-200/60 dark:border-slate-800/60 rounded-2xl hover:border-blue-300 dark:hover:border-blue-500/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all group text-left">
+          <button onClick={() => router.push("/teacher/exams/?mode=ai")} className="flex flex-col items-start p-5 bg-white dark:bg-[#111A2C] border border-slate-200/60 dark:border-slate-800/60 rounded-2xl hover:border-blue-300 dark:hover:border-blue-500/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all group text-left">
             <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined">psychology</span>
             </div>
@@ -430,7 +430,7 @@ export default function TeacherDashboard() {
                   </div>
                   <p className="text-slate-600 dark:text-slate-300 font-semibold mb-1">Kho đề của bạn đang trống</p>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Hãy thiết kế đề thi mới hoặc lưu từ ngân hàng chung.</p>
-                  <button onClick={() => router.push("/teacher/exams?mode=manual")} className="px-5 py-2.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-cyan-400 font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors text-sm">
+                  <button onClick={() => router.push("/teacher/exams/?mode=manual")} className="px-5 py-2.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-cyan-400 font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors text-sm">
                     Thiết kế Đề thi
                   </button>
                 </div>
@@ -463,7 +463,7 @@ export default function TeacherDashboard() {
                 </div>
               ) : classrooms.length > 0 ? (
                 classrooms.slice(0, 4).map((cls: any) => (
-                  <div key={cls.id} onClick={() => router.push(`/teacher/classrooms/detail?id=${cls.id}`)} className="group p-4 bg-slate-50 dark:bg-[#162137] rounded-2xl border border-slate-100 dark:border-slate-800/50 hover:border-blue-300 dark:hover:border-blue-500/50 hover:bg-white dark:hover:bg-[#1A263D] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md">
+                  <div key={cls.id} onClick={() => router.push(`/teacher/classrooms/detail/?id=${cls.id}`)} className="group p-4 bg-slate-50 dark:bg-[#162137] rounded-2xl border border-slate-100 dark:border-slate-800/50 hover:border-blue-300 dark:hover:border-blue-500/50 hover:bg-white dark:hover:bg-[#1A263D] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md">
                     <div>
                       <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-1 group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors">{cls.name}</h3>
                       <div className="flex items-center gap-3 text-xs font-medium text-slate-500">

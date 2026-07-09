@@ -73,7 +73,7 @@ export default function ExamBankFolderPage({ params }: { params: { locale: strin
     <main className="p-8 space-y-8 max-w-5xl mx-auto w-full">
       <ScrollReveal variant="fade-up" duration={600}>
         <button
-          onClick={() => router.push(`/${locale}/teacher/exam-bank`)}
+          onClick={() => router.push(`/teacher/exam-bank`)}
           className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 mb-6 transition-colors"
         >
           <span className="material-symbols-outlined text-sm">arrow_back</span>
@@ -96,7 +96,7 @@ export default function ExamBankFolderPage({ params }: { params: { locale: strin
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <button
-              onClick={() => router.push(`/${locale}/teacher/exams/import?folderId=${folderId}`)}
+              onClick={() => router.push(`/teacher/exams/import/?folderId=${folderId}`)}
               className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-[#00C6FF] text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-lg">upload_file</span>
@@ -181,7 +181,7 @@ export default function ExamBankFolderPage({ params }: { params: { locale: strin
                       {item.teacherId === currentTeacherId && (
                         <>
                           <button
-                            onClick={() => router.push(`/${locale}/teacher/exam-bank/detail?folderId=${folderId}/create?editId=${item.id}`)}
+                            onClick={() => router.push(`/teacher/exam-bank/detail/?folderId=${folderId}/create/?editId=${item.id}`)}
                             title="Sửa bài"
                             className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-cyan-950/40 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center justify-center"
                           >

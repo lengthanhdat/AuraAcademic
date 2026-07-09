@@ -213,9 +213,9 @@ function ImportFormContent() {
 
       if (res.ok) {
         if (folderId || isBank) {
-          router.push(`/${locale}/teacher/exam-bank`);
+          router.push(`/teacher/exam-bank`);
         } else {
-          router.push(`/${locale}/teacher/dashboard`);
+          router.push(`/teacher/dashboard`);
         }
       } else {
         const err = await res.json();
@@ -237,7 +237,7 @@ function ImportFormContent() {
     <main className="min-h-screen bg-[#f8fafc] p-8">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => router.push(`/${locale}/teacher/dashboard`)} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
+        <button onClick={() => router.push(`/teacher/dashboard`)} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
           <span className="material-symbols-outlined text-slate-600">arrow_back</span>
         </button>
         <div>
