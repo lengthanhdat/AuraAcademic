@@ -65,6 +65,12 @@ export default function TeacherClassroomDetailPage() {
   const router = useRouter();
   const classroomId = params.id as string;
 
+  // Guard: nếu không có id thì redirect về danh sách lớp luôn
+  if (!classroomId || classroomId === 'null') {
+    if (typeof window !== 'undefined') router.replace('/teacher/classrooms');
+    return null;
+  }
+
   const [tab, setTab] = useState<Tab>("stream");
   const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; pendingStudents?: any[]; removedStudents?: any[]; posts?: any[]; teacherAvatarUrl?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -505,7 +511,7 @@ export default function TeacherClassroomDetailPage() {
                     const content = (document.getElementById("postInput") as HTMLTextAreaElement)?.value;
                     if (!content?.trim()) return;
                     try {
-                      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/detail/?id=${classroomId}/posts`, {
+                      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088'}/api/classrooms/${classroomId}/posts`, {
                         method: 'POST',
                         headers: { 
                           'Content-Type': 'application/json',
@@ -636,7 +642,7 @@ export default function TeacherClassroomDetailPage() {
                         onClick={async () => {
                           if (window.confirm("Bạn có chắc chắn muốn xóa học sinh này khỏi lớp?")) {
                             try {
-                              const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/classrooms/detail/?id=${classroomId}/remove/${stud.id}`, {
+                              const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088'}/api/classrooms/${classroomId}/remove/${stud.id}`, {
                                 method: 'POST',
                                 headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
                               });
