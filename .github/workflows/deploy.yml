@@ -38,9 +38,11 @@ jobs:
       # 5. Build Next.js → output vào thư mục /out
       - name: Build Next.js (static export)
         run: |
+          sed -i 's/\/\/ output: '"'"'export'"'"'/output: '"'"'export'"'"'/' next.config.mjs
+          sed -i 's/\/\/ trailingSlash: true/trailingSlash: true/' next.config.mjs
           npm run build
+          mkdir -p out
           echo '<meta http-equiv="refresh" content="0; url=/vi" />' > out/index.html
-      # next.config.mjs có output: 'export' → tạo thư mục out/
 
       # 6. Cấu hình AWS credentials
       - name: Configure AWS credentials
