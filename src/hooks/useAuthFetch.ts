@@ -13,7 +13,12 @@ export const authFetcher = async (url: string) => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      
+      const locale = window.location.pathname.split('/')[1] || 'vi';
+      const validLocales = ['en', 'vi'];
+      const currentLocale = validLocales.includes(locale) ? locale : 'vi';
+      
+      window.location.href = `/${currentLocale}/login`;
     }
     throw new Error("Session expired");
   }
