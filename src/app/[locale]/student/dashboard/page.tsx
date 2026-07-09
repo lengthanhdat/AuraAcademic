@@ -1,6 +1,6 @@
 "use client";
 
-import { Link } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import useSWR from "swr";
@@ -58,6 +58,7 @@ const dateValue = (value?: string) => {
 };
 
 export default function StudentDashboard() {
+  const router = useRouter();
   const t = useTranslations("StudentDashboard");
   const locale = useLocale();
   const user = useMemo(() => getStoredUser(), []);
@@ -132,7 +133,7 @@ export default function StudentDashboard() {
       });
 
       if (res.ok) {
-        window.location.href = `/${locale}/student/lobby?code=${cleanCode}`;
+        router.push(`/student/lobby?code=${cleanCode}`);
       } else if (res.status === 401) {
         setError(t("session_expired"));
       } else {

@@ -50,7 +50,7 @@ export default function StudentExams() {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
-        window.location.href = `/${locale}/student/lobby?code=${code}`;
+        router.push(`/student/lobby?code=${code}`);
       } else if (res.status === 401) {
         setError(t('session_expired'));
       } else {

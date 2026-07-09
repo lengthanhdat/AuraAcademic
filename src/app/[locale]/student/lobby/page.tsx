@@ -42,7 +42,7 @@ export default function StudentLobby() {
       if (res.ok) {
         const versionData = await res.json();
         sessionStorage.setItem("currentExam", JSON.stringify(versionData));
-        window.location.href = `/${locale}/student/exams/take?code=${accessCode}`;
+        router.push(`/student/exams/take?code=${accessCode}`);
       } else {
         const msg = await res.text();
         setError(msg);
