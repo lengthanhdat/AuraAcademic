@@ -663,10 +663,10 @@
     "info_title": "Thông tin tệp"
   },
   "StudentProfile": {
-    "title": "H? s? h?c sinh",
+    "title": "Hồ sơ học sinh",
     "subtitle": "Quản lý thông tin học tập của bạn.",
     "role": "Học sinh",
-    "btn_edit": "S?a h? s?",
+    "btn_edit": "Sửa hồ sơ",
     "btn_close": "Đóng chỉnh sửa",
     "change_photo": "Đổi ảnh đại diện",
     "update_title": "Cập nhật hồ sơ",
