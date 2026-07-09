@@ -63,7 +63,7 @@ export default function TeacherClassroomDetailPage() {
   const searchParams = useSearchParams();
   const params = { id: searchParams.get('id') as string, code: searchParams.get('code') as string, folderId: searchParams.get('folderId') as string, locale: useParams().locale as string };
   const router = useRouter();
-  const classroomId = params.id as string;
+  const classroomId = params.id || (typeof window !== 'undefined' ? sessionStorage.getItem('classroomDetailId') : '') || '';
 
   const [tab, setTab] = useState<Tab>("stream");
   const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; pendingStudents?: any[]; removedStudents?: any[]; posts?: any[]; teacherAvatarUrl?: string } | null>(null);
@@ -79,14 +79,6 @@ export default function TeacherClassroomDetailPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stompRef = useRef<Client | null>(null);
   const userRef = useRef<any>(null);
-
-  // Guard: nếu không có id thì redirect về danh sách lớp luôn
-  // Chạy trong useEffect để chờ client hydration (tránh redirect sớm trên S3)
-  useEffect(() => {
-    if (!classroomId || classroomId === 'null') {
-      router.replace('/teacher/classrooms/');
-    }
-  }, [classroomId]);
 
   useEffect(() => {
     if (tab === "gradebook" && data?.exams) {
