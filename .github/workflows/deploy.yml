@@ -43,6 +43,14 @@ jobs:
           npm run build
           mkdir -p out
           echo '<meta http-equiv="refresh" content="0; url=/vi" />' > out/index.html
+          
+          # Handle Next.js RSC payload mismatch for trailingSlash: true
+          find out -name "index.txt" | while read -r file; do
+            dir=$(dirname "$file")
+            if [ "$dir" != "out" ]; then
+              cp "$file" "$dir.txt"
+            fi
+          done
 
       # 6. Cấu hình AWS credentials
       - name: Configure AWS credentials
