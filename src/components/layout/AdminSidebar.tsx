@@ -124,7 +124,8 @@ export function AdminSidebar({ isCollapsed = false, onClose }: SidebarProps) {
               )}
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                  const cleanPath = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/');
+                  const isActive = cleanPath === item.href || (item.href !== "/admin/dashboard" && cleanPath.startsWith(item.href + "/"));
                   return (
                     <Link
                       key={item.href}
