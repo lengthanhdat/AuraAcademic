@@ -43,7 +43,7 @@ export function useProctoring(
     const studentName = encodeURIComponent(user.name || user.fullName || "Học sinh");
 
     // Kết nối WebSocket tới AI Service
-    const aiBaseUrl = process.env.NEXT_PUBLIC_AI_WS_URL || "ws://localhost:8001";
+    const aiBaseUrl = process.env.NEXT_PUBLIC_AI_URL || "ws://localhost:8001";
     const wsUrl = `${aiBaseUrl}/ws/detect/${examCode}/${studentId}?student_name=${studentName}&record=${isRecordingEnabled}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
