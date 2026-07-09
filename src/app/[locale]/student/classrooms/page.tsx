@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { classroomApi } from "@/lib/classroomApi";
 import { BookOpen, LogIn, Users, Clock } from "lucide-react";
 import { toast } from "sonner";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
 export default function StudentClassroomsPage() {

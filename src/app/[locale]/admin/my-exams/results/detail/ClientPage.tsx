@@ -1,7 +1,8 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/navigation';
 
 export default function ExamResults() {
   const searchParams = useSearchParams();

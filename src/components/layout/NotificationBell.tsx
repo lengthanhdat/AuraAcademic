@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-
+import { useRouter } from "@/navigation";
 interface NotificationItem {
   id: string;
   userId: string;
@@ -20,6 +20,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
+  const router = useRouter();
 
   // Filters & Search states
   const [searchQuery, setSearchQuery] = useState("");
@@ -114,10 +115,10 @@ export default function NotificationBell() {
               const path = window.location.pathname;
               const matches = path.match(/^\/([a-z]{2})\/(admin|teacher|student)/);
               if (matches) {
-                const [, locale, role] = matches;
-                window.location.href = `/${locale}/${role}/notifications`;
+                const [, , role] = matches;
+                router.push(`/${role}/notifications`);
               } else {
-                window.location.href = "/notifications";
+                router.push("/notifications");
               }
             }
           }

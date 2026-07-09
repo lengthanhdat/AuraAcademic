@@ -1,7 +1,8 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { useTranslations } from "next-intl";
 
 export default function TeacherExamRoom() {

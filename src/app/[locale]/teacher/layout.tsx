@@ -4,7 +4,7 @@ import { TeacherSidebar } from "@/components/layout/TeacherSidebar";
 import { TeacherHeader } from "@/components/layout/TeacherHeader";
 import { Toaster } from "sonner";
 import AuthGuard from "@/components/layout/AuthGuard";
-import { usePathname } from "next/navigation";
+import { usePathname } from '@/navigation';
 import dynamic from "next/dynamic";
 
 const ChatBox = dynamic(

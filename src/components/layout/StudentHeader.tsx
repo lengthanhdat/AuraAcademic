@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import NotificationBell from "@/components/layout/NotificationBell";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import Image from "next/image";
 

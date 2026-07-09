@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { useState } from "react";
 import { useRouter } from "@/navigation";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";

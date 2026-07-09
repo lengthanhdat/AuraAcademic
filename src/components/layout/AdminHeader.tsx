@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from '@/navigation';
 import NotificationBell from "@/components/layout/NotificationBell";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 

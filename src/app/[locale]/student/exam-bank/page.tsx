@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "@/navigation";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";

@@ -1,6 +1,7 @@
 ﻿"use client";
 import React, { useEffect, useState, useRef, useCallback, memo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

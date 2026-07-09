@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useState, useRef, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useTranslations, useLocale } from "next-intl";

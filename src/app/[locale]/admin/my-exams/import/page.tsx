@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";

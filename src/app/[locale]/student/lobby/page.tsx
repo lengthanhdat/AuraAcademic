@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { useTranslations, useLocale } from "next-intl";
 import { useProctoring, VIOLATION_LABELS } from "@/hooks/useProctoring";
 

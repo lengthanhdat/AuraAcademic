@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from 'next/navigation';
+import { useRouter } from '@/navigation';
 
 export default function ExamResults() {
   const router = useRouter();

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import useSWR from "swr";
 import { authFetcher, getStoredUser } from "@/hooks/useAuthFetch";
 import { StatCardSkeleton, TableRowSkeleton } from "@/components/ui/Skeleton";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { EDUCATION_HIERARCHY } from "@/lib/education-levels";
 
 

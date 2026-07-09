@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { useLocale } from "next-intl";
 import { API_BASE } from "@/lib/api";
 

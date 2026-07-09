@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { StudentSidebar } from "@/components/layout/StudentSidebar";
 import { StudentHeader } from "@/components/layout/StudentHeader";
 import AuthGuard from "@/components/layout/AuthGuard";
-import { usePathname } from "next/navigation";
+import { usePathname } from '@/navigation';
 import dynamic from "next/dynamic";
 
 const ChatBox = dynamic(

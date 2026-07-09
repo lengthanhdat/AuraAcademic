@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminHeader } from "@/components/layout/AdminHeader";
 import AuthGuard from "@/components/layout/AuthGuard";
-import { usePathname } from "next/navigation";
+import { usePathname } from '@/navigation';
 import dynamic from "next/dynamic";
 
 const KatexStyles = dynamic(() => import("@/components/KatexStyles"), { ssr: false });

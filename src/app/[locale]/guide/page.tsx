@@ -3,6 +3,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BookOpen, Key, MonitorPlay, FileText } from "lucide-react";
+import { Link } from "@/navigation";
 
 export default function GuidePage() {
   return (
@@ -42,7 +43,7 @@ export default function GuidePage() {
           <p className="text-blue-100/80 mb-8 relative z-10 max-w-xl mx-auto">
             Đội ngũ kỹ thuật của AuraAcademic luôn sẵn sàng 24/7 để hỗ trợ bạn giải quyết bất kỳ sự cố nào trong quá trình tổ chức thi.
           </p>
-          <a href="/contact" className="inline-block px-8 py-3 bg-gradient-to-r from-[#00C6FF] to-[#0072FF] text-white font-bold rounded-xl shadow-lg hover:shadow-cyan-500/25 transition-all hover:-translate-y-1 relative z-10">
+          <Link href="/contact" className="inline-block px-8 py-3 bg-gradient-to-r from-[#00C6FF] to-[#0072FF] text-white font-bold rounded-xl shadow-lg hover:shadow-cyan-500/25 transition-all hover:-translate-y-1 relative z-10">
             Liên hệ hỗ trợ ngay
           </a>
         </div>
