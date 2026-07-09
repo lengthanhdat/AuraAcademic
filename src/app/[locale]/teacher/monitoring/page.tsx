@@ -118,7 +118,7 @@ export default function MonitoringPage() {
                   </div>
 
                   <button
-                    onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
+                    onClick={() => router.push(`/teacher/exam-room/detail?id=${exam.id}`)}
                     className="w-full py-3.5 bg-slate-800 dark:bg-[#0E3E7A] dark:hover:bg-[#00C6FF] text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-blue-600 transition-all"
                   >
                     <span className="material-symbols-outlined text-lg">meeting_room</span>

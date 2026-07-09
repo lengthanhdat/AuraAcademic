@@ -166,7 +166,7 @@ export default function PracticeResultsPage() {
                   <span className="text-on-surface-variant dark:text-slate-400 text-sm">/10</span>
                 </div>
                 <Link
-                  href={`/${locale}/student/exam-bank/${r.examId}/result?resultId=${r.id}`}
+                  href={`/${locale}/student/exam-bank/detail?id=${r.examId}/result?resultId=${r.id}`}
                   className="h-9 px-3 rounded-xl bg-[#0C2E5E] text-white text-xs font-extrabold flex items-center gap-1.5 hover:bg-[#14508F] transition-colors"
                 >
                   Xem lại

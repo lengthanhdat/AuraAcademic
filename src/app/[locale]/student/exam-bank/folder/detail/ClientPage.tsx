@@ -1,4 +1,5 @@
 "use client";
+import { useSearchParams, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
@@ -7,6 +8,9 @@ import { useRouter } from "@/navigation";
 import { useLocale } from "next-intl";
 import { API_BASE } from "@/lib/api";
 export default function StudentExamBankFolderPage({ params }: { params: { locale: string; folderId: string } }) {
+  const searchParams = useSearchParams();
+  const folderId = searchParams.get("folderId");
+
   const router = useRouter();
   const locale = useLocale();
   const { data: user, mutate: mutateUser } = useSWR(`${API_BASE}/auth/me`, authFetcher, { revalidateOnFocus: false });
@@ -17,13 +21,13 @@ export default function StudentExamBankFolderPage({ params }: { params: { locale
   );
 
   const { data: currentFolder } = useSWR(
-    `${API_BASE}/exam-bank/folders/${params.folderId}`,
+    `${API_BASE}/exam-bank/folders/${folderId}`,
     authFetcher,
     { revalidateOnFocus: false }
   );
   // Fetch items in this folder
   const { data: items = [], isLoading } = useSWR(
-    `${API_BASE}/exam-bank/folders/${params.folderId}/items`,
+    `${API_BASE}/exam-bank/folders/${folderId}/items`,
     authFetcher,
     { revalidateOnFocus: false }
   );
@@ -138,7 +142,7 @@ export default function StudentExamBankFolderPage({ params }: { params: { locale
               return (
                 <div 
                   key={item.id} 
-                  onClick={() => router.push(`/${locale}/student/exam-bank/${item.id}`)}
+                  onClick={() => router.push(`/${locale}/student/exam-bank/detail?id=${item.id}`)}
                   className="group flex flex-col md:flex-row items-center justify-between p-6 bg-white dark:bg-[#0A1F3E]/80 rounded-2xl border border-slate-200/60 dark:border-cyan-950/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-indigo-500/5 to-transparent rounded-bl-full pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>

@@ -1,11 +1,15 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 export default function TeacherExamRoom() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+
   const router = useRouter();
-  const params = useParams();
+  const params = { id: searchParams.get('id') as string, code: searchParams.get('code') as string, folderId: searchParams.get('folderId') as string, locale: useParams().locale as string };
   const examId = params?.id as string;
   const t = useTranslations('TeacherExamRoom');
 

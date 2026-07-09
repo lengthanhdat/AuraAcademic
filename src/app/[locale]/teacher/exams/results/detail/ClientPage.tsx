@@ -4,8 +4,8 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 
 export default function ExamResults() {
   const router = useRouter();
-  const params = useParams();
   const searchParams = useSearchParams();
+  const params = { id: searchParams.get('id') as string, code: searchParams.get('code') as string, folderId: searchParams.get('folderId') as string, locale: useParams().locale as string };
   const code = params.code as string;
   const returnTo = searchParams.get("returnTo");
   

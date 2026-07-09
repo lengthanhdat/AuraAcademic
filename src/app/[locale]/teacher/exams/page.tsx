@@ -506,11 +506,11 @@ function ExamBuilderContent() {
         clearPersistedState();
         if (status === "WAITING") {
           // CÃ´ng bá»‘ Ä‘á» â†’ vÃ o tháº³ng trang phÃ²ng thi Ä‘á»ƒ chia sáº» mÃ£ vÃ  báº¯t Ä‘áº§u
-          router.push(`/teacher/exam-room/${savedExam.id}`);
+          router.push(`/teacher/exam-room/detail?id=${savedExam.id}`);
           toast.success(t('toast.publish_success'));
         } else if (classroomId) {
           // LÆ°u báº£n nhÃ¡p tá»« lá»›p há»c â†’ quay láº¡i lá»›p há»c
-          router.push(`/teacher/classrooms/${classroomId}?tab=exams`);
+          router.push(`/teacher/classrooms/detail?id=${classroomId}?tab=exams`);
           toast.success("Bài thi đã được tạo và gắn vào lớp!");
         } else {
           router.push("/teacher/dashboard");

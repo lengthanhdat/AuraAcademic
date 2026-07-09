@@ -1,4 +1,5 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
@@ -54,9 +55,12 @@ function Avatar({ name, src, className = "w-10 h-10", tone = "cyan" }: { name?: 
 }
 
 export default function StudentClassroomDetailPage() {
-  const params = useParams();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+
+  const params = { id: searchParams.get('id') as string, code: searchParams.get('code') as string, folderId: searchParams.get('folderId') as string, locale: useParams().locale as string };
   const router = useRouter();
-  const classroomId = params.id as string;
+  const classroomId = id as string;
 
   const [tab, setTab] = useState<Tab>("timeline");
   const [data, setData] = useState<{ classroom: any; exams: any[]; students?: any[]; posts?: any[]; teacherAvatarUrl?: string } | null>(null);

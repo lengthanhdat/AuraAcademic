@@ -343,7 +343,7 @@ export default function StudentDashboard() {
                   return (
                     <Link
                       key={roomId || index}
-                      href={roomId ? `/${locale}/student/classrooms/${roomId}` : `/${locale}/student/classrooms`}
+                      href={roomId ? `/${locale}/student/classrooms/detail?id=${roomId}` : `/${locale}/student/classrooms`}
                       className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-4 transition hover:border-cyan-300 hover:bg-cyan-50/50 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/20"
                     >
                       <div className="flex items-start justify-between gap-3">

@@ -208,7 +208,7 @@ function ImportFormContent() {
 
       if (res.ok) {
         if (folderId) {
-          router.push(`/${locale}/admin/exam-bank/${folderId}`);
+          router.push(`/${locale}/admin/exam-bank/detail?folderId=${folderId}`);
         } else if (isBank) {
           router.push(`/${locale}/admin/exam-bank`);
         } else {

@@ -670,7 +670,7 @@ export default function TeacherMyExamsPage() {
                       {isLive && (
                         <>
                           <button
-                            onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exam-room/detail?id=${exam.id}`)}
                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">meeting_room</span>
@@ -689,7 +689,7 @@ export default function TeacherMyExamsPage() {
                       {isPublished && (
                         <>
                           <button
-                            onClick={() => router.push(`/teacher/exam-room/${exam.id}`)}
+                            onClick={() => router.push(`/teacher/exam-room/detail?id=${exam.id}`)}
                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">meeting_room</span>
@@ -722,7 +722,7 @@ export default function TeacherMyExamsPage() {
                       {isFinished && (
                         <>
                           <button
-                            onClick={() => router.push(`/teacher/exams/results/${exam.accessCode}`)}
+                            onClick={() => router.push(`/teacher/exams/results/detail?code=${exam.accessCode}`)}
                             className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-sm">assignment_turned_in</span>

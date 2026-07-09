@@ -580,7 +580,7 @@ export default function CreateBankItemPage({ params }: { params: { locale: strin
       });
 
       if (res.ok) {
-        router.push(`/${locale}/teacher/exam-bank/${params.folderId}`);
+        router.push(`/${locale}/teacher/exam-bank/detail?folderId=${params.folderId}`);
         return;
       }
 

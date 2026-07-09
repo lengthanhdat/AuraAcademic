@@ -1,11 +1,14 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 export default function ExamResults() {
+  const searchParams = useSearchParams();
+  const code = searchParams.get("code");
+
   const router = useRouter();
-  const params = useParams();
-  const code = params.code as string;
+  const params = { id: searchParams.get('id') as string, code: searchParams.get('code') as string, folderId: searchParams.get('folderId') as string, locale: useParams().locale as string };
   
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

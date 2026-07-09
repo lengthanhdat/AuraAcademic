@@ -488,7 +488,7 @@ export default function TakeExam() {
           sessionStorage.removeItem("exam_redirect_classroomId");
           toast.success("Nộp bài thành công! Đang chuyển hướng bạn quay lại lớp học...");
           setTimeout(() => {
-            router.push(`/student/classrooms/${redirectClassroomId}`);
+            router.push(`/student/classrooms/detail?id=${redirectClassroomId}`);
           }, 3000);
         }
       } else {
@@ -769,7 +769,7 @@ export default function TakeExam() {
                 <button 
                   onClick={() => {
                     if (classroomId) {
-                      router.push(`/student/classrooms/${classroomId}`);
+                      router.push(`/student/classrooms/detail?id=${classroomId}`);
                     } else {
                       router.push("/student/dashboard");
                     }
@@ -860,7 +860,7 @@ export default function TakeExam() {
                <button 
                   onClick={() => {
                     if (classroomId) {
-                      router.push(`/student/classrooms/${classroomId}`);
+                      router.push(`/student/classrooms/detail?id=${classroomId}`);
                     } else {
                       router.push("/student/dashboard");
                     }

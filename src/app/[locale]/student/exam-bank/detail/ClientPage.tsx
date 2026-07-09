@@ -1,4 +1,5 @@
 "use client";
+import { useSearchParams, useParams } from "next/navigation";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "@/navigation";
 import { useLocale } from "next-intl";
@@ -123,12 +124,15 @@ function ConfirmModal({
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function TakePracticeExamPage({ params }: { params: { locale: string; id: string } }) {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+
   const router = useRouter();
   const locale = useLocale();
   const user = useMemo(() => getStoredUser(), []);
 
   const { data: exam, isLoading } = useSWR(
-    `${API_BASE}/practice/exams/${params.id}`,
+    `${API_BASE}/practice/exams/${id}`,
     authFetcher,
     { revalidateOnFocus: false }
   );
@@ -184,7 +188,7 @@ export default function TakePracticeExamPage({ params }: { params: { locale: str
       });
       if (res.ok) {
         const result = await res.json();
-        router.replace(`/${locale}/student/exam-bank/${params.id}/result?resultId=${result.id}`);
+        router.replace(`/${locale}/student/exam-bank/detail?id=${id}/result?resultId=${result.id}`);
       } else {
         setShowConfirm(false);
         alert("Có lỗi xảy ra khi nộp bài.");

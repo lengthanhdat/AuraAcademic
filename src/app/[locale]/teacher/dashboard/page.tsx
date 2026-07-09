@@ -190,7 +190,7 @@ export default function TeacherDashboard() {
   }, [router]);
 
   const viewExam = useCallback((exam: any) => {
-    router.push(`/teacher/exam-room/${exam.id}`);
+    router.push(`/teacher/exam-room/detail?id=${exam.id}`);
   }, [router]);
 
   const openShareModal = useCallback((exam: any) => {
@@ -463,7 +463,7 @@ export default function TeacherDashboard() {
                 </div>
               ) : classrooms.length > 0 ? (
                 classrooms.slice(0, 4).map((cls: any) => (
-                  <div key={cls.id} onClick={() => router.push(`/teacher/classrooms/${cls.id}`)} className="group p-4 bg-slate-50 dark:bg-[#162137] rounded-2xl border border-slate-100 dark:border-slate-800/50 hover:border-blue-300 dark:hover:border-blue-500/50 hover:bg-white dark:hover:bg-[#1A263D] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md">
+                  <div key={cls.id} onClick={() => router.push(`/teacher/classrooms/detail?id=${cls.id}`)} className="group p-4 bg-slate-50 dark:bg-[#162137] rounded-2xl border border-slate-100 dark:border-slate-800/50 hover:border-blue-300 dark:hover:border-blue-500/50 hover:bg-white dark:hover:bg-[#1A263D] transition-all cursor-pointer flex items-center justify-between shadow-sm hover:shadow-md">
                     <div>
                       <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-1 group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors">{cls.name}</h3>
                       <div className="flex items-center gap-3 text-xs font-medium text-slate-500">

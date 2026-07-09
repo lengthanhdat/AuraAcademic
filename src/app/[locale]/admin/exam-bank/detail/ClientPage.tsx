@@ -1,4 +1,5 @@
 "use client";
+import { useSearchParams, useParams } from "next/navigation";
 import { useState } from "react";
 import useSWR from "swr";
 import { authFetcher } from "@/hooks/useAuthFetch";
@@ -19,6 +20,9 @@ export default function AdminFolderDetailPage({
 }: {
   params: { locale: string; folderId: string };
 }) {
+  const searchParams = useSearchParams();
+  const folderId = searchParams.get("folderId");
+
   const router = useRouter();
   const locale = useLocale();
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,13 +30,13 @@ export default function AdminFolderDetailPage({
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const { data: folder } = useSWR(
-    `${API_BASE}/exam-bank/folders/${params.folderId}`,
+    `${API_BASE}/exam-bank/folders/${folderId}`,
     authFetcher,
     { revalidateOnFocus: false }
   );
 
   const { data: items = [], isLoading, mutate } = useSWR(
-    `${API_BASE}/exam-bank/folders/${params.folderId}/items`,
+    `${API_BASE}/exam-bank/folders/${folderId}/items`,
     authFetcher,
     { revalidateOnFocus: false }
   );
@@ -50,7 +54,7 @@ export default function AdminFolderDetailPage({
     setRemovingId(examId);
     try {
       const res = await fetch(
-        `${API_BASE}/exam-bank/folders/${params.folderId}/items/${examId}`,
+        `${API_BASE}/exam-bank/folders/${folderId}/items/${examId}`,
         { method: "DELETE", headers: getAuthHeaders() }
       );
       if (res.ok) mutate();
@@ -109,7 +113,7 @@ export default function AdminFolderDetailPage({
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <button
-              onClick={() => router.push(`/${locale}/admin/exams/import?folderId=${params.folderId}`)}
+              onClick={() => router.push(`/${locale}/admin/exams/import?folderId=${folderId}`)}
               className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-[#00C6FF] text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-lg">upload_file</span>

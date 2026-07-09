@@ -90,7 +90,7 @@ export default function ExamConfigDrawer({
           onSuccess();
         }
         // Redirect to active exam room
-        router.push(`/teacher/exam-room/${savedSession.id}`);
+        router.push(`/teacher/exam-room/detail?id=${savedSession.id}`);
       } else {
         const errText = await res.text();
         toast.error(`Lỗi: ${errText || "Không thể giao bài"}`);
