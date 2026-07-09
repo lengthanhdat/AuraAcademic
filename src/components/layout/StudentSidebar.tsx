@@ -25,10 +25,11 @@ export function StudentSidebar({ isCollapsed = false, onClose }: SidebarProps) {
   ];
 
   const isActive = (href: string) => {
+    const cleanPath = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/');
     if (href === "/student/dashboard") {
-      return pathname === href;
+      return cleanPath === href;
     }
-    return pathname.startsWith(href);
+    return cleanPath.startsWith(href);
   };
 
   return (

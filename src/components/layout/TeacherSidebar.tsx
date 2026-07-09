@@ -39,7 +39,13 @@ export function TeacherSidebar({ isCollapsed = false, onClose }: SidebarProps) {
     { label: t("bottom.profile"), icon: "manage_accounts", href: "/teacher/profile" },
   ];
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => {
+    const cleanPath = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/');
+    if (href === "/teacher/dashboard") {
+      return cleanPath === href;
+    }
+    return cleanPath.startsWith(href);
+  };
 
   return (
     <>
