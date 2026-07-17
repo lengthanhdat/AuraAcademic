@@ -59,7 +59,7 @@ export default function StudentLobby() {
   const startSSE = (examCode: string) => {
     if (esRef.current) return;
     const token = localStorage.getItem("accessToken");
-    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examCode}/stream/?token=${token}`);
+    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${examCode}/stream?token=${token}`);
     esRef.current = es;
 
     es.addEventListener("status", (e) => {
