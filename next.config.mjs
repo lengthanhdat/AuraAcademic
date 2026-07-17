@@ -5,8 +5,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ── Static Export for S3 + CloudFront hosting ──────────────────
-  output: 'export',
-  trailingSlash: true,   // /login → /login/index.html (S3 compatible)
+  // output: 'export',
+  // trailingSlash: true,   // /login → /login/index.html (S3 compatible)
 
   // Enable gzip/brotli compression
   compress: true,
