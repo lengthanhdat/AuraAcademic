@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useState, useRef, useCallback, memo } from "react";
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/navigation';
@@ -117,6 +117,7 @@ export default function TakeExam() {
   const searchParams = useSearchParams();
   const accessCode = searchParams.get("code");
   const t = useTranslations("TakeExam");
+  const isSubmittingRef = useRef(false);
   
   const [examVersion, setExamVersion] = useState<any>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -414,6 +415,7 @@ export default function TakeExam() {
 
   const handleSubmit = async (force = false) => {
     if (!examVersion) return;
+    if (isSubmittingRef.current) return;
     
     // Bọc xử lý xác nhận: Nếu không force (ấn thủ công) và chưa hiện modal, thì hiện modal lên rồi dừng
     if (!force && (timeLeft ?? 0) > 0) {
@@ -423,6 +425,7 @@ export default function TakeExam() {
 
     setShowSubmitModal(false);
     setIsSubmitting(true);
+    isSubmittingRef.current = true;
     try {
       // 1. TÍNH ĐIỂM
       let correctCount = 0;
@@ -493,12 +496,24 @@ export default function TakeExam() {
           }, 3000);
         }
       } else {
-        alert(t("submit_error"));
+        const errText = await res.text();
+        if (errText.includes("Bạn đã hoàn thành bài thi này rồi")) {
+          toast.success("Bài thi của bạn đã được ghi nhận trước đó!");
+          const redirectClassroomId = sessionStorage.getItem("exam_redirect_classroomId");
+          if (redirectClassroomId) {
+            router.push(`/student/classrooms/detail/?id=${redirectClassroomId}`);
+          } else {
+            router.push("/student/dashboard");
+          }
+        } else {
+          alert(t("submit_error"));
+        }
       }
     } catch (e) {
       alert(t("connect_error"));
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
       setIsTimeUp(false);
     }
   };
