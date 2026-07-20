@@ -36,11 +36,16 @@ export function Footer() {
           <div>
             <h4 className="text-slate-900 dark:text-white font-extrabold text-base mb-6 tracking-wide">{t("solutions")}</h4>
             <ul className="space-y-4">
-              {[t("solution_list.item1"), t("solution_list.item2"), t("solution_list.item3"), t("solution_list.item4")].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-[#00C6FF] dark:hover:text-[#00C6FF] transition-colors flex items-center gap-2 group">
+              {[
+                { label: t("solution_list.item1"), href: '/solutions/exam-bank' },
+                { label: t("solution_list.item2"), href: '/solutions/ai-proctoring' },
+                { label: t("solution_list.item3"), href: '/solutions/analytics' },
+                { label: t("solution_list.item4"), href: '/solutions/roles' }
+              ].map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-[#00C6FF] dark:hover:text-[#00C6FF] transition-colors flex items-center gap-2 group">
                     <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-[#00C6FF] transition-colors" />
-                    {link}
+                    {link.label}
                   </Link>
                 </li>
               ))}
