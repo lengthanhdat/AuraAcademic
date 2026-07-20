@@ -75,7 +75,7 @@ export default function TeacherExamRoom() {
     if (!exam?.accessCode) return;
     const code = exam.accessCode;
 
-    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/stream/?token=${getToken()}`);
+    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8088') + ''}/api/exams/${code}/stream?token=${getToken()}`);
 
     es.addEventListener("count", (e) => {
       const data = JSON.parse(e.data);
