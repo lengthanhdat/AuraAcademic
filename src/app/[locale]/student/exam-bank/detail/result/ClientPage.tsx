@@ -57,14 +57,15 @@ export default function PracticeResultPage({ params }: { params: { locale: strin
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const resultId = searchParams.get("resultId");
+  const examId = searchParams.get("id");
 
   const { data: exam, isLoading: examLoading } = useSWR(
-    resultId ? ["practice-result-exam", resultId, params.id] : null,
+    resultId ? ["practice-result-exam", resultId, examId] : null,
     async () => {
       try {
-        return await authFetcher(`${API_BASE}/practice/results/detail/?code=${resultId}/exam`);
+        return await authFetcher(`${API_BASE}/practice/results/${resultId}/exam`);
       } catch {
-        return authFetcher(`${API_BASE}/exams/${params.id}`);
+        return authFetcher(`${API_BASE}/exams/${examId}`);
       }
     },
     { revalidateOnFocus: false }
@@ -72,7 +73,7 @@ export default function PracticeResultPage({ params }: { params: { locale: strin
 
   // Fetch the student's submitted result
   const { data: result, isLoading: resultLoading } = useSWR(
-    resultId ? `${API_BASE}/practice/results/detail/?code=${resultId}` : null,
+    resultId ? `${API_BASE}/practice/results/${resultId}` : null,
     authFetcher,
     { revalidateOnFocus: false }
   );
@@ -195,7 +196,7 @@ export default function PracticeResultPage({ params }: { params: { locale: strin
 
               <div className="mt-8 flex justify-center gap-3">
                 <button
-                  onClick={() => router.push(`/student/exam-bank/detail/?id=${params.id}`)}
+                  onClick={() => router.push(`/student/exam-bank/detail/?id=${examId}`)}
                   className="px-5 py-2.5 bg-slate-100 dark:bg-cyan-950/40 text-on-surface dark:text-slate-200 font-bold rounded-xl text-sm hover:bg-slate-200 dark:hover:bg-cyan-950/60 transition-all"
                 >
                   Làm lại
@@ -402,7 +403,7 @@ export default function PracticeResultPage({ params }: { params: { locale: strin
                 {/* Back buttons */}
                 <div className="px-3 pb-3 space-y-2">
                   <button
-                    onClick={() => router.push(`/student/exam-bank/detail/?id=${params.id}`)}
+                    onClick={() => router.push(`/student/exam-bank/detail/?id=${examId}`)}
                     className="w-full py-2 bg-slate-100 dark:bg-cyan-950/40 text-on-surface dark:text-slate-200 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-cyan-950/60 transition-all"
                   >
                     Làm lại
